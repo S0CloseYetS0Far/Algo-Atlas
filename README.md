@@ -1,3 +1,5 @@
+**English** | [简体中文](./README.zh-CN.md)
+
 [LeetCode post](https://leetcode.cn/discuss/post/3851162/ru-he-ke-xue-de-8ge-yue-xie-2000ti-x-plo-zvsq/) | [xhs](http://xhslink.com/o/9IVHU999iO0) | [bilibili]
 
 ![algo](./png/Re_Algo.png)
