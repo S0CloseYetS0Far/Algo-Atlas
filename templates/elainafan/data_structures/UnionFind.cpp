@@ -1,8 +1,8 @@
 class UnionFind {
     vector<int> fa;
-    vector<int> sz;  // 集合大小
+    vector<int> sz;  // set sizes
 public:
-    int cc;  // 连通块个数
+    int cc;  // number of connected components
     UnionFind(int n) : fa(n), sz(n, 1), cc(n) { ranges::iota(fa, 0); }
     int get(int x) {
         if (fa[x] != x) fa[x] = get(fa[x]);
@@ -17,7 +17,7 @@ public:
         cc--;
         return true;
     }
-    int get_size(int x) {  // 查询x所在集合大小
+    int get_size(int x) {  // size of the set containing x
         return sz[get(x)];
     }
 };

@@ -5,13 +5,13 @@ using namespace std;
 
 const int MAXN = 1e5 + 5;
 
-int a[MAXN];          // 原数组
-long long sum[MAXN];  // 每块的和
-int add[MAXN];        // 每块的懒标记（增量）
-int block_size;       // 块大小
+int a[MAXN];          // original array
+long long sum[MAXN];  // sum of each block
+int add[MAXN];        // lazy tag of each block (increment)
+int block_size;       // block size
 int n;
 
-// 初始化分块
+// initialize the blocks
 void init() {
     block_size = sqrt(n);
     for (int i = 1; i <= n; i++) {
@@ -20,27 +20,27 @@ void init() {
     }
 }
 
-// 区间加 [l, r] += val
+// range add: [l, r] += val
 void update(int l, int r, int val) {
     int bl = l / block_size;
     int br = r / block_size;
     if (bl == br) {
-        // 同一块，暴力修改
+        // same block: brute-force update
         for (int i = l; i <= r; i++) {
             a[i] += val;
             sum[bl] += val;
         }
     } else {
-        // 左边碎块
+        // partial block on the left
         for (int i = l; i < (bl + 1) * block_size; i++) {
             a[i] += val;
             sum[bl] += val;
         }
-        // 中间整块
+        // full blocks in the middle
         for (int i = bl + 1; i < br; i++) {
             add[i] += val;
         }
-        // 右边碎块
+        // partial block on the right
         for (int i = br * block_size; i <= r; i++) {
             a[i] += val;
             sum[br] += val;
@@ -48,7 +48,7 @@ void update(int l, int r, int val) {
     }
 }
 
-// 区间查询 [l, r] 的和
+// range query: sum of [l, r]
 long long query(int l, int r) {
     long long res = 0;
     int bl = l / block_size;
@@ -74,8 +74,8 @@ long long query(int l, int r) {
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(0);
-    // 读入 n、数组 a
+    // read n and array a
     // init();
-    // 处理 update / query
+    // handle update / query
     return 0;
 }

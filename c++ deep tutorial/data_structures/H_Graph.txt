@@ -1,48 +1,50 @@
 ================================================================================
-C++ 算法结构教程 — 图 (Graph)
+C++ Algorithms and Data Structures Tutorial — Graph
 ================================================================================
 
-## 章节概述
+## Chapter Overview
 
-图（Graph）是一种非线性数据结构，由顶点（Vertex）和连接顶点的边（Edge）组成。
-图是最灵活的数据结构之一，可以表示各种复杂关系：社交网络、地图导航、网页链接、
-依赖关系、电路设计等。
+A Graph is a non-linear data structure made up of vertices and the edges that connect
+them. Graphs are among the most flexible data structures and can represent all kinds of
+complex relationships: social networks, map navigation, web page links, dependencies,
+circuit design, and more.
 
-图论是计算机科学的重要分支，本章将从图的基本概念讲起，深入图的存储和遍历原理，
-全面覆盖常见图算法，最后通过实例和习题巩固所学知识。
+Graph theory is an important branch of computer science. This chapter starts with the
+basic concepts of graphs, digs into how graphs are stored and traversed, covers the
+common graph algorithms in depth, and finally reinforces what you've learned with examples and exercises.
 
 ================================================================================
-### 第一节: 基础语法 + 计算机底层原理
+### Section 1: Basic Syntax + Low-Level Computer Principles
 ================================================================================
 
-1.1 图的基本概念
+1.1 Basic Concepts of Graphs
 --------------------
 
-图的组成元素：
-- 顶点（Vertex）：图中的节点
-- 边（Edge）：连接两个顶点的线
+Components of a graph:
+- Vertex: a node in the graph
+- Edge: a line connecting two vertices
 
-图的分类：
-- 有向图 vs 无向图
-- 加权图 vs 无权图
-- 连通图 vs 非连通图
-- 稠密图 vs 稀疏图
+Kinds of graphs:
+- Directed vs undirected
+- Weighted vs unweighted
+- Connected vs disconnected
+- Dense vs sparse
 
-相关术语：
-- 度（Degree）：顶点连接的边数
-- 出度（Out-degree）：有向图中从该顶点出发的边数
-- 入度（In-degree）：有向图中指向该顶点的边数
-- 路径（Path）：顶点序列，相邻顶点间有边连接
-- 环（Cycle）：起点等于终点的路径
+Related terminology:
+- Degree: the number of edges incident to a vertex
+- Out-degree: in a directed graph, the number of edges leaving the vertex
+- In-degree: in a directed graph, the number of edges pointing into the vertex
+- Path: a sequence of vertices where each pair of adjacent vertices is connected by an edge
+- Cycle: a path whose start vertex equals its end vertex
 
-1.2 图的存储方式
+1.2 Ways to Store a Graph
 --------------------
 
-(1) 邻接矩阵（Adjacency Matrix）
-用二维数组表示图，arr[i][j] = 1(或权重) 表示顶点i到j有边。
+(1) Adjacency Matrix
+The graph is represented by a 2D array: arr[i][j] = 1 (or a weight) means there is an edge from vertex i to j.
 
-优点：判断两顶点间是否有边O(1)
-缺点：空间O(V^2)，稀疏图浪费空间
+Pros: checking whether two vertices are connected is O(1)
+Cons: O(V^2) space, which wastes memory for sparse graphs
 
 ```cpp
 #include <iostream>
@@ -51,7 +53,7 @@ C++ 算法结构教程 — 图 (Graph)
 class AdjacencyMatrixGraph {
 private:
     int vertices;
-    std::vector<std::vector<int>> matrix;  // 0=无边, 1=有边
+    std::vector<std::vector<int>> matrix;  // 0 = no edge, 1 = edge
 
 public:
     AdjacencyMatrixGraph(int v) : vertices(v), matrix(v, std::vector<int>(v, 0)) {}
@@ -94,18 +96,18 @@ int main() {
 
     g.print();
 
-    std::cout << "0-2有边? " << g.hasEdge(0, 2) << std::endl;
-    std::cout << "0-3有边? " << g.hasEdge(0, 3) << std::endl;
+    std::cout << "Edge 0-2? " << g.hasEdge(0, 2) << std::endl;
+    std::cout << "Edge 0-3? " << g.hasEdge(0, 3) << std::endl;
 
     return 0;
 }
 ```
 
-(2) 邻接表（Adjacency List）
-每个顶点维护一个链表/vector，存储与其相邻的顶点。
+(2) Adjacency List
+Each vertex maintains a list/vector of the vertices adjacent to it.
 
-优点：空间O(V+E)，适合稀疏图
-缺点：判断两顶点间是否有边需要O(degree)
+Pros: O(V+E) space, well suited to sparse graphs
+Cons: checking whether two vertices are connected takes O(degree)
 
 ```cpp
 #include <iostream>
@@ -162,10 +164,10 @@ int main() {
     g.addEdge(2, 3);
     g.addEdge(3, 4);
 
-    std::cout << "邻接表:" << std::endl;
+    std::cout << "Adjacency list:" << std::endl;
     g.print();
 
-    std::cout << "\n顶点1的邻居: ";
+    std::cout << "\nNeighbors of vertex 1: ";
     for (int v : g.getNeighbors(1)) std::cout << v << " ";
     std::cout << std::endl;
 
@@ -173,10 +175,10 @@ int main() {
 }
 ```
 
-1.3 图的遍历：广度优先搜索（BFS）
+1.3 Graph Traversal: Breadth-First Search (BFS)
 ---------------------------------------
 
-BFS使用队列，按"层"遍历，可用于求最短路径（无权图）。
+BFS uses a queue and traverses "level by level"; it can be used to find shortest paths (in unweighted graphs).
 
 ```cpp
 #include <iostream>
@@ -197,7 +199,7 @@ public:
         if (!directed) adj_list[v].push_back(u);
     }
 
-    // BFS遍历
+    // BFS traversal
     void bfs(int start) const {
         std::vector<bool> visited(vertices, false);
         std::queue<int> q;
@@ -205,7 +207,7 @@ public:
         visited[start] = true;
         q.push(start);
 
-        std::cout << "BFS从" << start << "开始: ";
+        std::cout << "BFS starting from " << start << ": ";
         while (!q.empty()) {
             int current = q.front();
             q.pop();
@@ -221,7 +223,7 @@ public:
         std::cout << std::endl;
     }
 
-    // BFS求最短路径（无权图）
+    // Shortest path with BFS (unweighted graph)
     std::vector<int> shortestPath(int start, int end) const {
         std::vector<bool> visited(vertices, false);
         std::vector<int> parent(vertices, -1);
@@ -245,9 +247,9 @@ public:
             }
         }
 
-        // 重构路径
+        // Reconstruct the path
         std::vector<int> path;
-        if (!visited[end]) return path;  // 无法到达
+        if (!visited[end]) return path;  // unreachable
 
         for (int v = end; v != -1; v = parent[v]) {
             path.push_back(v);
@@ -271,7 +273,7 @@ int main() {
     g.bfs(0);
 
     auto path = g.shortestPath(0, 5);
-    std::cout << "0->5的最短路径: ";
+    std::cout << "Shortest path 0->5: ";
     for (int v : path) std::cout << v << " ";
     std::cout << std::endl;
 
@@ -279,10 +281,10 @@ int main() {
 }
 ```
 
-1.4 图的遍历：深度优先搜索（DFS）
+1.4 Graph Traversal: Depth-First Search (DFS)
 ---------------------------------------
 
-DFS使用栈（递归或显式栈），沿一条路径走到尽头再回溯。
+DFS uses a stack (recursion or an explicit stack): it follows one path as far as it goes and then backtracks.
 
 ```cpp
 #include <iostream>
@@ -314,22 +316,22 @@ public:
         if (!directed) adj_list[v].push_back(u);
     }
 
-    // 递归DFS
+    // Recursive DFS
     void dfsRecursive(int start) const {
         std::vector<bool> visited(vertices, false);
-        std::cout << "DFS(递归)从" << start << "开始: ";
+        std::cout << "DFS (recursive) starting from " << start << ": ";
         dfsRecursive(start, visited);
         std::cout << std::endl;
     }
 
-    // 迭代DFS（使用栈）
+    // Iterative DFS (using a stack)
     void dfsIterative(int start) const {
         std::vector<bool> visited(vertices, false);
         std::stack<int> stk;
 
         stk.push(start);
 
-        std::cout << "DFS(迭代)从" << start << "开始: ";
+        std::cout << "DFS (iterative) starting from " << start << ": ";
         while (!stk.empty()) {
             int v = stk.top();
             stk.pop();
@@ -338,7 +340,7 @@ public:
             visited[v] = true;
             std::cout << v << " ";
 
-            // 逆序入栈以保持与递归相同的遍历顺序
+            // Push in reverse order to keep the same traversal order as the recursive version
             for (auto it = adj_list[v].rbegin(); it != adj_list[v].rend(); ++it) {
                 if (!visited[*it]) {
                     stk.push(*it);
@@ -348,7 +350,7 @@ public:
         std::cout << std::endl;
     }
 
-    // 判断是否有环（有向图）
+    // Detect whether there is a cycle (directed graph)
     bool hasCycle() const {
         std::vector<bool> visited(vertices, false);
         std::vector<bool> on_path(vertices, false);
@@ -371,7 +373,7 @@ private:
             if (!visited[neighbor]) {
                 if (dfsCycleDetect(neighbor, visited, on_path)) return true;
             } else if (on_path[neighbor]) {
-                return true;  // 发现环
+                return true;  // cycle found
             }
         }
 
@@ -384,14 +386,14 @@ int main() {
     GraphDFS g(5);
     g.addEdge(0, 1, true);
     g.addEdge(1, 2, true);
-    g.addEdge(2, 0, true);   // 形成环 0->1->2->0
+    g.addEdge(2, 0, true);   // forms the cycle 0->1->2->0
     g.addEdge(1, 3, true);
     g.addEdge(3, 4, true);
 
     g.dfsRecursive(0);
     g.dfsIterative(0);
 
-    std::cout << "有环? " << g.hasCycle() << std::endl;
+    std::cout << "Has a cycle? " << g.hasCycle() << std::endl;
 
     return 0;
 }
@@ -399,10 +401,10 @@ int main() {
 
 
 ================================================================================
-### 第二节: 所有用法大全
+### Section 2: Complete Guide to All Usages
 ================================================================================
 
-2.1 加权图与最短路径（Dijkstra算法）
+2.1 Weighted Graphs and Shortest Paths (Dijkstra's Algorithm)
 -----------------------------------------
 
 ```cpp
@@ -425,12 +427,12 @@ public:
         if (!directed) adj_list[v].push_back({u, weight});
     }
 
-    // Dijkstra最短路径算法
+    // Dijkstra's shortest path algorithm
     std::vector<int> dijkstra(int start) const {
         std::vector<int> dist(vertices, std::numeric_limits<int>::max());
         std::vector<bool> visited(vertices, false);
 
-        // 最小堆：{距离, 顶点}
+        // Min-heap: {distance, vertex}
         std::priority_queue<std::pair<int, int>,
                             std::vector<std::pair<int, int>>,
                             std::greater<std::pair<int, int>>> pq;
@@ -456,12 +458,12 @@ public:
         return dist;
     }
 
-    // Bellman-Ford算法（处理负权边）
+    // Bellman-Ford algorithm (handles negative edge weights)
     std::vector<int> bellmanFord(int start) const {
         std::vector<int> dist(vertices, std::numeric_limits<int>::max());
         dist[start] = 0;
 
-        // 松弛V-1次
+        // Relax V-1 times
         for (int i = 0; i < vertices - 1; ++i) {
             for (int u = 0; u < vertices; ++u) {
                 for (const auto& [v, w] : adj_list[u]) {
@@ -473,12 +475,12 @@ public:
             }
         }
 
-        // 检查负权环
+        // Check for negative-weight cycles
         for (int u = 0; u < vertices; ++u) {
             for (const auto& [v, w] : adj_list[u]) {
                 if (dist[u] != std::numeric_limits<int>::max() &&
                     dist[u] + w < dist[v]) {
-                    std::cout << "图中存在负权环！" << std::endl;
+                    std::cout << "The graph contains a negative-weight cycle!" << std::endl;
                     return {};
                 }
             }
@@ -502,7 +504,7 @@ int main() {
 
     auto dist = g.dijkstra(0);
 
-    std::cout << "从0到各点的最短距离:" << std::endl;
+    std::cout << "Shortest distances from 0 to every vertex:" << std::endl;
     for (int i = 0; i < dist.size(); ++i) {
         std::cout << "  0 -> " << i << ": "
                   << (dist[i] == std::numeric_limits<int>::max() ? "INF" :
@@ -513,7 +515,7 @@ int main() {
 }
 ```
 
-2.2 最小生成树（Prim算法 & Kruskal算法）
+2.2 Minimum Spanning Trees (Prim's Algorithm & Kruskal's Algorithm)
 ---------------------------------------------
 
 ```cpp
@@ -525,7 +527,7 @@ int main() {
 
 class MST {
 private:
-    // 并查集（Union-Find）
+    // Union-Find (disjoint set)
     struct UnionFind {
         std::vector<int> parent, rank;
         UnionFind(int n) : parent(n), rank(n, 0) {
@@ -549,10 +551,10 @@ private:
     };
 
 public:
-    // Kruskal算法
+    // Kruskal's algorithm
     static std::vector<std::tuple<int, int, int>>
     kruskalMST(int vertices, std::vector<std::tuple<int, int, int>>& edges) {
-        // 按权重排序
+        // Sort by weight
         std::sort(edges.begin(), edges.end(),
                   [](const auto& a, const auto& b) {
                       return std::get<2>(a) < std::get<2>(b);
@@ -571,7 +573,7 @@ public:
         return mst;
     }
 
-    // Prim算法
+    // Prim's algorithm
     static std::vector<std::pair<int, int>>
     primMST(const std::vector<std::list<std::pair<int, int>>>& adj_list) {
         int vertices = adj_list.size();
@@ -579,7 +581,7 @@ public:
         std::vector<int> key(vertices, std::numeric_limits<int>::max());
         std::vector<int> parent(vertices, -1);
 
-        // 最小堆：{权重, 顶点}
+        // Min-heap: {weight, vertex}
         std::priority_queue<std::pair<int, int>,
                             std::vector<std::pair<int, int>>,
                             std::greater<std::pair<int, int>>> pq;
@@ -603,7 +605,7 @@ public:
             }
         }
 
-        // 构建MST边列表
+        // Build the list of MST edges
         std::vector<std::pair<int, int>> mst;
         for (int i = 1; i < vertices; ++i) {
             if (parent[i] != -1) {
@@ -617,7 +619,7 @@ public:
 int main() {
     int V = 5;
 
-    // 边: (u, v, w)
+    // Edges: (u, v, w)
     std::vector<std::tuple<int, int, int>> edges = {
         {0, 1, 2}, {0, 3, 6}, {1, 2, 3},
         {1, 3, 8}, {1, 4, 5}, {2, 4, 7}, {3, 4, 9}
@@ -626,18 +628,18 @@ int main() {
     auto mst = MST::kruskalMST(V, edges);
     int total_weight = 0;
 
-    std::cout << "Kruskal最小生成树:" << std::endl;
+    std::cout << "Kruskal minimum spanning tree:" << std::endl;
     for (const auto& [u, v, w] : mst) {
-        std::cout << "  " << u << " - " << v << "  权重: " << w << std::endl;
+        std::cout << "  " << u << " - " << v << "  weight: " << w << std::endl;
         total_weight += w;
     }
-    std::cout << "总权重: " << total_weight << std::endl;
+    std::cout << "Total weight: " << total_weight << std::endl;
 
     return 0;
 }
 ```
 
-2.3 拓扑排序（Topological Sort）
+2.3 Topological Sort
 -------------------------------------
 
 ```cpp
@@ -658,7 +660,7 @@ public:
         adj_list[u].push_back(v);
     }
 
-    // Kahn算法（基于入度）
+    // Kahn's algorithm (based on in-degrees)
     std::vector<int> topologicalSort() {
         std::vector<int> in_degree(vertices, 0);
 
@@ -687,7 +689,7 @@ public:
         }
 
         if (result.size() != (size_t)vertices) {
-            std::cout << "图中存在环，无法拓扑排序！" << std::endl;
+            std::cout << "The graph contains a cycle; topological sort is impossible!" << std::endl;
             return {};
         }
 
@@ -696,19 +698,19 @@ public:
 };
 
 int main() {
-    // 课程依赖图
+    // Course dependency graph
     TopologicalSort ts(6);
-    ts.addEdge(0, 2);  // C++基础 -> 数据结构
-    ts.addEdge(0, 3);  // C++基础 -> 算法
-    ts.addEdge(1, 2);  // 数学 -> 数据结构
-    ts.addEdge(2, 3);  // 数据结构 -> 算法
-    ts.addEdge(2, 4);  // 数据结构 -> 数据库
-    ts.addEdge(3, 5);  // 算法 -> 图形学
-    ts.addEdge(4, 5);  // 数据库 -> 图形学
+    ts.addEdge(0, 2);  // C++ Basics -> Data Structures
+    ts.addEdge(0, 3);  // C++ Basics -> Algorithms
+    ts.addEdge(1, 2);  // Mathematics -> Data Structures
+    ts.addEdge(2, 3);  // Data Structures -> Algorithms
+    ts.addEdge(2, 4);  // Data Structures -> Databases
+    ts.addEdge(3, 5);  // Algorithms -> Computer Graphics
+    ts.addEdge(4, 5);  // Databases -> Computer Graphics
 
     auto order = ts.topologicalSort();
 
-    std::cout << "学习顺序: ";
+    std::cout << "Study order: ";
     for (int course : order) {
         std::cout << "C" << course << " ";
     }
@@ -720,10 +722,10 @@ int main() {
 
 
 ================================================================================
-### 第三节: 实用案例
+### Section 3: Practical Examples
 ================================================================================
 
-案例一：社交网络的影响力分析
+Example 1: Influence Analysis in a Social Network
 ------------------------------------
 
 ```cpp
@@ -759,15 +761,15 @@ public:
         friends[id_b].push_back(id_a);
     }
 
-    // 计算影响力（影响力 = 粉丝数 + 粉丝的粉丝数 * 0.5）
+    // Compute influence (influence = followers + followers of followers * 0.5)
     std::vector<std::pair<std::string, double>> getInfluenceRank() {
         int n = id_to_name.size();
         std::vector<double> influence(n, 0);
 
         for (int i = 0; i < n; ++i) {
-            influence[i] = friends[i].size();  // 直接粉丝
+            influence[i] = friends[i].size();  // direct followers
 
-            // 间接粉丝（二度关系）
+            // Indirect followers (second-degree connections)
             for (int f : friends[i]) {
                 influence[i] += friends[f].size() * 0.5;
             }
@@ -786,7 +788,7 @@ public:
         return result;
     }
 
-    // 寻找最短联系路径（六度分隔理论）
+    // Find the shortest connection path (six degrees of separation)
     std::vector<std::string> findConnectionPath(const std::string& from,
                                                  const std::string& to) {
         if (name_to_id.find(from) == name_to_id.end() ||
@@ -842,12 +844,12 @@ int main() {
     sn.addFriendship("Eve", "Frank");
     sn.addFriendship("Bob", "Grace");
 
-    std::cout << "影响力排名:" << std::endl;
+    std::cout << "Influence ranking:" << std::endl;
     for (const auto& [name, score] : sn.getInfluenceRank()) {
         std::cout << "  " << name << ": " << score << std::endl;
     }
 
-    std::cout << "\nAlice到Frank的联系路径: ";
+    std::cout << "\nConnection path from Alice to Frank: ";
     for (const auto& name : sn.findConnectionPath("Alice", "Frank")) {
         std::cout << name << " -> ";
     }
@@ -858,7 +860,7 @@ int main() {
 ```
 
 
-案例二：地图导航系统
+Example 2: Map Navigation System
 ---------------------------
 
 ```cpp
@@ -949,28 +951,28 @@ public:
 int main() {
     MapNavigator nav;
 
-    nav.addLocation("北京", 39.9, 116.4);
-    nav.addLocation("天津", 39.1, 117.2);
-    nav.addLocation("上海", 31.2, 121.5);
-    nav.addLocation("南京", 32.1, 118.8);
-    nav.addLocation("济南", 36.7, 117.0);
+    nav.addLocation("Beijing", 39.9, 116.4);
+    nav.addLocation("Tianjin", 39.1, 117.2);
+    nav.addLocation("Shanghai", 31.2, 121.5);
+    nav.addLocation("Nanjing", 32.1, 118.8);
+    nav.addLocation("Jinan", 36.7, 117.0);
 
-    nav.addRoad("北京", "天津", 120);
-    nav.addRoad("北京", "济南", 400);
-    nav.addRoad("天津", "济南", 320);
-    nav.addRoad("济南", "南京", 600);
-    nav.addRoad("南京", "上海", 300);
-    nav.addRoad("天津", "上海", 1000);
+    nav.addRoad("Beijing", "Tianjin", 120);
+    nav.addRoad("Beijing", "Jinan", 400);
+    nav.addRoad("Tianjin", "Jinan", 320);
+    nav.addRoad("Jinan", "Nanjing", 600);
+    nav.addRoad("Nanjing", "Shanghai", 300);
+    nav.addRoad("Tianjin", "Shanghai", 1000);
 
-    auto [path, distance] = nav.findShortestPath("北京", "上海");
+    auto [path, distance] = nav.findShortestPath("Beijing", "Shanghai");
 
-    std::cout << "北京到上海的最短路线: ";
+    std::cout << "Shortest route from Beijing to Shanghai: ";
     for (size_t i = 0; i < path.size(); ++i) {
         std::cout << path[i];
         if (i < path.size() - 1) std::cout << " -> ";
     }
     std::cout << std::endl;
-    std::cout << "总距离: " << distance << "公里" << std::endl;
+    std::cout << "Total distance: " << distance << " km" << std::endl;
 
     return 0;
 }
@@ -978,33 +980,33 @@ int main() {
 
 
 ================================================================================
-### 第四节: 课后习题
+### Section 4: Exercises
 ================================================================================
 
-1. 基础题：手动实现图的邻接表表示和邻接矩阵表示。
-   - 支持添加/删除顶点和边
-   - 实现BFS和DFS遍历
-   - 比较两种存储方式的空间和时间差异
+1. Basic: Implement both the adjacency-list and adjacency-matrix representations of a graph by hand.
+   - Support adding/removing vertices and edges
+   - Implement BFS and DFS traversal
+   - Compare the space and time differences between the two storage methods
 
-2. 应用题：使用图实现一个简单的依赖管理器。
-   - 使用有向无环图（DAG）表示包依赖关系
-   - 实现拓扑排序确定安装顺序
-   - 检测循环依赖
+2. Application: Use a graph to implement a simple dependency manager.
+   - Represent package dependencies with a directed acyclic graph (DAG)
+   - Use topological sort to determine the installation order
+   - Detect circular dependencies
 
-3. 进阶题：实现Floyd-Warshall全源最短路径算法。
-   - 计算图中所有顶点对之间的最短路径
-   - 处理负权边（但不含负权环）
-   - 时间复杂度O(V^3)
+3. Advanced: Implement the Floyd-Warshall all-pairs shortest path algorithm.
+   - Compute the shortest paths between every pair of vertices in the graph
+   - Handle negative edge weights (but no negative-weight cycles)
+   - Time complexity O(V^3)
 
-4. 综合题：实现一个简单的搜索引擎PageRank算法。
-   - 将网页和超链接建模为有向图
-   - 迭代计算每个页面的排名
-   - 处理悬挂节点（没有出链的页面）
+4. Comprehensive: Implement a simple search engine PageRank algorithm.
+   - Model web pages and hyperlinks as a directed graph
+   - Iteratively compute the rank of every page
+   - Handle dangling nodes (pages with no outgoing links)
 
-5. 挑战题：实现一个A*寻路算法。
-   - 在网格地图上寻找最短路径
-   - 使用启发式函数（曼哈顿距离或欧几里得距离）
-   - 与Dijkstra算法进行性能对比
-   - 可视化路径
+5. Challenge: Implement the A* pathfinding algorithm.
+   - Find the shortest path on a grid map
+   - Use a heuristic function (Manhattan distance or Euclidean distance)
+   - Compare its performance with Dijkstra's algorithm
+   - Visualize the path
 
 ================================================================================

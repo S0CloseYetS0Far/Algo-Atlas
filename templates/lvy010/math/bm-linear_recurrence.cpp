@@ -96,17 +96,17 @@ ll bostan_mori(const vector<ll>& rec, const vector<ll>& init, ll n) {
 }
 
 int main() {
-    // 示例：斐波那契数列前几项 0, 1, 1, 2, 3, 5, 8, 13, 21, 34
+    // example: the first few Fibonacci numbers 0, 1, 1, 2, 3, 5, 8, 13, 21, 34
     vector<ll> s = {0, 1, 1, 2, 3, 5, 8, 13, 21, 34};
     vector<ll> rec = berlekamp_massey(s);
     
-    cout << "最短线性递推式: ";
+    cout << "Shortest linear recurrence: ";
     for (ll x : rec) cout << x << " ";
     cout << endl;
     
     ll n = 100;
     ll ans = bostan_mori(rec, s, n);
-    cout << "斐波那契数列第 " << n << " 项: " << ans << endl;
+    cout << "Fibonacci term #" << n << ": " << ans << endl;
     
     return 0;
 }

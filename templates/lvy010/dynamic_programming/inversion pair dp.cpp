@@ -1,8 +1,8 @@
 /*
-本题的难点在状态设计上，核心想法是把【没有填过的数】和当前元素的逆序对计算出来
-这样子问题就不用考虑右边填过的数了。这样思考，可以简化逆序对的计算
-使得每个子问题都只需考虑当前元素和左边没有填过的数的逆序对，
-而不需要考虑当前元素和右边填过的数的逆序对
+The difficulty of this problem lies in the state design. The core idea is to count the inversions between the current element and the [numbers not yet placed],
+so subproblems don't need to consider the numbers already placed on the right. Thinking this way simplifies the inversion count,
+so that each subproblem only needs to consider inversions between the current element and the unplaced numbers to the left,
+rather than inversions between the current element and the numbers already placed on the right
 */
 class Solution {
     const int MOD = 1'000'000'007;
@@ -18,13 +18,13 @@ public:
         }
 
         int m = ranges::max(req);
-        vector<vector<int>> memo(n, vector<int>(m + 1, -1)); // -1 表示没有计算过
+        vector<vector<int>> memo(n, vector<int>(m + 1, -1)); // -1 means not computed yet
         auto dfs = [&](auto&& dfs, int i, int j) -> int {
             if (i == 0) {
                 return 1;
             }
-            int& res = memo[i][j]; // 注意这里是引用
-            if (res != -1) { // 之前计算过
+            int& res = memo[i][j]; // note: this is a reference
+            if (res != -1) { // already computed
                 return res;
             }
             res = 0;

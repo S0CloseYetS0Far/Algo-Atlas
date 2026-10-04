@@ -19,8 +19,8 @@ public:
         sorted(sorted), 
         high_bit(1 << (bit_width(sorted.size()) - 1)) {}
 
-    // 添加 num 个 val，其中 val 离散化后的值为 i（i 从 1 开始）
-    // 如果 num < 0，表示减少 -num 个 val
+    // add num copies of val, where val's compressed value is i (i starts from 1)
+    // if num < 0, remove -num copies of val
     void update(int i, int num, int val) {
         for (; i < cnt.size(); i += i & -i) {
             cnt[i] += num;
@@ -28,7 +28,7 @@ public:
         }
     }
 
-    // 返回第 k 小的数（k 从 1 开始）
+    // return the k-th smallest number (k starts from 1)
     int kth(int k) const {
         int i = 0;
         for (int b = high_bit; b > 0; b >>= 1) {
@@ -41,7 +41,7 @@ public:
         return sorted[i];
     }
 
-    // 返回前 k 小的数之和（k 从 1 开始）
+    // return the sum of the k smallest numbers (k starts from 1)
     long long pre_sum(int k) const {
         long long s = 0;
         int i = 0;
@@ -53,7 +53,7 @@ public:
                 i = nxt;
             }
         }
-        // 加上等于第 k 小的数
+        // add the numbers equal to the k-th smallest
         return s + 1LL * sorted[i] * k;;
     }
 };
@@ -61,13 +61,13 @@ public:
 class Solution {
 public:
     long long maxSum(vector<int>& nums, int k) {
-        // 离散化
+        // coordinate compression
         int n = nums.size();
         vector<int> sorted = nums;
         ranges::sort(sorted);
         sorted.erase(ranges::unique(sorted).begin(), sorted.end());
-        vector<int> rank(n); // rank[i] 是 nums[i] 离散化后的值（从 1 开始）
-        FenwickTree all_tree(sorted); // 包含所有元素的树状数组
+        vector<int> rank(n); // rank[i] is the compressed value of nums[i] (starting from 1)
+        FenwickTree all_tree(sorted); // Fenwick tree containing all elements
         long long total = 0;
         for (int i = 0; i < n; i++) {
             int x = nums[i];
@@ -78,16 +78,16 @@ public:
 
         long long ans = LLONG_MIN;
 
-        // 枚举子数组左端点
+        // enumerate the left endpoint of the subarray
         for (int left = 0; left < n; left++) {
             FenwickTree in_tree(sorted);
             FenwickTree out_tree = all_tree;
             int need_swap = 0;
             long long sub_sum = 0;
 
-            // 枚举子数组右端点
+            // enumerate the right endpoint of the subarray
             for (int right = left; right < n; right++) {
-                // x 从子数组外移到子数组内
+                // x moves from outside the subarray to inside it
                 int x = nums[right];
                 int rk = rank[right];
                 sub_sum += x;
@@ -97,7 +97,7 @@ public:
                 bool inc = false;
                 int sz = right - left + 1;
                 if (need_swap < k && need_swap < sz && need_swap < n - sz) {
-                    // 能否多交换一次
+                    // can we do one more swap
                     if (in_tree.kth(need_swap + 1) < out_tree.kth(n - sz - need_swap)) {
                         inc = true;
                         need_swap++;
@@ -105,13 +105,13 @@ public:
                 }
 
                 if (!inc && need_swap > 0) {
-                    // 是否要减少交换次数
+                    // whether we need to reduce the number of swaps
                     if (in_tree.kth(need_swap) >= out_tree.kth(n - sz - need_swap + 1)) {
                         need_swap--;
                     }
                 }
 
-                // 计算通过交换导致的元素和的增量
+                // compute the increase in the element sum gained through swaps
                 long long delta = 0;
                 if (need_swap > 0) {
                     long long in_sum = in_tree.pre_sum(need_swap);

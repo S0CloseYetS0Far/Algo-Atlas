@@ -13,7 +13,7 @@ public:
     }
 };
 
-//离散化
+//coordinate compression
 
 auto sorted = nums;
 ranges::sort(sorted);

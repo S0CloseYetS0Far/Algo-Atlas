@@ -7,6 +7,6 @@ int qpow(int x, int y) {
         y >>= 1;
     }
     return z;
-}  // 求x**y%MOD
+}  // compute x**y % MOD
 
-// 注意：当MOD为质数时， (x/y)%MOD=(x*(y**(MOD-2)))%MOD
+// Note: when MOD is prime, (x/y)%MOD = (x*(y**(MOD-2)))%MOD

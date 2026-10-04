@@ -1,12 +1,12 @@
 #lc2059 minimum operations to convert number
 class Solution:
-#刚拿到这题找不出什么规律，要我们求最小运算次数，加之这个数据范围很小，无权最短路...暴力... 嘶~ BFS ？！
+#When I first got this problem I couldn't find any pattern. It asks for the minimum number of operations, and the data range is tiny: unweighted shortest path... brute force... hmm~ BFS?!
 
-#以前自己做题经常爱用 DFS，因为递归代码一般会少一些。
-# 但是 DFS 与 BFS 在寻找路径最不同的一点是，DFS 是一条路走到黑，它适合用于 「是否存在一条路径」
-# 而 BFS 是影分身，每次影分身都会在原基础上走一步，适合用于 「是否存在一条最短路径」。
+#I used to love using DFS for problems, because recursive code is usually shorter.
+# But the biggest difference between DFS and BFS in path finding is that DFS follows one path all the way to the end, so it suits "does a path exist?"
+# whereas BFS is like shadow clones: each clone advances one step from where it was, so it suits "what is the shortest path?".
 
-#明白上面两点区别，便可顺利通过。
+#Once you understand the difference above, you can solve it smoothly.
 
     def minimumOperations(self, nums: List[int], start: int, goal: int) -> int:
         if start < 0 or start > 1000 or start == goal:

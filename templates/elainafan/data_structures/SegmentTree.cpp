@@ -2,9 +2,9 @@ template <typename T>
 class SegmentTree {
     int n;
     vector<T> tree;
-    T merge_val(T a, T b) const { return max(a, b); } // 合并子树
+    T merge_val(T a, T b) const { return max(a, b); } // merge subtrees
 
-    void maintain(int node) { // 维护整棵树
+    void maintain(int node) { // maintain the whole tree
         tree[node] = merge_val(tree[node * 2], tree[node * 2 + 1]);
     }
 
@@ -17,7 +17,7 @@ class SegmentTree {
         build(a, node * 2, l, m);
         build(a, node * 2 + 1, m + 1, r);
         maintain(node);
-    } // 建树
+    } // build the tree
 
     void update(int node, int l, int r, int i, T val) {
         if (l == r) {
@@ -30,7 +30,7 @@ class SegmentTree {
         else
             update(node * 2 + 1, m + 1, r, i, val);
         maintain(node);
-    } // 更新i处的值为val
+    } // set the value at i to val
 
     T query(int node, int l, int r, int ql, int qr) const {
         if (ql <= l && r <= qr) return tree[node];
@@ -40,7 +40,7 @@ class SegmentTree {
         T l_res = query(node * 2, l, m, ql, qr);
         T r_res = query(node * 2 + 1, m + 1, r, ql, qr);
         return merge_val(l_res, r_res);
-    } // 查询[ql,qr]的值
+    } // query the value of [ql,qr]
 
 public:
     SegmentTree(int n, T init_val) : SegmentTree(vector<T>(n, init_val)) {}
@@ -48,13 +48,13 @@ public:
     SegmentTree(const vector<T>& a)
         : n(a.size()), tree(2 << bit_width(a.size() - 1)) {
         build(a, 1, 0, n - 1);
-    } // 传入一个数组维护
+    } // construct from an array
 
-    void update(int i, T val) { update(1, 0, n - 1, i, val); } // 更新i的值为val
+    void update(int i, T val) { update(1, 0, n - 1, i, val); } // set the value of i to val
 
-    T query(int ql, int qr) const { return query(1, 0, n - 1, ql, qr); } // 查询[ql,qr]的值
+    T query(int ql, int qr) const { return query(1, 0, n - 1, ql, qr); } // query the value of [ql,qr]
 
-    T get(int i) const { return query(1, 0, n - 1, i, i); } // 取出i处的值
+    T get(int i) const { return query(1, 0, n - 1, i, i); } // get the value at i
 
     T find(int val, int node, int l, int r) {
         if (tree[node] < val) return -1;
@@ -67,7 +67,7 @@ public:
         if (res < 0) res = find(val, node * 2 + 1, mid + 1, r);
         maintain(node);
         return res;
-    } // 线段树二分，查询最早的大于等于val的下标
+    } // binary search on segment tree: find the earliest index with value >= val
 
     
 };
@@ -80,4 +80,4 @@ public:
         if (M - tree[node * 2].first >= val) return find(val, node * 2, l, mid, qr);
         if (qr > mid) return find(val, node * 2 + 1, mid + 1, r, qr);
         return -1;
-    }  // 线段树二分，查询最早的大于等于val的下标
+    }  // binary search on segment tree: find the earliest index with value >= val

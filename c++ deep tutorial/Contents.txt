@@ -1,230 +1,243 @@
 ================================================================================
-                    C++ 深化教程 (C++ Advanced Tutorial)
+                    C++ Advanced Tutorial
 ================================================================================
 
-【教程简介】
+[About This Tutorial]
 
-本教程面向已具备C++基础语法知识的读者，旨在帮助学习者从"会用C++"进阶到"理解C++"。
-教程深入讲解C++核心机制、内存模型、并发编程、网络编程和标准库，覆盖C++11/14/17/20
-的现代特性。每个知识点都配有底层原理剖析和实际生活场景案例，帮助读者建立完整的
-C++知识体系。
+This tutorial is aimed at readers who already know basic C++ syntax. Its goal is to
+take learners from "able to use C++" to "understanding C++". It covers C++'s core
+mechanisms, memory model, concurrent programming, network programming, and the
+standard library in depth, including modern features from C++11/14/17/20. Every topic
+comes with an analysis of the underlying principles and real-life scenario examples,
+helping readers build a complete C++ knowledge system.
 
-作者建议学习顺序：按章节1→14逐步学习，因为每章案例会融入前面已学章节的知识点，
-形成螺旋式上升的学习曲线。如果跳读，可能会在案例部分遇到尚未学习的语法。
-
-
-【学习路线图说明】
-
-为什么按以下顺序排列？
-
-第1-3章  (基础进阶)    命名空间 → 预处理器 → 动态内存
-  这三章是C++的基础工具。命名空间解决大型项目的符号冲突；预处理器是编译前的
-  代码处理机制；动态内存是C++区别于Java/C#的核心——程序员自己管理堆内存。
-  这三者放在最初，是因为后续几乎所有章节都要用到。
-
-第4-6章  (面向对象核心) 类与对象 → 继承 → 多态
-  C++的核心范式——面向对象编程。从封装到继承再到多态，这是逐步深入的经典路线。
-  多态是OOP的巅峰，也是设计模式的基础。为运算符重载、模板做铺垫。
-
-第7-8章  (泛型编程入门) 运算符重载 → 函数模板
-  运算符重载让自定义类型像内置类型一样自然；模板开启泛型编程的大门。
-  这两章为理解STL的实现原理打下基础。
-
-第9-11章 (实战能力)     异常处理 → 文件与流 → 信号处理
-  异常处理增加程序的健壮性；文件与流是持久化数据的基础；信号处理让程序能
-  响应操作系统事件。这三章构建了编写生产级C++程序的能力。
-
-第12章   (并发编程)     多线程
-  多线程是现代C++的重要主题。掌握线程、互斥量、条件变量、原子操作和异步编程，
-  是高性能服务器和系统软件的必备技能。
-
-第13章   (网络编程)     Web编程
-  Socket编程是C++在实际工程中最常见的应用之一。从TCP/IP协议栈到HTTP协议，
-  从客户端到服务器，网络编程是连接C++与外部世界的桥梁。
-
-第14章   (标准库)       C++标准库
-  STL是C++的精华。全面掌握容器、算法、迭代器、函数对象、智能指针等，以及
-  C++14/17/20新增的标准库组件，是写出高效、优雅C++代码的关键。
-
-这条路线遵循"语言基础 → OOP → 泛型 → 实战 → 并发 → 网络 → 标准库"的逻辑，
-由浅入深，由内而外（先用好语言本身，再与系统交互，最后用好标准库）。
+Recommended order: study chapters 1 -> 14 in sequence, because each chapter's examples
+build on knowledge from earlier chapters, forming a spiral learning curve. If you skip
+around, you may run into syntax in the examples that you haven't learned yet.
 
 
-【详细目录】
+[About the Learning Roadmap]
 
-----------------------------------------------------------------------
-第一章  命名空间 (Namespace)
-----------------------------------------------------------------------
-  第一节: 命名空间基础语法 + 编译链接符号解析原理
-  第二节: namespace/using/匿名命名空间/内联命名空间/命名空间别名大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+Why this order?
 
-----------------------------------------------------------------------
-第二章  预处理器 (Preprocessor)
-----------------------------------------------------------------------
-  第一节: #include/#define/#ifdef基础 + 预处理阶段与编译流程原理
-  第二节: 所有预处理指令大全（#include/#define/#undef/#if/#ifdef/#ifndef/
-          #elif/#else/#endif/#error/#pragma/#line）
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+Ch. 1-3   (Foundations+)        Namespaces -> Preprocessor -> Dynamic Memory
+  These three chapters are C++'s basic tools. Namespaces solve symbol conflicts in
+  large projects; the preprocessor is the code-processing stage before compilation;
+  dynamic memory is the core difference between C++ and Java/C# -- the programmer
+  manages heap memory directly. They come first because nearly every later chapter uses them.
+
+Ch. 4-6   (OOP Core)            Classes and Objects -> Inheritance -> Polymorphism
+  C++'s core paradigm: object-oriented programming. Going from encapsulation to
+  inheritance to polymorphism is the classic progressive route. Polymorphism is the
+  pinnacle of OOP and the foundation of design patterns. It also paves the way for
+  operator overloading and templates.
+
+Ch. 7-8   (Intro to Generics)   Operator Overloading -> Function Templates
+  Operator overloading lets user-defined types feel as natural as built-in types;
+  templates open the door to generic programming. These two chapters lay the
+  groundwork for understanding how the STL is implemented.
+
+Ch. 9-11  (Practical Skills)    Exception Handling -> Files and Streams -> Signal Handling
+  Exception handling makes programs more robust; files and streams are the basis of
+  data persistence; signal handling lets programs respond to operating system events.
+  Together these chapters build the ability to write production-grade C++ programs.
+
+Ch. 12    (Concurrency)         Multithreading
+  Multithreading is a major topic in modern C++. Mastering threads, mutexes, condition
+  variables, atomics, and asynchronous programming is an essential skill for
+  high-performance servers and systems software.
+
+Ch. 13    (Networking)          Web Programming
+  Socket programming is one of the most common uses of C++ in real-world engineering.
+  From the TCP/IP stack to the HTTP protocol, from clients to servers, network
+  programming is the bridge between C++ and the outside world.
+
+Ch. 14    (Standard Library)    The C++ Standard Library
+  The STL is the essence of C++. A thorough command of containers, algorithms,
+  iterators, function objects, smart pointers, and the library components added in
+  C++14/17/20 is the key to writing efficient, elegant C++ code.
+
+This roadmap follows the logic "language basics -> OOP -> generics -> practice ->
+concurrency -> networking -> standard library", moving from simple to deep and from
+the inside out (first master the language itself, then interact with the system, and
+finally make good use of the standard library).
+
+
+[Detailed Table of Contents]
 
 ----------------------------------------------------------------------
-第三章  动态内存 (Dynamic Memory)
+Chapter 1  Namespaces
 ----------------------------------------------------------------------
-  第一节: new/delete基础 + 堆与栈的内存布局原理
-  第二节: new/delete/new[]/delete[]/placement new/nothrow new/
-          unique_ptr/shared_ptr/weak_ptr/allocator大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+  Section 1: Namespace basic syntax + how compilation/linking resolves symbols
+  Section 2: Complete guide to namespace/using/anonymous namespaces/inline namespaces/namespace aliases
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第四章  类与对象 (Classes and Objects)
+Chapter 2  Preprocessor
 ----------------------------------------------------------------------
-  第一节: class/struct基础 + 对象内存布局与this指针原理
-  第二节: 构造函数/析构函数/拷贝/移动/成员/静态/const/friend大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+  Section 1: #include/#define/#ifdef basics + the preprocessing stage and compilation pipeline
+  Section 2: Complete guide to all preprocessor directives (#include/#define/#undef/#if/#ifdef/#ifndef/
+          #elif/#else/#endif/#error/#pragma/#line)
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第五章  继承 (Inheritance)
+Chapter 3  Dynamic Memory
 ----------------------------------------------------------------------
-  第一节: public/protected/private继承基础 + 虚函数表(vtable)底层原理
-  第二节: 继承方式/构造函数链/析构虚函数/多重继承/虚继承大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+  Section 1: new/delete basics + memory layout of the heap and the stack
+  Section 2: Complete guide to new/delete/new[]/delete[]/placement new/nothrow new/
+          unique_ptr/shared_ptr/weak_ptr/allocator
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第六章  多态 (Polymorphism)
+Chapter 4  Classes and Objects
 ----------------------------------------------------------------------
-  第一节: virtual/override/final基础 + 动态绑定的汇编级原理
-  第二节: 虚函数/纯虚函数/抽象类/动态_cast/typeid/RTTI大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+  Section 1: class/struct basics + object memory layout and the this pointer
+  Section 2: Complete guide to constructors/destructors/copy/move/members/static/const/friend
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第七章  运算符重载 (Operator Overloading)
+Chapter 5  Inheritance
 ----------------------------------------------------------------------
-  第一节: operator+基础 + 运算符重载的底层函数调用机制
-  第二节: 所有可重载运算符大全（算术/关系/赋值/下标/调用/转换/
-          类型转换/递增递减/new/delete）
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+  Section 1: public/protected/private inheritance basics + how the virtual function table (vtable) works
+  Section 2: Complete guide to inheritance modes/constructor chains/virtual destructors/multiple inheritance/virtual inheritance
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第八章  函数模板 (Function Templates)
+Chapter 6  Polymorphism
 ----------------------------------------------------------------------
-  第一节: template<typename T>基础 + 模板实例化的编译器机制
-  第二节: 函数模板/类模板/模板特化/偏特化/非类型参数/可变参数模板/
-          SFINAE/概念(concepts C++20)大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+  Section 1: virtual/override/final basics + dynamic binding at the assembly level
+  Section 2: Complete guide to virtual functions/pure virtual functions/abstract classes/dynamic_cast/typeid/RTTI
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第九章  异常处理 (Exception Handling)
+Chapter 7  Operator Overloading
 ----------------------------------------------------------------------
-  第一节: try/catch/throw基础 + 栈展开和异常处理表原理
-  第二节: 标准异常类层次/自定义异常/noexcept/异常安全保证/
-          构造函数中异常/析构函数禁抛异常大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
-
-----------------------------------------------------------------------
-第十章  文件与流 (File and Stream)
-----------------------------------------------------------------------
-  第一节: fstream基础 + 内核文件描述符和用户态缓冲区原理
-  第二节: ifstream/ofstream/fstream/stringstream/iostream继承体系/
-          格式化标志/seek/tell/二进制读写大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
+  Section 1: operator+ basics + the underlying function-call mechanism of operator overloading
+  Section 2: Complete guide to all overloadable operators (arithmetic/relational/assignment/subscript/call/conversion/
+          type conversion/increment and decrement/new/delete)
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第十一章  信号处理 (Signal Handling)
+Chapter 8  Function Templates
 ----------------------------------------------------------------------
-  第一节: signal()基础 + 信号的内核实现机制与软中断原理
-  第二节: signal/raise/sigaction/sigset/信号屏蔽字/信号处理函数限制大全
-  第三节: 实用案例（融入前章知识）
-  第四节: 课后习题
-
-----------------------------------------------------------------------
-第十二章  多线程 (Multithreading)
-----------------------------------------------------------------------
-  第一节: std::thread基础 + CPU核心/线程调度/数据竞争底层原理
-  第二节: thread/mutex/condition_variable/atomic/future大全
-  第三节: 5个实战案例（并发计数器/生产消费者/并行文件搜索/线程池/银行转账）
-  第四节: 课后习题（并发爬虫框架设计）
+  Section 1: template<typename T> basics + how the compiler instantiates templates
+  Section 2: Complete guide to function templates/class templates/template specialization/partial specialization/non-type parameters/variadic templates/
+          SFINAE/concepts (C++20)
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第十三章  Web编程 (Web Programming)
+Chapter 9  Exception Handling
 ----------------------------------------------------------------------
-  第一节: Socket基础 + TCP/IP协议栈和HTTP底层原理
-  第二节: Socket API/HTTP协议解析/跨平台封装大全
-  第三节: 5个实战案例（HTTP客户端/静态文件服务器/RESTful API/
-          WebSocket聊天室/微型Web框架）
-  第四节: 课后习题（HTTP反向代理服务器设计）
-
-----------------------------------------------------------------------
-第十四章  C++标准库 (C++ Standard Library)
-----------------------------------------------------------------------
-   第一节: STL六大组件概览 + 各容器底层数据结构原理
-   第二节: 容器/算法/迭代器/函数对象/lambda/chrono/random/regex/
-           tuple/optional/variant/string_view大全
-   第三节: 5个实战案例（成绩分析/购物篮管理/日程管理/搜索引擎索引/游戏资源管理）
-   第四节: 课后习题（物流包裹追踪系统设计）
+  Section 1: try/catch/throw basics + stack unwinding and exception-handling tables
+  Section 2: Complete guide to the standard exception hierarchy/custom exceptions/noexcept/exception-safety guarantees/
+          exceptions in constructors/why destructors must not throw
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
-第十五章  算法结构 (Data Structures) — 位于"算法结构"文件夹
+Chapter 10  Files and Streams
 ----------------------------------------------------------------------
-   A. 容器 (Container) — STL六大容器详解、迭代器原理、内存分配策略
-   B. 栈 (Stack) — LIFO结构、函数调用栈原理、表达式求值
-   C. 堆 (Heap) — 优先队列、上浮/下沉、堆排序、Top-K问题
-   D. 链表 (Linked List) — 单向/双向/循环链表、LRU缓存、约瑟夫问题
-   E. 红黑树 (Red-Black Tree) — 自平衡BST、旋转/变色、map/set底层实现
-   F. 队列 (Queue) — FIFO结构、循环队列、BFS、生产者消费者模型
-   G. 哈希表 (Hash Table) — 哈希函数、冲突解决、unordered_map底层实现
-   H. 图 (Graph) — 邻接表/矩阵、BFS/DFS、Dijkstra、最小生成树、拓扑排序
-   I. 树 (Tree:BST/AVL) — 二叉搜索树、AVL自平衡树、字典树(Trie)
+  Section 1: fstream basics + kernel file descriptors and user-space buffers
+  Section 2: Complete guide to ifstream/ofstream/fstream/stringstream/the iostream hierarchy/
+          format flags/seek/tell/binary I/O
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
 
 ----------------------------------------------------------------------
+Chapter 11  Signal Handling
+----------------------------------------------------------------------
+  Section 1: signal() basics + how the kernel implements signals and software interrupts
+  Section 2: Complete guide to signal/raise/sigaction/sigset/signal masks/restrictions on signal handlers
+  Section 3: Practical examples (building on earlier chapters)
+  Section 4: Exercises
+
+----------------------------------------------------------------------
+Chapter 12  Multithreading
+----------------------------------------------------------------------
+  Section 1: std::thread basics + CPU cores/thread scheduling/data races under the hood
+  Section 2: Complete guide to thread/mutex/condition_variable/atomic/future
+  Section 3: 5 hands-on examples (concurrent counter/producer-consumer/parallel file search/thread pool/bank transfers)
+  Section 4: Exercises (designing a concurrent web crawler framework)
+
+----------------------------------------------------------------------
+Chapter 13  Web Programming
+----------------------------------------------------------------------
+  Section 1: Socket basics + the TCP/IP stack and how HTTP works
+  Section 2: Complete guide to the socket API/HTTP protocol parsing/cross-platform wrappers
+  Section 3: 5 hands-on examples (HTTP client/static file server/RESTful API/
+          WebSocket chat room/micro web framework)
+  Section 4: Exercises (designing an HTTP reverse proxy server)
+
+----------------------------------------------------------------------
+Chapter 14  The C++ Standard Library
+----------------------------------------------------------------------
+   Section 1: Overview of the six STL components + the underlying data structures of each container
+   Section 2: Complete guide to containers/algorithms/iterators/function objects/lambda/chrono/random/regex/
+           tuple/optional/variant/string_view
+   Section 3: 5 hands-on examples (grade analysis/shopping cart management/schedule management/search engine index/game resource management)
+   Section 4: Exercises (designing a parcel tracking system)
+
+----------------------------------------------------------------------
+Chapter 15  Data Structures -- located in the "data_structures" folder
+----------------------------------------------------------------------
+   A. Container -- the six major STL containers in detail, how iterators work, memory allocation strategies
+   B. Stack -- LIFO structure, how the function call stack works, expression evaluation
+   C. Heap -- priority queues, sift-up/sift-down, heap sort, the Top-K problem
+   D. Linked List -- singly/doubly/circular linked lists, LRU cache, the Josephus problem
+   E. Red-Black Tree -- self-balancing BST, rotations/recoloring, how map/set are implemented
+   F. Queue -- FIFO structure, circular queues, BFS, the producer-consumer model
+   G. Hash Table -- hash functions, collision resolution, how unordered_map is implemented
+   H. Graph -- adjacency lists/matrices, BFS/DFS, Dijkstra, minimum spanning trees, topological sort
+   I. Tree (BST/AVL) -- binary search trees, AVL self-balancing trees, tries
+
+----------------------------------------------------------------------
 
 
-【学习建议】
+[Study Tips]
 
-1. 动手实践为王
-   - 每个代码示例都亲手敲一遍，不要复制粘贴
-   - 修改示例代码，观察不同行为
-   - 使用编译器的不同优化级别(-O0/-O2/-O3)查看效果
+1. Hands-on practice is king
+   - Type out every code example yourself; don't copy and paste
+   - Modify the example code and observe how the behavior changes
+   - Try different compiler optimization levels (-O0/-O2/-O3) and compare the results
 
-2. 理解底层原理
-   - "第一节"的底层原理部分是本教程的精髓
-   - 知道"怎么做"只是起步，知道"为什么"才是真正的进阶
-   - 推荐使用objdump/gdb/valgrind等工具观察程序行为
+2. Understand the underlying principles
+   - The "under the hood" part of each "Section 1" is the heart of this tutorial
+   - Knowing "how" is only the start; knowing "why" is real progress
+   - Use tools such as objdump/gdb/valgrind to observe program behavior
 
-3. 前后贯通
-   - 后续章节的案例会融入前面章节的知识点
-   - 做课后习题时，主动使用已学知识
-   - 尝试用不同方法解决同一问题，体会C++的灵活性
+3. Connect everything together
+   - Examples in later chapters build on knowledge from earlier chapters
+   - When doing the exercises, actively apply what you've already learned
+   - Try solving the same problem in different ways to appreciate C++'s flexibility
 
-4. 系统化学习
-   - 建议每章花2-3天学习（1天理解+1天练习+1天做习题）
-   - 每完成3-4章，返回复习前面的重点
-   - 阅读C++标准文档(cppreference.com)作为权威参考
+4. Study systematically
+   - Spend about 2-3 days per chapter (1 day understanding + 1 day practicing + 1 day on exercises)
+   - After every 3-4 chapters, go back and review the key points of earlier ones
+   - Use the C++ reference documentation (cppreference.com) as the authoritative reference
 
-5. 工具链熟练
-   - 编译器: GCC 10+ 或 Clang 14+ 或 MSVC 2019+
-   - 编译选项: -std=c++17 -Wall -Wextra -g -O2
-   - 调试器: gdb/lldb
-   - 内存检查: valgrind --tool=memcheck
-   - 线程检查: valgrind --tool=helgrind
-   - 性能分析: perf/gprof
+5. Get fluent with the toolchain
+   - Compiler: GCC 10+ or Clang 14+ or MSVC 2019+
+   - Compiler flags: -std=c++17 -Wall -Wextra -g -O2
+   - Debugger: gdb/lldb
+   - Memory checking: valgrind --tool=memcheck
+   - Thread checking: valgrind --tool=helgrind
+   - Profiling: perf/gprof
 
-6. 扩展阅读
-   - 《Effective Modern C++》 Scott Meyers
-   - 《C++ Concurrency in Action》 Anthony Williams
-   - 《The C++ Standard Library》 Nicolai Josuttis
-   - https://en.cppreference.com/ 在线C++参考
-   - https://isocpp.org/ C++标准委员会
+6. Further reading
+   - "Effective Modern C++" by Scott Meyers
+   - "C++ Concurrency in Action" by Anthony Williams
+   - "The C++ Standard Library" by Nicolai Josuttis
+   - https://en.cppreference.com/ Online C++ reference
+   - https://isocpp.org/ The C++ Standards Committee
 
 ================================================================================
-                              开始你的C++深化之旅吧！
+                    Start your journey into advanced C++!
 ================================================================================

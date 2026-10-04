@@ -5,25 +5,25 @@ using ll = long long;
 
 pair<ll, int> treeSlidingWindow(
     int n,
-    const vector<vector<pair<int, int>>>& g,  // 邻接表: {to, weight}
-    const vector<int>& color                  // 每个节点的“颜色”/值
+    const vector<vector<pair<int, int>>>& g,  // adjacency list: {to, weight}
+    const vector<int>& color                  // "color"/value of each node
 ) {
     pair<ll, int> best = {-1, 0};  // {max_length, start_depth}
-    vector<ll> dis = {0};           // 路径前缀和
-    unordered_map<int, int> last;   // 颜色 -> 上一次出现的深度 + 1
+    vector<ll> dis = {0};           // path prefix sums
+    unordered_map<int, int> last;   // color -> depth of its last occurrence + 1
 
     function<void(int, int, int)> dfs = [&](int u, int fa, int top_depth) {
         int c = color[u];
         int old = last[c];
-        top_depth = max(top_depth, old);  // 窗口左边界更新
+        top_depth = max(top_depth, old);  // update the window's left boundary
 
-        // 更新最优解：长度 = 当前前缀和 - 窗口起点前缀和
+        // update the best answer: length = current prefix sum - prefix sum at window start
         ll len = dis.back() - dis[top_depth];
         if (len > best.first || (len == best.first && top_depth < best.second)) {
             best = {len, top_depth};
         }
 
-        last[c] = dis.size();  // 记录当前颜色位置
+        last[c] = dis.size();  // record the current color's position
 
         for (auto& [v, w] : g[u]) {
             if (v != fa) {
@@ -33,14 +33,14 @@ pair<ll, int> treeSlidingWindow(
             }
         }
 
-        last[c] = old;  // 回溯恢复
+        last[c] = old;  // restore on backtrack
     };
 
     dfs(0, -1, 0);
     return best;
 }
 
-// 示例主函数
+// example main function
 int main() {
     int n;
     cin >> n;

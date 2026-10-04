@@ -17,7 +17,7 @@ class SlopeTrick:
     """
     https://maspypy.com/slope-trick-1-%e8%a7%a3%e8%aa%ac%e7%b7%a8
 
-    上记の记事にもとづき、@caomeinaixiさんが実装したテンプレートです。
+    A template implemented by @caomeinaixi, based on the article above.
     """
 
     __slots__ = "_minY", "_leftTuring", "_rightTuring", "_leftOffset", "_rightOffset"
@@ -25,22 +25,22 @@ class SlopeTrick:
     def __init__(
         self, leftTuring: Optional[List[int]] = None, rightTuring: Optional[List[int]] = None
     ) -> None:
-        self._minY = 0  # dp 最小値
-        self._leftTuring = [INF] if leftTuring is None else leftTuring  # 左拐点
-        self._rightTuring = [INF] if rightTuring is None else rightTuring  # 右拐点
-        self._leftOffset = 0  # 左拐点的平移量
-        self._rightOffset = 0  # 右拐点的平移量
+        self._minY = 0  # minimum dp value
+        self._leftTuring = [INF] if leftTuring is None else leftTuring  # left turning points
+        self._rightTuring = [INF] if rightTuring is None else rightTuring  # right turning points
+        self._leftOffset = 0  # shift amount of the left turning points
+        self._rightOffset = 0  # shift amount of the right turning points
 
     def addAbsXMinusA(self, a: int) -> None:
-        """|x-a|の加算:O(logn) 时间"""
+        """Add |x-a|: O(logn) time"""
         self.addXMinusA(a)
         self.addAMinusX(a)
 
     def addXMinusA(self, a: int) -> None:
-        """(x-a)+の加算:O(logn) 时间
+        """Add (x-a)+: O(logn) time
 
-        倾きの変化点に a が追加されます
-        minYの変化はf(left0)に等しい
+        a is added to the slope change points
+        the change in minY equals f(left0)
         """
         if len(self._leftTuring) != 0:
             self._minY += max(0, self.leftTop - a)
@@ -48,10 +48,10 @@ class SlopeTrick:
         self._pushRight(self._popLeft())
 
     def addAMinusX(self, a: int) -> None:
-        """(a-x)+の加算:O(logn) 时间
+        """Add (a-x)+: O(logn) time
 
-        倾きの変化点に a が追加されます
-        minYの変化はf(right0)に等しい
+        a is added to the slope change points
+        the change in minY equals f(right0)
         """
         if len(self._rightTuring) != 0:
             self._minY += max(0, a - self.rightTop)
@@ -59,60 +59,60 @@ class SlopeTrick:
         self._pushLeft(self._popRight())
 
     def addY(self, delta: int) -> None:
-        """yの加算:O(1) 时间"""
+        """Add y: O(1) time"""
         self._minY += delta
 
     def addOffset(self, delta: int) -> None:
-        """平移:O(1) 时间
+        """Shift: O(1) time
 
         g(x) = f(x - a)
-        fをg に取り换える
+        replace f with g
         """
         self._leftOffset += delta
         self._rightOffset += delta
 
     def addLeftOffset(self, delta: int) -> None:
-        """左拐点の平移:O(1) 时间"""
+        """Shift the left turning points: O(1) time"""
         self._leftOffset += delta
 
     def addRightOffset(self, delta: int) -> None:
-        """右拐点の平移:O(1) 时间"""
+        """Shift the right turning points: O(1) time"""
         self._rightOffset += delta
 
     def updateLeftMin(self) -> None:
-        """累积 min:O(1) 时间
+        """Cumulative min: O(1) time
 
         g(x) = min(f(y) | y <= x)
-        fをg に取り换える
+        replace f with g
 
-        rightTuringを空集合に取り换える
+        replace rightTuring with the empty set
         """
         self._rightTuring = [INF]
 
     def updateRightMin(self) -> None:
-        """累积 min:O(1) 时间
+        """Cumulative min: O(1) time
 
         g(x) = min(f(y) | y >= x)
-        fをg に取り替える
+        replace f with g
 
-        leftTuringを空集合に取り换える
+        replace leftTuring with the empty set
         """
         self._leftTuring = [INF]
 
     def updateWindowMin(self, leftDiff: int, rightDiff: int) -> None:
-        """累积 min:O(1) 时间
+        """Cumulative min: O(1) time
 
         g(x) = min(f(y) | `x - leftDiff <= y <= x - rightDiff`)
-        fをg に取り替える
+        replace f with g
 
-        左侧集合・右侧集合それぞれを平行移动する
+        shift the left set and the right set respectively
         left0, right0 => left0 + rightDiff, right0 + leftDiff
         """
         self._leftOffset += rightDiff
         self._rightOffset += leftDiff
 
     def getMinY(self) -> int:
-        """最小値の取得:O(1) 时间"""
+        """Get the minimum value: O(1) time"""
         return self._minY
 
     def _pushLeft(self, a: int) -> None:
@@ -129,10 +129,10 @@ class SlopeTrick:
 
     @property
     def leftTop(self) -> int:
-        """左侧の倾きの変化点の最大値left0の取得:O(1)时间"""
+        """Get left0, the maximum slope change point on the left side: O(1) time"""
         return -self._leftTuring[0] + self._leftOffset
 
     @property
     def rightTop(self) -> int:
-        """右侧の倾きの変化点の最小値right0の取得:O(1)时间"""
+        """Get right0, the minimum slope change point on the right side: O(1) time"""
         return self._rightTuring[0] + self._rightOffset

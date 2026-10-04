@@ -1,13 +1,13 @@
 
 
-- 在字符串  s （主串）里找  p （模式串）
-- 返回第一次匹配成功的起始下标
-- 找不到就返回  -1 
- 
- 
- 
-1. 完整模板再放一遍
- 
+- Find p (the pattern) in the string s (the text)
+- Return the starting index of the first match
+- Return -1 if not found
+
+
+
+1. The full template again
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -33,36 +33,36 @@ int kmp(const string &s, const string &p) {
     }
     return -1;
 }
- 
- 
- 
- 
-2. 每个部分干什么
- 
-①  ne  数组
- 
-全局数组，存的是：
-模式串前 i 个字符里，最长相等 前缀 & 后缀 的长度
-作用：匹配失败时，不用从头比，直接跳到合适位置
- 
-②  get_next(p) 
- 
-预处理模式串  p ，算出  ne  数组
-只用跑一次，非常快
- 
-③  kmp(s, p) 
- 
--  i ：遍历主串  s ，从不回退
--  j ：遍历模式串  p ，匹配失败会跳
-- 字符相等： i++、j++ 
-- 不等： j = ne[j-1]  跳转
-- 当  j == m ：说明完全匹配成功
-返回位置： i - m + 1 
- 
- 
- 
-3. 怎么使用（套题示例）
- 
+
+
+
+
+2. What each part does
+
+① The ne array
+
+A global array that stores:
+the length of the longest equal prefix & suffix among the first i characters of the pattern
+Purpose: on a mismatch, instead of comparing from the start again, jump directly to the right position
+
+② get_next(p)
+
+Preprocesses the pattern p and computes the ne array
+Only needs to run once, very fast
+
+③ kmp(s, p)
+
+- i: walks through the text s, never moves backward
+- j: walks through the pattern p, jumps on a mismatch
+- Characters equal: i++, j++
+- Not equal: jump with j = ne[j-1]
+- When j == m: a full match has been found
+Returned position: i - m + 1
+
+
+
+3. How to use it (example)
+
 int main() {
     string s, p;
     cin >> s >> p;
@@ -70,25 +70,25 @@ int main() {
     cout << pos << endl;
     return 0;
 }
- 
- 
-输入：
- 
+
+
+Input:
+
 abcabcabd
 abcab
- 
- 
-返回： 0 
-因为从下标 0 开始匹配成功。
- 
- 
- 
-4. 竞赛里常见改法（你一定会用到）
- 
-① 要找所有匹配位置
- 
-把  return  改成存答案：
- 
+
+
+Returns: 0
+because the match starts at index 0.
+
+
+
+4. Common modifications in contests (you will definitely use these)
+
+① Find all match positions
+
+Change the return into storing answers:
+
 vector<int> kmp(const string &s, const string &p) {
     get_next(p);
     int n = s.size(), m = p.size();
@@ -98,25 +98,25 @@ vector<int> kmp(const string &s, const string &p) {
         if (s[i] == p[j]) j++;
         if (j == m) {
             res.push_back(i - m + 1);
-            j = ne[j - 1]; // 关键：继续匹配下一个
+            j = ne[j - 1]; // key: continue matching the next one
         }
     }
     return res;
 }
- 
- 
-② 求最小循环节
- 
+
+
+② Find the smallest repeating unit (period)
+
 int m = p.size();
 int len = m - ne[m-1];
-if (m % len == 0) cout << len << endl; // 最小周期
- 
- 
- 
- 
-5. 一句话记忆
- 
--  ne ：跳回哪里
--  i  只往前走
--  j  匹配失败跳  ne[j-1] 
-- 匹配完  j == m  就是找到
+if (m % len == 0) cout << len << endl; // smallest period
+
+
+
+
+5. One-line summary
+
+- ne: where to jump back to
+- i only moves forward
+- j jumps to ne[j-1] on a mismatch
+- When j == m, a match is found

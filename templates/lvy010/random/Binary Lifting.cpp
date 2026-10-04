@@ -1,18 +1,18 @@
 
-//树上倍增
+//Binary lifting on trees
 #include <iostream>
 #include <vector>
 #include <algorithm>
 using namespace std;
 
 const int MAXN = 1e5 + 5;
-const int LOG = 20; // 2^20 足够覆盖 1e5 节点
+const int LOG = 20; // 2^20 is enough to cover 1e5 nodes
 
 vector<int> adj[MAXN];
-int up[LOG][MAXN]; // up[k][u] 表示 u 向上跳 2^k 步的祖先
-int depth[MAXN];   // 节点深度
+int up[LOG][MAXN]; // up[k][u] is the ancestor of u 2^k steps up
+int depth[MAXN];   // node depths
 
-// DFS 预处理深度和 2^0 级祖先（父节点）
+// DFS to precompute depths and 2^0-level ancestors (parents)
 void dfs(int u, int fa) {
     up[0][u] = fa;
     depth[u] = depth[fa] + 1;
@@ -21,7 +21,7 @@ void dfs(int u, int fa) {
     }
 }
 
-// 预处理倍增表
+// precompute the binary lifting table
 void init(int root, int n) {
     dfs(root, 0);
     for (int k = 1; k < LOG; k++) {
@@ -31,7 +31,7 @@ void init(int root, int n) {
     }
 }
 
-// 将 u 向上跳 k 步
+// move u up by k steps
 int jump(int u, int k) {
     for (int i = 0; i < LOG; i++) {
         if (k & (1 << i)) u = up[i][u];
@@ -39,13 +39,13 @@ int jump(int u, int k) {
     return u;
 }
 
-// 求 LCA
+// compute the LCA
 int lca(int u, int v) {
     if (depth[u] < depth[v]) swap(u, v);
-    // 1. 将 u 跳到与 v 同深度
+    // 1. lift u to the same depth as v
     u = jump(u, depth[u] - depth[v]);
     if (u == v) return u;
-    // 2. 两个节点一起往上跳，直到父节点相同
+    // 2. lift both nodes together until their parents are the same
     for (int k = LOG-1; k >= 0; k--) {
         if (up[k][u] != up[k][v]) {
             u = up[k][u];
@@ -58,16 +58,16 @@ int lca(int u, int v) {
 int main() {
     int n, m;
     cin >> n >> m;
-    // 建图
+    // build the graph
     for (int i = 0; i < n-1; i++) {
         int u, v;
         cin >> u >> v;
         adj[u].push_back(v);
         adj[v].push_back(u);
     }
-    // 初始化（根节点设为1）
+    // initialize (root is node 1)
     init(1, n);
-    // 查询
+    // queries
     while (m--) {
         int u, v;
         cin >> u >> v;

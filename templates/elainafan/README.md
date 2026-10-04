@@ -1,27 +1,27 @@
-## 打算法竞赛用的板子
+## Templates for Competitive Programming
 
-作者还是菜鸡，因此没有收录太多板子，还在学习中，目前目录如下：
+The author is still a beginner, so not many templates are included yet; still learning. The current contents are:
 
-### 图论
-- ``Kruscal.cpp``：Kruscal算法，求MST。
-- ``Dijsktra.cpp``：Dijkstra算法，单源最短路。
-- ``Floyd.cpp``：Floyd算法，全源最短路。
-- ``toposort.cpp``：拓扑排序
+### Graph Theory (`graph_theory/`)
+- ``Kruscal.cpp``: Kruskal's algorithm, finds the MST.
+- ``Dijsktra.cpp``: Dijkstra's algorithm, single-source shortest paths.
+- ``Floyd.cpp``: Floyd's algorithm, all-pairs shortest paths.
+- ``toposort.cpp``: Topological sort
 
-### 树论
-- ``LCA.cpp``：倍增法求最近公共祖先
+### Trees (`trees/`)
+- ``LCA.cpp``: Lowest common ancestor via binary lifting
 
-### 数学
-- ``Qpow.cpp``：快速幂
+### Math (`math/`)
+- ``Qpow.cpp``: Fast exponentiation
 
-### 数据结构
-- ``Monotone Stack``：单调栈
-- ``UnionFind.cpp``：并查集（带大小）
-- ``UnionFind_With_Weights.cpp``：带权并查集
-- ``Trie.cpp``：Trie/字典树，前缀匹配
-- ``Treearray``：树状数组，区间修改单点查询，离散化。
-- ``SegmentTree``：线段树，区间修改单点查询，线段树二分。
+### Data Structures (`data_structures/`)
+- ``Monotone Stack``: Monotonic stack
+- ``UnionFind.cpp``: Union-Find / DSU (with sizes)
+- ``UnionFind_With_Weights.cpp``: Weighted Union-Find
+- ``Trie.cpp``: Trie / prefix tree, prefix matching
+- ``Treearray``: Fenwick tree (binary indexed tree), range update + point query, coordinate compression.
+- ``SegmentTree``: Segment tree, range update + point query, binary search on segment tree.
 
-### 字符串
-- ``kmp.cpp``：KMP算法，求border。
-- ``zfunc.cpp``：Zfunc/拓展kmp算法，求LCP。
+### Strings (`strings/`)
+- ``kmp.cpp``: KMP algorithm, computes borders.
+- ``zfunc.cpp``: Z-function / extended KMP, computes LCP.

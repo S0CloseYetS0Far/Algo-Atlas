@@ -9,7 +9,7 @@ public:
 
         vector dis(n, vector<long long>(power + 1, LLONG_MAX));
         dis[source][power] = 0;
-        // tuple{最短路长度, -剩余电量, 节点编号}
+        // tuple{shortest path length, -remaining battery, node id}
         priority_queue<tuple<long long, int, int>, vector<tuple<long long, int, int>>, greater<>> pq;
         pq.emplace(0, -power, source);
 

@@ -1,33 +1,34 @@
 ================================================================================
-C++ 算法结构教程 — 栈 (Stack)
+C++ Data Structures Tutorial -- Stack
 ================================================================================
 
-## 章节概述
+## Chapter Overview
 
-栈（Stack）是一种受限的线性数据结构，它遵循"后进先出"（LIFO, Last In First Out）
-的原则。栈在计算机科学中有着极其广泛的应用：函数调用栈、表达式求值、括号匹配、
-浏览器的后退功能、撤销操作等。
+A stack is a restricted linear data structure that follows the "Last In, First Out" (LIFO)
+principle. Stacks are used extremely widely in computer science: the function call stack,
+expression evaluation, bracket matching, a browser's back button, undo operations, and more.
 
-本章将从栈的基本概念出发，深入栈的底层实现原理，全面覆盖栈的所有用法，
-最后通过实例和习题巩固所学知识。
+This chapter starts from the basic concept of a stack, digs into how stacks are implemented
+under the hood, covers every way of using a stack, and finally consolidates what you've learned
+through examples and exercises.
 
 ================================================================================
-### 第一节: 基础语法 + 计算机底层原理
+### Section 1: Basic Syntax + Underlying Computer Principles
 ================================================================================
 
-1.1 栈的基本概念
---------------------
+1.1 Basic Stack Concepts
+------------------------
 
-栈是一种只能在一端（称为"栈顶"）进行插入和删除操作的线性表。
+A stack is a linear list in which insertions and removals can only happen at one end (called the "top").
 
-核心操作：
-- push  : 将元素压入栈顶
-- pop   : 弹出栈顶元素
-- top   : 获取栈顶元素（不弹出）
-- empty : 判断栈是否为空
-- size  : 返回栈中元素个数
+Core operations:
+- push  : push an element onto the top of the stack
+- pop   : pop the top element
+- top   : get the top element (without popping it)
+- empty : check whether the stack is empty
+- size  : return the number of elements in the stack
 
-最基础的栈使用示例：
+The most basic stack example:
 
 ```cpp
 #include <iostream>
@@ -36,22 +37,22 @@ C++ 算法结构教程 — 栈 (Stack)
 int main() {
     std::stack<int> stk;
 
-    // 压栈
+    // Push
     stk.push(10);
     stk.push(20);
     stk.push(30);
 
-    // 访问栈顶
-    std::cout << "栈顶元素: " << stk.top() << std::endl;  // 30
+    // Access the top
+    std::cout << "Top element: " << stk.top() << std::endl;  // 30
 
-    // 弹栈
+    // Pop
     stk.pop();
-    std::cout << "弹出一个元素后栈顶: " << stk.top() << std::endl;  // 20
+    std::cout << "Top after popping one element: " << stk.top() << std::endl;  // 20
 
-    // 大小
-    std::cout << "栈大小: " << stk.size() << std::endl;  // 2
+    // Size
+    std::cout << "Stack size: " << stk.size() << std::endl;  // 2
 
-    // 遍历并清空
+    // Traverse and empty the stack
     while (!stk.empty()) {
         std::cout << stk.top() << " ";
         stk.pop();
@@ -62,104 +63,104 @@ int main() {
 }
 ```
 
-1.2 栈的底层原理：函数调用栈
----------------------------------
+1.2 Under the Hood: The Function Call Stack
+-------------------------------------------
 
-栈的数据结构在计算机底层有着直接的硬件支持——这就是"调用栈"（Call Stack）。
+The stack data structure has direct hardware support at the lowest level of the computer -- this is the "call stack".
 
-当一个函数被调用时，系统会在调用栈上分配一个"栈帧"（Stack Frame），用于存储：
-- 函数的局部变量
-- 函数的参数
-- 返回地址（函数执行完毕后跳转的位置）
-- 保存的寄存器状态
+When a function is called, the system allocates a "stack frame" on the call stack to store:
+- The function's local variables
+- The function's parameters
+- The return address (where to jump once the function finishes)
+- Saved register state
 
-函数调用结束时，栈帧被弹出，控制权返回到调用者。
+When the function call ends, its stack frame is popped and control returns to the caller.
 
 ```cpp
 #include <iostream>
 
 void funcC() {
-    std::cout << "funcC 被调用" << std::endl;
-    // funcC的栈帧: 局部变量 + 返回地址
+    std::cout << "funcC called" << std::endl;
+    // funcC's stack frame: local variables + return address
 }
 
 void funcB() {
-    std::cout << "funcB 被调用" << std::endl;
+    std::cout << "funcB called" << std::endl;
     funcC();
 }
 
 void funcA() {
-    std::cout << "funcA 被调用" << std::endl;
+    std::cout << "funcA called" << std::endl;
     funcB();
 }
 
 int main() {
-    std::cout << "main 开始" << std::endl;
+    std::cout << "main starts" << std::endl;
     funcA();
-    std::cout << "main 结束" << std::endl;
+    std::cout << "main ends" << std::endl;
     return 0;
 }
 ```
 
-上述代码执行时的调用栈变化：
+How the call stack changes while the code above runs:
 
 ```
-初始状态:
+Initial state:
 +-------------------+
-| main 栈帧         |
-+-------------------+
-
-调用 funcA 后:
-+-------------------+
-| funcA 栈帧        |
-+-------------------+
-| main 栈帧         |
+| main frame        |
 +-------------------+
 
-调用 funcB 后:
+After calling funcA:
 +-------------------+
-| funcB 栈帧        |
+| funcA frame       |
 +-------------------+
-| funcA 栈帧        |
-+-------------------+
-| main 栈帧         |
+| main frame        |
 +-------------------+
 
-调用 funcC 后:
+After calling funcB:
 +-------------------+
-| funcC 栈帧        |
+| funcB frame       |
 +-------------------+
-| funcB 栈帧        |
+| funcA frame       |
 +-------------------+
-| funcA 栈帧        |
-+-------------------+
-| main 栈帧         |
+| main frame        |
 +-------------------+
 
-funcC 返回后:
+After calling funcC:
 +-------------------+
-| funcB 栈帧        |
+| funcC frame       |
 +-------------------+
-| funcA 栈帧        |
+| funcB frame       |
 +-------------------+
-| main 栈帧         |
+| funcA frame       |
++-------------------+
+| main frame        |
++-------------------+
+
+After funcC returns:
++-------------------+
+| funcB frame       |
++-------------------+
+| funcA frame       |
++-------------------+
+| main frame        |
 +-------------------+
 ```
 
-1.3 栈溢出的原理
---------------------
+1.3 How Stack Overflow Happens
+------------------------------
 
-栈的大小是有限的（通常为1MB~8MB，取决于操作系统和编译器设置）。
-如果递归太深或局部变量太大，会导致"栈溢出"（Stack Overflow）。
+The stack has a limited size (typically 1MB to 8MB, depending on the operating system and compiler settings).
+If recursion goes too deep or local variables are too large, you get a "stack overflow".
 
 ```cpp
-// 递归过深导致栈溢出
+// Excessively deep recursion causes a stack overflow
 #include <iostream>
 
 void deepRecursion(int depth) {
-    int local_array[1000];  // 每个递归层消耗约4KB栈空间
-    std::cout << "深度: " << depth << std::endl;
-    deepRecursion(depth + 1);  // 最终导致段错误
+    int local_array[1000];  // each recursion level consumes about 4KB of stack space
+    std::cout << "Depth: " << depth << std::endl;
+    deepRecursion(depth + 1);  // eventually causes a segmentation fault
 }
 
 int main() {
@@ -168,10 +169,10 @@ int main() {
 }
 ```
 
-1.4 手动实现栈（基于数组）
-------------------------------
+1.4 Implementing a Stack by Hand (Array-Based)
+----------------------------------------------
 
-理解栈的底层实现可以帮助我们深入理解其工作原理：
+Understanding how a stack is implemented helps us understand in depth how it works:
 
 ```cpp
 #include <iostream>
@@ -181,28 +182,28 @@ template<typename T, size_t MAX_SIZE = 100>
 class ArrayStack {
 private:
     T data[MAX_SIZE];
-    size_t top_index;  // 当前栈顶位置
+    size_t top_index;  // current top-of-stack position
 
 public:
     ArrayStack() : top_index(0) {}
 
     void push(const T& value) {
         if (top_index >= MAX_SIZE) {
-            throw std::overflow_error("栈溢出！");
+            throw std::overflow_error("Stack overflow!");
         }
         data[top_index++] = value;
     }
 
     void pop() {
         if (empty()) {
-            throw std::underflow_error("栈为空！");
+            throw std::underflow_error("Stack is empty!");
         }
         --top_index;
     }
 
     T& top() {
         if (empty()) {
-            throw std::underflow_error("栈为空！");
+            throw std::underflow_error("Stack is empty!");
         }
         return data[top_index - 1];
     }
@@ -218,7 +219,7 @@ int main() {
         stk.push(i * 10);
     }
 
-    std::cout << "栈大小: " << stk.size() << std::endl;
+    std::cout << "Stack size: " << stk.size() << std::endl;
 
     while (!stk.empty()) {
         std::cout << stk.top() << " ";
@@ -230,10 +231,10 @@ int main() {
 }
 ```
 
-1.5 手动实现栈（基于链表）
-------------------------------
+1.5 Implementing a Stack by Hand (Linked-List-Based)
+----------------------------------------------------
 
-基于链表的栈实现，支持动态增长，没有固定容量限制：
+A linked-list-based stack grows dynamically and has no fixed capacity limit:
 
 ```cpp
 #include <iostream>
@@ -248,7 +249,7 @@ private:
         Node(const T& val) : data(val), next(nullptr) {}
     };
 
-    Node* head;  // 栈顶指针
+    Node* head;  // top-of-stack pointer
     size_t count;
 
 public:
@@ -271,7 +272,7 @@ public:
 
     void pop() {
         if (empty()) {
-            throw std::underflow_error("栈为空！");
+            throw std::underflow_error("Stack is empty!");
         }
         Node* temp = head;
         head = head->next;
@@ -281,7 +282,7 @@ public:
 
     T& top() {
         if (empty()) {
-            throw std::underflow_error("栈为空！");
+            throw std::underflow_error("Stack is empty!");
         }
         return head->data;
     }
@@ -297,7 +298,7 @@ int main() {
         stk.push(i);
     }
 
-    std::cout << "栈大小: " << stk.size() << std::endl;
+    std::cout << "Stack size: " << stk.size() << std::endl;
 
     while (!stk.empty()) {
         std::cout << stk.top() << " ";
@@ -311,13 +312,13 @@ int main() {
 
 
 ================================================================================
-### 第二节: 所有用法大全
+### Section 2: Complete Usage Guide
 ================================================================================
 
-2.1 std::stack —— 标准库栈容器适配器
------------------------------------------
+2.1 std::stack -- The Standard Library Stack Container Adapter
+--------------------------------------------------------------
 
-std::stack 是一个容器适配器，默认底层使用 deque，也可以指定其他容器。
+std::stack is a container adapter. By default it uses deque as the underlying container, but you can specify another one.
 
 ```cpp
 #include <iostream>
@@ -327,69 +328,69 @@ std::stack 是一个容器适配器，默认底层使用 deque，也可以指定
 #include <deque>
 
 int main() {
-    // 默认底层容器 deque
+    // Default underlying container: deque
     std::stack<int> stk1;
 
-    // 使用 vector 作为底层容器
+    // Use vector as the underlying container
     std::stack<int, std::vector<int>> stk2;
 
-    // 使用 list 作为底层容器
+    // Use list as the underlying container
     std::stack<int, std::list<int>> stk3;
 
-    // 从已有容器构造
+    // Construct from an existing container
     std::deque<int> deq = {1, 2, 3, 4, 5};
-    std::stack<int> stk4(deq);  // 栈底为1，栈顶为5
+    std::stack<int> stk4(deq);  // bottom of stack is 1, top is 5
 
-    // 核心操作
+    // Core operations
     std::stack<int> stk;
     stk.push(100);
     stk.push(200);
-    stk.emplace(300);   // C++11: 就地构造，效果同push
+    stk.emplace(300);   // C++11: constructs in place, same effect as push
 
     std::cout << "size: " << stk.size() << std::endl;
     std::cout << "top: " << stk.top() << std::endl;
 
-    stk.pop();  // 弹出（不返回元素）
+    stk.pop();  // pop (does not return the element)
     std::cout << "after pop, top: " << stk.top() << std::endl;
 
-    // 交换两个栈的内容
+    // Swap the contents of two stacks
     std::stack<int> other;
     other.push(999);
     stk.swap(other);
     std::cout << "after swap, top: " << stk.top() << std::endl;
 
-    // 关系运算符
+    // Relational operators
     std::stack<int> a, b;
     a.push(1); a.push(2);
     b.push(1); b.push(2);
     std::cout << "a == b: " << (a == b) << std::endl;
-    // 比较规则：按元素顺序依次比较底层容器
+    // Comparison rule: compares the underlying containers element by element, in order
 
-    // 遍历技巧（标准stack不允许遍历，但可以访问底层容器）
-    // 方法：在适配器上继承或使用友元，这里展示一种hack方式
-    // 更推荐的做法是使用deque/vector代替stack
+    // Traversal trick (standard stack doesn't allow traversal, but you can reach the underlying container)
+    // Approach: inherit from the adapter or use a friend; a hack is shown here
+    // The more recommended practice is to use deque/vector instead of stack
 
     return 0;
 }
 
-// 继承stack以暴露底层容器（仅用于演示，生产代码不建议）
+// Inherit from stack to expose the underlying container (for demonstration only; not recommended in production code)
 template<typename T>
 class DebugStack : public std::stack<T> {
 public:
     void print() {
-        // std::stack<T>::c 是受保护的底层容器成员
+        // std::stack<T>::c is the protected underlying container member
         for (const auto& x : this->c) {
             std::cout << x << " ";
         }
-        std::cout << "(top -> 右)" << std::endl;
+        std::cout << "(top -> right)" << std::endl;
     }
 };
 ```
 
-2.2 自定义栈与迭代器支持
------------------------------
+2.2 A Custom Stack with Iterator Support
+----------------------------------------
 
-标准库的 stack 不提供迭代器，但我们可以自己实现一个可迭代的栈：
+The standard library's stack does not provide iterators, but we can implement an iterable stack ourselves:
 
 ```cpp
 #include <iostream>
@@ -408,7 +409,7 @@ public:
     bool empty() const { return data.empty(); }
     size_t size() const { return data.size(); }
 
-    // 提供迭代器支持
+    // Provide iterator support
     using iterator = typename std::deque<T>::reverse_iterator;
     using const_iterator = typename std::deque<T>::const_reverse_iterator;
 
@@ -424,7 +425,7 @@ int main() {
     stk.push(20);
     stk.push(30);
 
-    std::cout << "从栈顶到栈底遍历: ";
+    std::cout << "Traversing from top to bottom: ";
     for (int x : stk) {
         std::cout << x << " ";
     }
@@ -434,10 +435,10 @@ int main() {
 }
 ```
 
-2.3 栈的各种应用场景
------------------------
+2.3 Various Stack Use Cases
+---------------------------
 
-（1）括号匹配检查
+(1) Bracket matching
 
 ```cpp
 #include <iostream>
@@ -473,14 +474,14 @@ int main() {
     };
 
     for (const auto& s : tests) {
-        std::cout << s << " -> " << (isBalanced(s) ? "匹配" : "不匹配") << std::endl;
+        std::cout << s << " -> " << (isBalanced(s) ? "balanced" : "unbalanced") << std::endl;
     }
 
     return 0;
 }
 ```
 
-（2）中缀表达式转后缀表达式（逆波兰表达式）
+(2) Converting infix expressions to postfix (Reverse Polish Notation)
 
 ```cpp
 #include <iostream>
@@ -509,8 +510,8 @@ std::string infixToPostfix(const std::string& expr) {
                 output += stk.top();
                 stk.pop();
             }
-            stk.pop();  // 弹出 '('
-        } else {  // 运算符
+            stk.pop();  // pop '('
+        } else {  // operator
             while (!stk.empty() && precedence(stk.top()) >= precedence(ch)) {
                 output += stk.top();
                 stk.pop();
@@ -529,13 +530,13 @@ std::string infixToPostfix(const std::string& expr) {
 
 int main() {
     std::string expr = "a+b*(c^d-e)^(f+g*h)-i";
-    std::cout << "中缀: " << expr << std::endl;
-    std::cout << "后缀: " << infixToPostfix(expr) << std::endl;
+    std::cout << "Infix: " << expr << std::endl;
+    std::cout << "Postfix: " << infixToPostfix(expr) << std::endl;
     return 0;
 }
 ```
 
-（3）后缀表达式求值
+(3) Evaluating postfix expressions
 
 ```cpp
 #include <iostream>
@@ -570,21 +571,21 @@ int evaluatePostfix(const std::string& expr) {
 
 int main() {
     std::string expr = "3 4 + 5 * 6 -";
-    std::cout << "表达式: " << expr << std::endl;
-    std::cout << "结果: " << evaluatePostfix(expr) << std::endl;  // (3+4)*5-6 = 29
+    std::cout << "Expression: " << expr << std::endl;
+    std::cout << "Result: " << evaluatePostfix(expr) << std::endl;  // (3+4)*5-6 = 29
     return 0;
 }
 ```
 
 
 ================================================================================
-### 第三节: 实用案例
+### Section 3: Practical Examples
 ================================================================================
 
-案例一：浏览器的前进后退功能
---------------------------------------
+Example 1: A Browser's Back and Forward Buttons
+-----------------------------------------------
 
-使用两个栈实现浏览器的前进后退：
+Using two stacks to implement a browser's back and forward navigation:
 
 ```cpp
 #include <iostream>
@@ -593,8 +594,8 @@ int main() {
 
 class BrowserHistory {
 private:
-    std::stack<std::string> back_stack;   // 后退栈
-    std::stack<std::string> forward_stack; // 前进栈
+    std::stack<std::string> back_stack;   // back stack
+    std::stack<std::string> forward_stack; // forward stack
     std::string current_url;
 
 public:
@@ -603,34 +604,34 @@ public:
     void visit(const std::string& url) {
         back_stack.push(current_url);
         current_url = url;
-        // 访问新页面时，清空前进栈
+        // When visiting a new page, clear the forward stack
         while (!forward_stack.empty()) {
             forward_stack.pop();
         }
-        std::cout << "访问: " << current_url << std::endl;
+        std::cout << "Visit: " << current_url << std::endl;
     }
 
     std::string back() {
         if (back_stack.empty()) {
-            std::cout << "无法后退" << std::endl;
+            std::cout << "Cannot go back" << std::endl;
             return current_url;
         }
         forward_stack.push(current_url);
         current_url = back_stack.top();
         back_stack.pop();
-        std::cout << "后退到: " << current_url << std::endl;
+        std::cout << "Back to: " << current_url << std::endl;
         return current_url;
     }
 
     std::string forward() {
         if (forward_stack.empty()) {
-            std::cout << "无法前进" << std::endl;
+            std::cout << "Cannot go forward" << std::endl;
             return current_url;
         }
         back_stack.push(current_url);
         current_url = forward_stack.top();
         forward_stack.pop();
-        std::cout << "前进到: " << current_url << std::endl;
+        std::cout << "Forward to: " << current_url << std::endl;
         return current_url;
     }
 
@@ -649,17 +650,17 @@ int main() {
     bh.forward();  // stackoverflow.com
     bh.visit("reddit.com");  // forward stack cleared
 
-    std::cout << "\n当前页面: " << bh.getCurrent() << std::endl;
+    std::cout << "\nCurrent page: " << bh.getCurrent() << std::endl;
 
     return 0;
 }
 ```
 
 
-案例二：表达式计算器
-------------------------------
+Example 2: Expression Calculator
+--------------------------------
 
-完整的四则运算表达式计算器，包含括号支持：
+A complete calculator for arithmetic expressions with the four basic operations, including parentheses support:
 
 ```cpp
 #include <iostream>
@@ -670,21 +671,21 @@ int main() {
 
 class Calculator {
 private:
-    // 获取运算符优先级
+    // Get the operator's precedence
     int precedence(char op) {
         if (op == '+' || op == '-') return 1;
         if (op == '*' || op == '/') return 2;
         return 0;
     }
 
-    // 执行运算
+    // Perform the operation
     int applyOp(int a, int b, char op) {
         switch (op) {
             case '+': return a + b;
             case '-': return a - b;
             case '*': return a * b;
             case '/':
-                if (b == 0) throw std::runtime_error("除零错误");
+                if (b == 0) throw std::runtime_error("Division by zero");
                 return a / b;
         }
         return 0;
@@ -692,16 +693,16 @@ private:
 
 public:
     int evaluate(const std::string& expr) {
-        std::stack<int> values;   // 操作数栈
-        std::stack<char> ops;     // 运算符栈
+        std::stack<int> values;   // operand stack
+        std::stack<char> ops;     // operator stack
 
         for (size_t i = 0; i < expr.length(); ++i) {
             char ch = expr[i];
 
-            // 跳过空格
+            // Skip spaces
             if (ch == ' ') continue;
 
-            // 处理数字
+            // Handle numbers
             if (std::isdigit(ch)) {
                 int val = 0;
                 while (i < expr.length() && std::isdigit(expr[i])) {
@@ -709,13 +710,13 @@ public:
                     ++i;
                 }
                 values.push(val);
-                --i;  // for循环会自增，退回一步
+                --i;  // the for loop will increment, so step back one
             }
-            // 处理左括号
+            // Handle left parenthesis
             else if (ch == '(') {
                 ops.push(ch);
             }
-            // 处理右括号
+            // Handle right parenthesis
             else if (ch == ')') {
                 while (!ops.empty() && ops.top() != '(') {
                     int b = values.top(); values.pop();
@@ -723,10 +724,10 @@ public:
                     values.push(applyOp(a, b, ops.top()));
                     ops.pop();
                 }
-                if (ops.empty()) throw std::runtime_error("括号不匹配");
-                ops.pop();  // 弹出 '('
+                if (ops.empty()) throw std::runtime_error("Mismatched parentheses");
+                ops.pop();  // pop '('
             }
-            // 处理运算符
+            // Handle operators
             else if (ch == '+' || ch == '-' || ch == '*' || ch == '/') {
                 while (!ops.empty() && precedence(ops.top()) >= precedence(ch)) {
                     int b = values.top(); values.pop();
@@ -738,7 +739,7 @@ public:
             }
         }
 
-        // 处理剩余的运算符
+        // Process the remaining operators
         while (!ops.empty()) {
             int b = values.top(); values.pop();
             int a = values.top(); values.pop();
@@ -770,10 +771,10 @@ int main() {
 ```
 
 
-案例三：深度优先搜索（DFS）
---------------------------------------
+Example 3: Depth-First Search (DFS)
+-----------------------------------
 
-使用栈实现图/树的深度优先遍历：
+Using a stack to implement depth-first traversal of a graph/tree:
 
 ```cpp
 #include <iostream>
@@ -781,7 +782,7 @@ int main() {
 #include <vector>
 #include <unordered_set>
 
-// 用邻接表表示图
+// Represent the graph with an adjacency list
 class Graph {
 private:
     int vertices;
@@ -792,7 +793,7 @@ public:
 
     void addEdge(int u, int v) {
         adj_list[u].push_back(v);
-        adj_list[v].push_back(u);  // 无向图
+        adj_list[v].push_back(u);  // undirected graph
     }
 
     void dfs(int start) {
@@ -801,7 +802,7 @@ public:
 
         stk.push(start);
 
-        std::cout << "DFS遍历顺序: ";
+        std::cout << "DFS traversal order: ";
 
         while (!stk.empty()) {
             int current = stk.top();
@@ -812,7 +813,7 @@ public:
             visited.insert(current);
             std::cout << current << " ";
 
-            // 将邻居入栈（逆序入栈，保证正序访问）
+            // Push neighbors onto the stack (in reverse order, so they are visited in forward order)
             for (auto it = adj_list[current].rbegin();
                  it != adj_list[current].rend(); ++it) {
                 if (visited.find(*it) == visited.end()) {
@@ -842,34 +843,34 @@ int main() {
 
 
 ================================================================================
-### 第四节: 课后习题
+### Section 4: Exercises
 ================================================================================
 
-1. 基础题：手动实现一个支持动态增长的栈。
-   - 基于动态数组实现（类似std::vector）
-   - 实现push、pop、top、empty、size
-   - 实现扩容（2倍扩容策略）
-   - 分析各操作的时间复杂度
+1. Basic: Implement by hand a stack that grows dynamically.
+   - Base it on a dynamic array (similar to std::vector)
+   - Implement push, pop, top, empty, and size
+   - Implement growth (doubling strategy)
+   - Analyze the time complexity of each operation
 
-2. 应用题：设计一个最小栈（Min Stack）。
-   - 在O(1)时间内获取栈中的最小值
-   - 使用辅助栈或pair的方式实现
-   - 支持push、pop、top、getMin操作
+2. Application: Design a Min Stack.
+   - Retrieve the minimum value in the stack in O(1) time
+   - Implement it with an auxiliary stack or with pairs
+   - Support push, pop, top, and getMin operations
 
-3. 进阶题：使用栈实现一个简易的HTML标签检查器。
-   - 检查HTML标签是否匹配闭合
-   - 处理自闭合标签（如<br/>、<img/>）
-   - 报告第一个不匹配的位置
+3. Advanced: Use a stack to implement a simple HTML tag checker.
+   - Check whether HTML tags are properly matched and closed
+   - Handle self-closing tags (such as <br/>, <img/>)
+   - Report the position of the first mismatch
 
-4. 综合题：实现一个基于栈的迷宫求解器。
-   - 迷宫用二维数组表示（0=通路，1=墙）
-   - 使用DFS（栈）寻找从起点到终点的路径
-   - 输出路径坐标
-   - 如果能找到多条路径，输出最短路径
+4. Comprehensive: Implement a stack-based maze solver.
+   - Represent the maze with a 2D array (0 = path, 1 = wall)
+   - Use DFS (with a stack) to find a path from the start to the exit
+   - Output the coordinates of the path
+   - If multiple paths exist, output the shortest one
 
-5. 挑战题：实现一个单调栈，并用它计算"柱状图中的最大矩形面积"。
-   - 时间复杂度要求O(n)
-   - 单调栈维护递增/递减序列
-   - 应用在LeetCode 84题
+5. Challenge: Implement a monotonic stack and use it to compute the "largest rectangle in a histogram".
+   - Required time complexity: O(n)
+   - The monotonic stack maintains an increasing/decreasing sequence
+   - Applies to LeetCode problem 84
 
 ================================================================================

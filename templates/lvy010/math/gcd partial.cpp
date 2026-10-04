@@ -15,12 +15,12 @@ public:
             int c = 0;
             for (int j = i; j <= mx; j += i) {
                 c += cnt_x[j];
-                cnt_gcd[i] -= cnt_gcd[j]; // gcd 是 2i,3i,4i,... 的数对不能统计进来
+                cnt_gcd[i] -= cnt_gcd[j]; // pairs whose gcd is 2i, 3i, 4i, ... must not be counted
             }
-            cnt_gcd[i] += (long long) c * (c - 1) / 2; // c 个数选 2 个，组成 c*(c-1)/2 个数对
+            cnt_gcd[i] += (long long) c * (c - 1) / 2; // choose 2 of the c numbers, giving c*(c-1)/2 pairs
         }
 
-        // 原地求前缀和
+        // compute prefix sums in place
         partial_sum(cnt_gcd.begin(), cnt_gcd.end(), cnt_gcd.begin());
 
         vector<int> ans(queries.size());

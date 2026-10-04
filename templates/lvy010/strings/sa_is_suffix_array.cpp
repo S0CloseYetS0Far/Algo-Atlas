@@ -1,5 +1,5 @@
 //3735
-//线性时间构建后缀数组
+//Build a suffix array in linear time
 const int N = 3e5 + 9;
 const int LG = 18;
 

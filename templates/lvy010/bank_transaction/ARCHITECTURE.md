@@ -1,59 +1,59 @@
-## 银行交易系统（高并发 C++ 架构设计）
+## Bank Transaction System (High-Concurrency C++ Architecture Design)
 
-### 目标
-- 高并发、多线程下安全处理账户的存取款与转账交易。
-- 保证数据一致性（余额不丢失、不重复扣减、不出现负数越界）。
-- 提供良好的可扩展性（线程池扩展、事务批量处理、异步化）。
+### Goals
+- Safely process account deposits, withdrawals, and transfers under high concurrency with multiple threads.
+- Guarantee data consistency (no lost balances, no double deductions, no negative/out-of-range balances).
+- Provide good extensibility (thread pool scaling, batch transaction processing, asynchrony).
 
-### 总体架构
-- 线程池（ThreadPool）
-  - 固定数量工作线程，阻塞队列提交任务，`submit` 返回 `std::future`。
-  - 任务异常安全：在线程内捕获，传播到 future。
-- 并发账户模型（Bank）
-  - 使用账户级细粒度互斥锁（每个账户一个 `std::mutex`）。
-  - 存取款：持有该账户的独占锁；转账：对两个账户“按序加锁”避免死锁。
-  - 余额使用 `long long` 存储，所有修改在互斥锁保护下进行。
-- 事务模型（Transaction）
-  - 三类：Deposit、Withdraw、Transfer。
-  - 携带唯一 ID、源/目标账户、金额。
-  - 结果（TransactionResult）包含 ID、是否成功、错误信息等。
-- 事务处理器（TransactionProcessor）
-  - 将事务批量提交到线程池并发执行。
-  - 聚合执行结果，保证与输入顺序无关但可按 ID 关联。
+### Overall Architecture
+- Thread pool (ThreadPool)
+  - A fixed number of worker threads; tasks are submitted through a blocking queue, and `submit` returns a `std::future`.
+  - Exception-safe tasks: exceptions are caught inside the thread and propagated to the future.
+- Concurrent account model (Bank)
+  - Uses fine-grained per-account mutexes (one `std::mutex` per account).
+  - Deposit/withdrawal: holds the exclusive lock of that account; transfer: "locks in order" on both accounts to avoid deadlock.
+  - Balances are stored as `long long`, and all modifications happen under mutex protection.
+- Transaction model (Transaction)
+  - Three kinds: Deposit, Withdraw, Transfer.
+  - Carries a unique ID, source/destination accounts, and an amount.
+  - The result (TransactionResult) contains the ID, whether it succeeded, an error message, etc.
+- Transaction processor (TransactionProcessor)
+  - Submits transactions in batches to the thread pool for concurrent execution.
+  - Aggregates the execution results; independent of input order, but each result can be matched by ID.
 
-### 并发控制与一致性
-- 账户级锁粒度：
-  - 单账户操作（存/取）：持有单锁，临界区尽量小。
-  - 两账户操作（转账）：总是先锁定较小账户 ID，再锁定较大账户 ID，避免死锁。
-- 资金校验：
-  - 取款与转账需校验余额是否足够；不足则失败并不修改状态。
-  - 存款允许任意非负金额（示例中约束金额 > 0）。
-- 原子性：
-  - 每笔事务在其临界区内要么全部成功，要么失败不改状态。
+### Concurrency Control and Consistency
+- Per-account lock granularity:
+  - Single-account operations (deposit/withdraw): hold a single lock, keep the critical section as small as possible.
+  - Two-account operations (transfer): always lock the smaller account ID first, then the larger one, to avoid deadlock.
+- Funds validation:
+  - Withdrawals and transfers must check that the balance is sufficient; if not, they fail without modifying state.
+  - Deposits allow any non-negative amount (the example requires amount > 0).
+- Atomicity:
+  - Within its critical section, each transaction either fully succeeds or fails without changing state.
 
-### 可扩展性考量
-- 线程池大小：
-  - CPU 密集型任务：≈ CPU 核数。
-  - I/O 或混合型：可适当放大（2x~4x）。
-- 分区与扩展（如有超大规模账户）：
-  - 可按账户 ID 进行分片（Sharding），每片内独立锁。跨片转账可用“两阶段锁”或消息中间件。
-- 多机部署（超出本示例范围）：
-  - 使用分布式事务或最终一致（事件驱动）。
+### Scalability Considerations
+- Thread pool size:
+  - CPU-bound tasks: ≈ number of CPU cores.
+  - I/O-bound or mixed: can be scaled up appropriately (2x~4x).
+- Partitioning and scaling (for very large numbers of accounts):
+  - Shard by account ID, with independent locks within each shard. Cross-shard transfers can use "two-phase locking" or message middleware.
+- Multi-machine deployment (beyond the scope of this example):
+  - Use distributed transactions or eventual consistency (event-driven).
 
-### 异常与容错
-- 线程任务异常被捕获并通过 `std::future` 传播到调用端。
-- 对业务失败（余额不足、账户不存在）以业务错误返回，不抛异常。
+### Exceptions and Fault Tolerance
+- Exceptions thrown by thread tasks are caught and propagated to the caller via `std::future`.
+- Business failures (insufficient balance, nonexistent account) are returned as business errors, not thrown as exceptions.
 
-### 性能权衡
-- 账户级锁优点：锁粒度小、冲突少；缺点：转账需双锁。
-- 避免使用全局大锁（吞吐低）。
-- 不采用 `std::atomic<long long>` 直接更新余额，因为转账需要跨两个账户的复合不变量，必须使用互斥保证一致性。
+### Performance Trade-offs
+- Pros of per-account locks: fine lock granularity, few conflicts; cons: transfers need two locks.
+- Avoid a single global lock (low throughput).
+- We don't use `std::atomic<long long>` to update balances directly, because transfers involve a compound invariant across two accounts, so mutexes are required to guarantee consistency.
 
-### 数据校验与账实相符
-- 可在批处理前记录总余额 `S0`，统计净现金流 `Δ`（存款+，取款-），最终核对 `S1 == S0 + Δ`。
-- 转账对总余额无影响。
+### Data Validation and Reconciliation
+- Before batch processing, record the total balance `S0` and tally the net cash flow `Δ` (deposits +, withdrawals -); finally verify `S1 == S0 + Δ`.
+- Transfers have no effect on the total balance.
 
-### 目录结构（计划）
+### Directory Structure (Planned)
 ```
 bank_transaction/
   ├─ include/
@@ -63,15 +63,14 @@ bank_transaction/
   │   └─ transaction_processor.hpp
   ├─ src/
   │   └─ main.cpp
-  ├─ v1.0.cpp            # 原始简单实现（单线程示例）
+  ├─ v1.0.cpp            # original simple implementation (single-threaded example)
   ├─ CMakeLists.txt
   ├─ README.md
   └─ ARCHITECTURE.md
 ```
 
-### 测试思路
-- 随机生成大量事务（混合存取款与转账），并发执行。
-- 统计期望净现金流并校对最终余额总和。
-- 在高线程数与高冲突（同一账户热度高）的情况下观察吞吐与延迟。
-
+### Testing Approach
+- Randomly generate a large number of transactions (a mix of deposits, withdrawals, and transfers) and execute them concurrently.
+- Tally the expected net cash flow and reconcile it against the final total balance.
+- Observe throughput and latency under high thread counts and high contention (hot accounts accessed very frequently).
 

@@ -1,5 +1,5 @@
 
-//st表
+//sparse table
 
 #include <iostream>
 #include <vector>

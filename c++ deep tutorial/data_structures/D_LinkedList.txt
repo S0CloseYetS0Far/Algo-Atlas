@@ -1,29 +1,30 @@
 ================================================================================
-C++ 算法结构教程 — 链表 (Linked List)
+C++ Data Structures Tutorial -- Linked List
 ================================================================================
 
-## 章节概述
+## Chapter Overview
 
-链表（Linked List）是一种线性数据结构，其中的元素通过指针链接在一起，而不是像
-数组那样在内存中连续存储。链表的每个节点包含数据域和指针域，指针指向下一个节点。
+A linked list is a linear data structure whose elements are linked together by pointers, rather than
+being stored contiguously in memory like an array. Each node of a linked list contains a data field and a
+pointer field, and the pointer points to the next node.
 
-链表的优点：插入和删除操作高效（O(1)），不需要移动其他元素；空间动态分配，不
-需要预分配。
-链表的缺点：不支持随机访问（O(n)才能访问任意元素）；每个节点需要额外的指针
-存储空间；对缓存不友好（节点分散在内存各处）。
+Advantages of linked lists: insertion and removal are efficient (O(1)) and don't require moving other
+elements; space is allocated dynamically, with no need to pre-allocate.
+Disadvantages of linked lists: no random access (reaching an arbitrary element takes O(n)); each node needs
+extra storage for pointers; they are cache-unfriendly (nodes are scattered throughout memory).
 
 ================================================================================
-### 第一节: 基础语法 + 计算机底层原理
+### Section 1: Basic Syntax + Underlying Computer Principles
 ================================================================================
 
-1.1 链表的基本概念
------------------------
+1.1 Basic Linked List Concepts
+------------------------------
 
-常见的链表类型：
+Common kinds of linked lists:
 
-单向链表（Singly Linked List）：每个节点包含数据 + 指向下一个节点的指针。
-双向链表（Doubly Linked List）：每个节点包含数据 + 指向前一个和后一个节点的指针。
-循环链表（Circular Linked List）：尾节点指向头节点，形成环。
+Singly Linked List: each node contains data + a pointer to the next node.
+Doubly Linked List: each node contains data + pointers to the previous and next nodes.
+Circular Linked List: the tail node points back to the head node, forming a ring.
 
 ```cpp
 #include <iostream>
@@ -44,13 +45,13 @@ struct DoublyNode {
 };
 
 int main() {
-    // 创建单向链表: 10 -> 20 -> 30
+    // Create a singly linked list: 10 -> 20 -> 30
     SinglyNode* head = new SinglyNode(10);
     head->next = new SinglyNode(20);
     head->next->next = new SinglyNode(30);
 
-    // 遍历单向链表
-    std::cout << "单向链表: ";
+    // Traverse the singly linked list
+    std::cout << "Singly linked list: ";
     SinglyNode* cur = head;
     while (cur) {
         std::cout << cur->data;
@@ -59,7 +60,7 @@ int main() {
     }
     std::cout << std::endl;
 
-    // 创建双向链表: 10 <-> 20 <-> 30
+    // Create a doubly linked list: 10 <-> 20 <-> 30
     DoublyNode* dhead = new DoublyNode(10);
     DoublyNode* dsecond = new DoublyNode(20);
     DoublyNode* dthird = new DoublyNode(30);
@@ -69,8 +70,8 @@ int main() {
     dsecond->next = dthird;
     dthird->prev = dsecond;
 
-    // 正向遍历
-    std::cout << "双向链表(正向): ";
+    // Forward traversal
+    std::cout << "Doubly linked list (forward): ";
     DoublyNode* dcur = dhead;
     while (dcur) {
         std::cout << dcur->data;
@@ -79,8 +80,8 @@ int main() {
     }
     std::cout << std::endl;
 
-    // 反向遍历
-    std::cout << "双向链表(反向): ";
+    // Backward traversal
+    std::cout << "Doubly linked list (backward): ";
     dcur = dthird;
     while (dcur) {
         std::cout << dcur->data;
@@ -89,38 +90,38 @@ int main() {
     }
     std::cout << std::endl;
 
-    // 清理内存（略）
+    // Memory cleanup (omitted)
 
     return 0;
 }
 ```
 
-1.2 链表的底层原理：内存布局
+1.2 Under the Hood: Memory Layout
 ---------------------------------
 
-链表节点在内存中是非连续存储的。每个节点通过 new 在堆上独立分配。
+Linked list nodes are stored non-contiguously in memory. Each node is allocated independently on the heap via new.
 
 ```
-内存布局示意（地址随机）:
+Memory layout illustration (addresses are arbitrary):
 
-0x1000: [10 | ptr(0x2000)]       ← 头节点
-0x2000: [20 | ptr(0x3000)]       ← 第二个节点
-0x3000: [30 | ptr(nullptr)]      ← 尾节点
+0x1000: [10 | ptr(0x2000)]       <- head node
+0x2000: [20 | ptr(0x3000)]       <- second node
+0x3000: [30 | ptr(nullptr)]      <- tail node
 
-数组（对比）:
-0x1000: [10]                      ← arr[0]
-0x1004: [20]                      ← arr[1]
-0x1008: [30]                      ← arr[2]
-        连续地址，紧挨在一起
+Array (for comparison):
+0x1000: [10]                      <- arr[0]
+0x1004: [20]                      <- arr[1]
+0x1008: [30]                      <- arr[2]
+        contiguous addresses, right next to each other
 ```
 
-这种非连续存储意味着：
-1. 无法通过索引直接访问（需要从头遍历）
-2. CPU缓存命中率低（空间局部性差）
-3. 插入/删除只需要修改指针，不需要移动数据
+This non-contiguous storage means:
+1. Elements can't be accessed directly by index (you have to traverse from the head)
+2. Low CPU cache hit rate (poor spatial locality)
+3. Insertion/removal only requires updating pointers, not moving data
 
-1.3 手动实现单向链表
------------------------
+1.3 Implementing a Singly Linked List by Hand
+---------------------------------------------
 
 ```cpp
 #include <iostream>
@@ -149,7 +150,7 @@ public:
         }
     }
 
-    // 头插
+    // Insert at the head
     void push_front(const T& value) {
         Node* new_node = new Node(value);
         new_node->next = head;
@@ -157,7 +158,7 @@ public:
         ++count;
     }
 
-    // 尾插
+    // Insert at the tail
     void push_back(const T& value) {
         Node* new_node = new Node(value);
         if (!head) {
@@ -170,10 +171,10 @@ public:
         ++count;
     }
 
-    // 中间插入（在指定位置之后）
+    // Insert in the middle (after the given position)
     void insert_after(size_t index, const T& value) {
         if (index >= count) {
-            throw std::out_of_range("索引越界");
+            throw std::out_of_range("Index out of range");
         }
         Node* cur = head;
         for (size_t i = 0; i < index; ++i) cur = cur->next;
@@ -184,18 +185,18 @@ public:
         ++count;
     }
 
-    // 头删
+    // Remove from the head
     void pop_front() {
-        if (!head) throw std::underflow_error("链表为空");
+        if (!head) throw std::underflow_error("List is empty");
         Node* temp = head;
         head = head->next;
         delete temp;
         --count;
     }
 
-    // 尾删
+    // Remove from the tail
     void pop_back() {
-        if (!head) throw std::underflow_error("链表为空");
+        if (!head) throw std::underflow_error("List is empty");
         if (!head->next) {
             delete head;
             head = nullptr;
@@ -208,7 +209,7 @@ public:
         --count;
     }
 
-    // 按值删除（删除第一个匹配的）
+    // Remove by value (removes the first match)
     void remove(const T& value) {
         if (!head) return;
 
@@ -232,7 +233,7 @@ public:
         }
     }
 
-    // 查找
+    // Search
     bool contains(const T& value) const {
         Node* cur = head;
         while (cur) {
@@ -242,7 +243,7 @@ public:
         return false;
     }
 
-    // 反转链表
+    // Reverse the list
     void reverse() {
         Node* prev = nullptr;
         Node* cur = head;
@@ -257,9 +258,9 @@ public:
         head = prev;
     }
 
-    // 获取第index个元素（0-based）
+    // Get the element at index (0-based)
     T& at(size_t index) {
-        if (index >= count) throw std::out_of_range("索引越界");
+        if (index >= count) throw std::out_of_range("Index out of range");
         Node* cur = head;
         for (size_t i = 0; i < index; ++i) cur = cur->next;
         return cur->data;
@@ -295,10 +296,10 @@ int main() {
     lst.print();
 
     lst.reverse();
-    std::cout << "反转后: ";
+    std::cout << "After reversing: ";
     lst.print();
 
-    std::cout << "含有20? " << lst.contains(20) << std::endl;
+    std::cout << "Contains 20? " << lst.contains(20) << std::endl;
     std::cout << "at(2) = " << lst.at(2) << std::endl;
 
     lst.remove(20);
@@ -308,8 +309,8 @@ int main() {
 }
 ```
 
-1.4 手动实现双向链表
-------------------------
+1.4 Implementing a Doubly Linked List by Hand
+---------------------------------------------
 
 ```cpp
 #include <iostream>
@@ -365,7 +366,7 @@ public:
     }
 
     void pop_back() {
-        if (!tail) throw std::underflow_error("链表为空");
+        if (!tail) throw std::underflow_error("List is empty");
         Node* temp = tail;
         tail = tail->prev;
         if (tail) tail->next = nullptr;
@@ -404,9 +405,9 @@ int main() {
     dll.push_back(30);
     dll.push_front(5);
 
-    std::cout << "正向: ";
+    std::cout << "Forward: ";
     dll.print_forward();
-    std::cout << "反向: ";
+    std::cout << "Backward: ";
     dll.print_backward();
 
     return 0;
@@ -415,13 +416,13 @@ int main() {
 
 
 ================================================================================
-### 第二节: 所有用法大全
+### Section 2: Complete Usage Guide
 ================================================================================
 
-2.1 std::forward_list —— 单向链表
----------------------------------------
+2.1 std::forward_list -- Singly Linked List
+-------------------------------------------
 
-C++11引入，比list更节省内存（只有一个指针）。
+Introduced in C++11, it uses less memory than list (only one pointer per node).
 
 ```cpp
 #include <iostream>
@@ -430,36 +431,36 @@ C++11引入，比list更节省内存（只有一个指针）。
 int main() {
     std::forward_list<int> flst = {1, 2, 3, 4, 5};
 
-    // 头部操作
+    // Operations at the head
     flst.push_front(0);
     flst.pop_front();
 
-    // 在指定位置之后操作（需要前驱迭代器）
-    auto it = flst.before_begin();  // 头部哨兵
-    flst.insert_after(it, 99);     // 在头部之后插入
+    // Operations after a given position (require the predecessor iterator)
+    auto it = flst.before_begin();  // head sentinel
+    flst.insert_after(it, 99);     // insert after the head position
 
-    // 查找并插入
+    // Find and insert
     auto prev = flst.before_begin();
     for (auto cur = flst.begin(); cur != flst.end(); ++cur, ++prev) {
         if (*cur == 3) {
-            flst.insert_after(cur, 100);  // 在3之后插入100
+            flst.insert_after(cur, 100);  // insert 100 after 3
             break;
         }
     }
 
-    // 删除
-    flst.erase_after(flst.before_begin());  // 删除第一个元素
+    // Removal
+    flst.erase_after(flst.before_begin());  // erase the first element
 
-    // 特有操作
+    // Specific operations
     flst.sort();
-    flst.unique();        // 删除连续重复元素
+    flst.unique();        // remove consecutive duplicate elements
     flst.reverse();
 
-    // 拼接
+    // Splicing
     std::forward_list<int> other = {200, 300};
-    flst.splice_after(flst.before_begin(), other);  // 将other拼接到头部
+    flst.splice_after(flst.before_begin(), other);  // splice other onto the front
 
-    // 合并（两个list必须已排序）
+    // Merge (both lists must already be sorted)
     std::forward_list<int> a = {1, 3, 5};
     std::forward_list<int> b = {2, 4, 6};
     a.merge(b);
@@ -471,8 +472,8 @@ int main() {
 }
 ```
 
-2.2 std::list —— 双向链表
-------------------------------
+2.2 std::list -- Doubly Linked List
+-----------------------------------
 
 ```cpp
 #include <iostream>
@@ -482,45 +483,45 @@ int main() {
 int main() {
     std::list<int> lst = {3, 1, 4, 1, 5, 9};
 
-    // 两端操作
+    // Operations at both ends
     lst.push_front(0);
     lst.push_back(10);
     lst.pop_front();
     lst.pop_back();
 
-    // 插入（在pos之前）
+    // Insertion (before pos)
     auto it = std::find(lst.begin(), lst.end(), 4);
     if (it != lst.end()) {
-        lst.insert(it, 100);      // 在4之前插入
-        lst.emplace(it, 200);     // C++11就地构造
+        lst.insert(it, 100);      // insert before 4
+        lst.emplace(it, 200);     // C++11 in-place construction
     }
 
-    // 删除
-    lst.remove(1);                // 删除所有值为1的元素
-    lst.remove_if([](int x) { return x > 5; });  // 条件删除
+    // Removal
+    lst.remove(1);                // remove all elements equal to 1
+    lst.remove_if([](int x) { return x > 5; });  // conditional removal
 
-    // 链表特有操作
+    // List-specific operations
     lst.sort();
-    lst.unique();                 // 去重
+    lst.unique();                 // remove duplicates
     lst.reverse();
 
-    // 拼接（将other的元素移动到lst中）
+    // Splicing (moves other's elements into lst)
     std::list<int> other = {100, 200};
-    lst.splice(lst.end(), other);  // other变为空
+    lst.splice(lst.end(), other);  // other becomes empty
 
-    // 合并（两个list必须都已排序）
+    // Merge (both lists must already be sorted)
     std::list<int> a = {1, 3, 5};
     std::list<int> b = {2, 4, 6};
-    a.merge(b);  // a变为{1,2,3,4,5,6}, b为空
+    a.merge(b);  // a becomes {1,2,3,4,5,6}, b is empty
 
     // resize
-    lst.resize(10);    // 扩展或截断
-    lst.resize(20, -1); // 用-1填充新元素
+    lst.resize(10);    // extend or truncate
+    lst.resize(20, -1); // fill new elements with -1
 
-    // 赋值
-    lst.assign(5, 100);  // 全部替换为5个100
+    // Assignment
+    lst.assign(5, 100);  // replace everything with five 100s
 
-    // 遍历
+    // Traversal
     for (int x : lst) std::cout << x << " ";
     std::cout << std::endl;
 
@@ -528,15 +529,15 @@ int main() {
 }
 ```
 
-2.3 链表算法（常见操作）
----------------------------
+2.3 Linked List Algorithms (Common Operations)
+----------------------------------------------
 
 ```cpp
 #include <iostream>
 #include <forward_list>
 #include <unordered_set>
 
-// 1. 检测链表是否有环（快慢指针）
+// 1. Detect whether a linked list has a cycle (fast and slow pointers)
 struct ListNode {
     int val;
     ListNode* next;
@@ -555,7 +556,7 @@ bool hasCycle(ListNode* head) {
     return false;
 }
 
-// 2. 找到链表中间节点
+// 2. Find the middle node of a linked list
 ListNode* findMiddle(ListNode* head) {
     ListNode* slow = head;
     ListNode* fast = head;
@@ -567,7 +568,7 @@ ListNode* findMiddle(ListNode* head) {
     return slow;
 }
 
-// 3. 合并两个有序链表
+// 3. Merge two sorted linked lists
 ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
     ListNode dummy(0);
     ListNode* tail = &dummy;
@@ -587,14 +588,14 @@ ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
     return dummy.next;
 }
 
-// 4. 删除倒数第N个节点
+// 4. Remove the Nth node from the end
 ListNode* removeNthFromEnd(ListNode* head, int n) {
     ListNode dummy(0);
     dummy.next = head;
     ListNode* fast = &dummy;
     ListNode* slow = &dummy;
 
-    // fast 先走 n+1 步
+    // fast moves n+1 steps ahead first
     for (int i = 0; i <= n; ++i) fast = fast->next;
 
     while (fast) {
@@ -609,7 +610,7 @@ ListNode* removeNthFromEnd(ListNode* head, int n) {
     return dummy.next;
 }
 
-// 辅助函数
+// Helper function
 void printList(ListNode* head) {
     while (head) {
         std::cout << head->val;
@@ -620,7 +621,7 @@ void printList(ListNode* head) {
 }
 
 int main() {
-    // 合并有序链表
+    // Merge sorted linked lists
     ListNode* l1 = new ListNode(1);
     l1->next = new ListNode(3);
     l1->next->next = new ListNode(5);
@@ -630,16 +631,16 @@ int main() {
     l2->next->next = new ListNode(6);
 
     ListNode* merged = mergeTwoLists(l1, l2);
-    std::cout << "合并后: ";
+    std::cout << "After merging: ";
     printList(merged);
 
-    // 中间节点
+    // Middle node
     ListNode* mid = findMiddle(merged);
-    std::cout << "中间节点: " << mid->val << std::endl;
+    std::cout << "Middle node: " << mid->val << std::endl;
 
-    // 删除倒数第3个
+    // Remove the 3rd node from the end
     ListNode* after_remove = removeNthFromEnd(merged, 3);
-    std::cout << "删除倒数第3个: ";
+    std::cout << "After removing the 3rd from the end: ";
     printList(after_remove);
 
     return 0;
@@ -648,13 +649,13 @@ int main() {
 
 
 ================================================================================
-### 第三节: 实用案例
+### Section 3: Practical Examples
 ================================================================================
 
-案例一：浏览器的前进后退（双向链表版）
-----------------------------------------------
+Example 1: Browser Back and Forward (Doubly Linked List Version)
+----------------------------------------------------------------
 
-与栈实现不同，这里使用双向链表更直观地管理页面历史：
+Unlike the stack implementation, here a doubly linked list is used to manage page history more intuitively:
 
 ```cpp
 #include <iostream>
@@ -677,7 +678,7 @@ public:
     }
 
     void visit(const std::string& url) {
-        // 清空前进历史
+        // Clear the forward history
         Page* temp = current->next;
         while (temp) {
             Page* to_del = temp;
@@ -688,14 +689,14 @@ public:
         current->next = new Page(url);
         current->next->prev = current;
         current = current->next;
-        std::cout << "访问: " << url << std::endl;
+        std::cout << "Visit: " << url << std::endl;
     }
 
     std::string back(int steps) {
         while (steps-- > 0 && current->prev) {
             current = current->prev;
         }
-        std::cout << "后退到: " << current->url << std::endl;
+        std::cout << "Back to: " << current->url << std::endl;
         return current->url;
     }
 
@@ -703,7 +704,7 @@ public:
         while (steps-- > 0 && current->next) {
             current = current->next;
         }
-        std::cout << "前进到: " << current->url << std::endl;
+        std::cout << "Forward to: " << current->url << std::endl;
         return current->url;
     }
 
@@ -727,7 +728,7 @@ int main() {
     bh.back(1);   // stackoverflow.com
     bh.back(1);   // github.com
     bh.forward(1); // stackoverflow.com
-    bh.visit("reddit.com");  // 前进历史被清空
+    bh.visit("reddit.com");  // forward history is cleared
 
     bh.back(2);   // github.com -> google.com
 
@@ -736,11 +737,11 @@ int main() {
 ```
 
 
-案例二：约瑟夫问题（循环链表）
---------------------------------------
+Example 2: The Josephus Problem (Circular Linked List)
+------------------------------------------------------
 
-经典的约瑟夫问题：n个人围成一圈，从第一个人开始报数，报到m的人出列，求最后
-剩下的人。
+The classic Josephus problem: n people stand in a circle and count off starting from the first person;
+whoever counts m is eliminated. Find the last person remaining.
 
 ```cpp
 #include <iostream>
@@ -752,7 +753,7 @@ struct Person {
 };
 
 int josephus(int n, int m) {
-    // 创建循环链表
+    // Build the circular linked list
     Person* head = new Person(1);
     Person* prev = head;
 
@@ -761,21 +762,21 @@ int josephus(int n, int m) {
         prev->next = p;
         prev = p;
     }
-    prev->next = head;  // 形成环
+    prev->next = head;  // close the ring
 
-    // 开始游戏
+    // Start the game
     Person* cur = head;
     Person* last = prev;
 
-    while (cur->next != cur) {  // 只剩一个人时结束
-        // 报数到m-1
+    while (cur->next != cur) {  // stop when only one person is left
+        // Count up to m-1
         for (int i = 1; i < m; ++i) {
             last = cur;
             cur = cur->next;
         }
 
-        // cur出列
-        std::cout << cur->id << " 出列" << std::endl;
+        // cur is eliminated
+        std::cout << cur->id << " eliminated" << std::endl;
         last->next = cur->next;
         delete cur;
         cur = last->next;
@@ -789,24 +790,24 @@ int josephus(int n, int m) {
 int main() {
     int n = 7, m = 3;
     int survivor = josephus(n, m);
-    std::cout << n << "个人, 报数" << m << ", 幸存者: " << survivor << std::endl;
+    std::cout << n << " people, counting to " << m << ", survivor: " << survivor << std::endl;
 
     return 0;
 }
 ```
 
 
-案例三：多项式的链表表示与运算
--------------------------------------------
+Example 3: Representing and Operating on Polynomials with Linked Lists
+----------------------------------------------------------------------
 
-使用链表表示多项式，实现加法运算：
+Using a linked list to represent polynomials and implementing addition:
 
 ```cpp
 #include <iostream>
 
 struct Term {
-    int coefficient;  // 系数
-    int exponent;     // 指数
+    int coefficient;  // coefficient
+    int exponent;     // exponent
     Term* next;
     Term(int c, int e) : coefficient(c), exponent(e), next(nullptr) {}
 };
@@ -815,9 +816,9 @@ class Polynomial {
 private:
     Term* head;
 
-    // 辅助：在尾部添加项
+    // Helper: append a term at the tail
     void append(int coeff, int exp) {
-        if (coeff == 0) return;  // 系数为0的项不添加
+        if (coeff == 0) return;  // terms with a coefficient of 0 are not added
         if (!head) {
             head = new Term(coeff, exp);
             return;
@@ -844,7 +845,7 @@ public:
         }
     }
 
-    // 多项式加法
+    // Polynomial addition
     Polynomial add(const Polynomial& other) const {
         Polynomial result;
         Term* p = head;
@@ -898,7 +899,7 @@ int main() {
 
     std::cout << "P1 = "; p1.print(); std::cout << std::endl;
     std::cout << "P2 = "; p2.print(); std::cout << std::endl;
-    std::cout << "和 = "; sum.print(); std::cout << std::endl;
+    std::cout << "Sum = "; sum.print(); std::cout << std::endl;
 
     return 0;
 }
@@ -906,33 +907,33 @@ int main() {
 
 
 ================================================================================
-### 第四节: 课后习题
+### Section 4: Exercises
 ================================================================================
 
-1. 基础题：手动实现一个带哨兵节点的单向链表。
-   - 使用 dummy head（哨兵头节点）简化边界条件处理
-   - 实现 insert、erase、find、reverse 操作
-   - 分析各操作的时间复杂度
+1. Basic: Implement by hand a singly linked list with a sentinel node.
+   - Use a dummy head (sentinel head node) to simplify handling of edge cases
+   - Implement insert, erase, find, and reverse operations
+   - Analyze the time complexity of each operation
 
-2. 应用题：判断一个链表是否为回文链表。
-   - 时间复杂度O(n)，空间复杂度O(1)
-   - 使用快慢指针找到中点
-   - 反转后半部分链表进行比较
+2. Application: Determine whether a linked list is a palindrome.
+   - O(n) time complexity, O(1) space complexity
+   - Use fast and slow pointers to find the midpoint
+   - Reverse the second half of the list and compare
 
-3. 进阶题：实现一个跳表（Skip List）。
-   - 跳表是一种多层链表结构，支持O(log n)的查找
-   - 随机决定节点层数
-   - 实现 insert、erase、find 操作
+3. Advanced: Implement a Skip List.
+   - A skip list is a multi-level linked list structure that supports O(log n) search
+   - Decide each node's level randomly
+   - Implement insert, erase, and find operations
 
-4. 综合题：使用链表实现一个简单的内存分配器。
-   - 维护空闲块链表（free list）
-   - 支持 malloc(size) 和 free(ptr) 操作
-   - 实现首次适应（first-fit）和最佳适应（best-fit）策略
-   - 处理内存碎片问题
+4. Comprehensive: Use linked lists to implement a simple memory allocator.
+   - Maintain a list of free blocks (free list)
+   - Support malloc(size) and free(ptr) operations
+   - Implement first-fit and best-fit strategies
+   - Handle memory fragmentation
 
-5. 挑战题：实现一个并发安全的链表。
-   - 支持读写锁（读多写少）
-   - 或者实现无锁链表（lock-free，使用CAS原子操作）
-   - 验证线程安全性
+5. Challenge: Implement a concurrency-safe linked list.
+   - Support a read-write lock (many reads, few writes)
+   - Or implement a lock-free linked list (using CAS atomic operations)
+   - Verify its thread safety
 
 ================================================================================

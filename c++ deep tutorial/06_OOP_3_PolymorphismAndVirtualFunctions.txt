@@ -1,32 +1,32 @@
 ================================================================================
-  C++ 深化教程：第六章 面向对象(三) —— 多态与虚函数
+  C++ In-Depth Tutorial: Chapter 6  Object-Oriented Programming (III) -- Polymorphism and Virtual Functions
 ================================================================================
 
-【本章目标】
-  1. 掌握虚函数(virtual)和动态绑定的工作机制
-  2. 深入理解虚函数表(vtable)和虚函数指针(vptr)的底层原理
-  3. 熟练使用override、final、纯虚函数、虚析构函数
-  4. 掌握typeid、dynamic_cast等RTTI工具
-  5. 通过5个生活场景案例综合运用多态与前6章知识
+[Chapter Goals]
+  1. Master how virtual functions (virtual) and dynamic binding work
+  2. Gain a deep understanding of the low-level principles of the virtual function table (vtable) and virtual pointer (vptr)
+  3. Use override, final, pure virtual functions, and virtual destructors fluently
+  4. Master RTTI tools such as typeid and dynamic_cast
+  5. Apply polymorphism together with the knowledge from the first 6 chapters through 5 real-life scenario cases
 
 ================================================================================
 
-                            === 第一节：基础示例代码 + 计算机底层原理 ===
+                            === Section 1: Basic Example Code + Low-Level Computer Principles ===
 ================================================================================
 
-一、虚函数与动态绑定：基础示例
+I. Virtual Functions and Dynamic Binding: A Basic Example
 ------------------------------------
 
-多态（Polymorphism）是面向对象编程最重要的特性之一。
-通过虚函数，基类指针/引用可以在运行时根据实际对象类型调用正确的函数版本。
+Polymorphism is one of the most important features of object-oriented programming.
+Through virtual functions, a base class pointer/reference can call the correct function version at runtime based on the actual object type.
 
-【示例1-1】没有虚函数（静态绑定）vs 有虚函数（动态绑定）：
+[Example 1-1] Without virtual functions (static binding) vs with virtual functions (dynamic binding):
 
 ```cpp
 #include <iostream>
 #include <string>
 
-// ====== 没有虚函数的版本（静态绑定）======
+// ====== Version without virtual functions (static binding) ======
 class Animal_NoVirtual {
 public:
     void makeSound() {
@@ -41,18 +41,18 @@ public:
     }
 };
 
-// ====== 有虚函数的版本（动态绑定）======
+// ====== Version with virtual functions (dynamic binding) ======
 class Animal {
 public:
     virtual void makeSound() {
         std::cout << "Animal makes some sound" << std::endl;
     }
-    virtual ~Animal() {}  // 虚析构函数！
+    virtual ~Animal() {}  // virtual destructor!
 };
 
 class Dog : public Animal {
 public:
-    void makeSound() override {   // override关键字确保正确重写
+    void makeSound() override {   // the override keyword ensures a correct override
         std::cout << "Dog barks: Woof! Woof!" << std::endl;
     }
 };
@@ -65,44 +65,44 @@ public:
 };
 
 int main() {
-    std::cout << "===== 静态绑定演示 =====" << std::endl;
+    std::cout << "===== Static binding demo =====" << std::endl;
     Dog_NoVirtual dnv;
     Animal_NoVirtual* ptr_nv = &dnv;
-    ptr_nv->makeSound();  // 调用 Animal_NoVirtual::makeSound()
-                          // ——虽然实际对象是Dog，但编译期就决定了调用基类版本！
+    ptr_nv->makeSound();  // calls Animal_NoVirtual::makeSound()
+                          // -- even though the actual object is a Dog, the base version was chosen at compile time!
 
-    std::cout << "\n===== 动态绑定演示 =====" << std::endl;
+    std::cout << "\n===== Dynamic binding demo =====" << std::endl;
     Dog dog;
     Cat cat;
 
     Animal* animals[] = { &dog, &cat };
 
     for (auto* a : animals) {
-        a->makeSound();  // 调用实际对象类型的版本！
-        // Dog调用Dog::makeSound(), Cat调用Cat::makeSound()
+        a->makeSound();  // calls the version for the actual object type!
+        // Dog calls Dog::makeSound(), Cat calls Cat::makeSound()
     }
 
-    std::cout << "\n===== 虚析构函数的重要性 =====" << std::endl;
+    std::cout << "\n===== Why virtual destructors matter =====" << std::endl;
     Animal* ptr = new Dog();
-    delete ptr;  // 如果~Animal()不是virtual，则只调用Animal的析构
-                 // Dog的析构不会被调用！内存泄漏！
-                 // 因为~Animal()是virtual，所以正确调用Dog::~Dog()→Animal::~Animal()
+    delete ptr;  // if ~Animal() were not virtual, only Animal's destructor would be called
+                 // Dog's destructor would not be called! Memory leak!
+                 // Because ~Animal() is virtual, Dog::~Dog() -> Animal::~Animal() is called correctly
     return 0;
 }
 ```
 
 ================================================================================
 
-二、计算机底层原理：虚函数表(vtable)详解
+II. Low-Level Computer Principles: The Virtual Function Table (vtable) Explained
 ------------------------------------
 
-虚函数是C++实现运行时多态的核心机制。编译器通过"虚函数表"（Virtual Table）
-和"虚函数表指针"（vptr）来实现动态绑定（也称后期绑定/运行时绑定）。
+Virtual functions are the core mechanism C++ uses to implement runtime polymorphism. The compiler uses a "virtual function table" (vtable)
+and a "virtual table pointer" (vptr) to implement dynamic binding (also called late binding/runtime binding).
 
-【原理2-1】虚函数表的结构
+[Principle 2-1] The structure of the virtual function table
 
-每个包含虚函数的类（或从虚基类派生）都有一个虚函数表(vtable)。
-vtable是一个函数指针数组，存储了该类所有虚函数的地址。
+Every class that contains virtual functions (or derives from a virtual base class) has a virtual function table (vtable).
+The vtable is an array of function pointers that stores the addresses of all the class's virtual functions.
 
 ```cpp
 class Base {
@@ -121,92 +121,92 @@ public:
 };
 ```
 
-Base类对象的内存布局：
+Memory layout of a Base object:
 
-  地址     内容
+  Address  Content
   ────────────────────────────────────
   &obj   ┌ vptr ──────→ Base vtable
          │             ┌─────────────────────┐
-         │             │ &Base::func1         │ ← slot 0
-         │             │ &Base::func2         │ ← slot 1
-         │             │ &type_info(Base)     │ ← RTTI信息
+         │             │ &Base::func1         │ <- slot 0
+         │             │ &Base::func2         │ <- slot 1
+         │             │ &type_info(Base)     │ <- RTTI info
          │             └─────────────────────┘
   +8     │ baseData
          └────────────────────────
 
-Derived类对象的内存布局：
+Memory layout of a Derived object:
 
-  地址     内容
+  Address  Content
   ────────────────────────────────────
   &obj   ┌ vptr ──────→ Derived vtable
          │             ┌─────────────────────┐
-         │             │ &Derived::func1      │ ← slot 0 (重写了)
-         │             │ &Base::func2         │ ← slot 1 (未重写)
-         │             │ &Derived::func3      │ ← slot 2 (新增虚函数)
-         │             │ &type_info(Derived)  │ ← RTTI信息
+         │             │ &Derived::func1      │ <- slot 0 (overridden)
+         │             │ &Base::func2         │ <- slot 1 (not overridden)
+         │             │ &Derived::func3      │ <- slot 2 (new virtual function)
+         │             │ &type_info(Derived)  │ <- RTTI info
          │             └─────────────────────┘
-  +8     │ baseData         ← 基类子对象
+  +8     │ baseData         <- base class subobject
   +12    │ [padding 4B]
-  +16    │ derivedData      ← 派生类新增
+  +16    │ derivedData      <- added by the derived class
          └────────────────────────
 
-关键点：
-  1. vptr位于对象内存的最开始位置（偏移0处）
-  2. vptr在构造函数执行时被初始化（指向当前类的vtable）
-  3. 非虚函数不在vtable中，其调用在编译期静态绑定
-  4. vtable存储在只读数据段(.rodata)
-  5. 所有同一类的对象共享同一个vtable
+Key points:
+  1. The vptr is located at the very beginning of the object's memory (offset 0)
+  2. The vptr is initialized when the constructor runs (pointing to the current class's vtable)
+  3. Non-virtual functions are not in the vtable; calls to them are statically bound at compile time
+  4. The vtable is stored in the read-only data segment (.rodata)
+  5. All objects of the same class share the same vtable
 
-【原理2-2】虚函数调用的汇编层面
+[Principle 2-2] Virtual function calls at the assembly level
 
-考虑以下调用：
+Consider the following call:
 
 ```cpp
 Base* ptr = new Derived();
-ptr->func1();  // 虚函数调用
+ptr->func1();  // virtual function call
 ```
 
-编译器生成的代码等价于（伪代码）：
+The code generated by the compiler is equivalent to (pseudocode):
 
 ```cpp
-// 步骤1: 通过vptr找到vtable
-vtable_ptr* vt = *(vtable_ptr**)ptr;  // 读取对象前8字节（vptr）
-// 步骤2: 从vtable中取出函数指针
+// Step 1: find the vtable through the vptr
+vtable_ptr* vt = *(vtable_ptr**)ptr;  // read the first 8 bytes of the object (vptr)
+// Step 2: fetch the function pointer from the vtable
 void (*func_ptr)() = vt[0];           // slot 0 = func1
-// 步骤3: 调用函数
+// Step 3: call the function
 func_ptr(ptr);                         // this = ptr
 ```
 
-对应的x86-64汇编伪代码：
+The corresponding x86-64 assembly pseudocode:
 
 ```asm
-; ptr->func1() 的汇编伪代码
-mov  rax, [rdi]        ; rax = vptr (rdi = this指针)
-                        ; 解引用this指针，读取前8字节获得vtable地址
-mov  rax, [rax]        ; rax = vtable[0]（第一个虚函数地址）
-                        ; 解引用vtable指针，读取第一个条目
-call rax                ; 调用函数
+; assembly pseudocode for ptr->func1()
+mov  rax, [rdi]        ; rax = vptr (rdi = this pointer)
+                        ; dereference the this pointer, reading the first 8 bytes to get the vtable address
+mov  rax, [rax]        ; rax = vtable[0] (address of the first virtual function)
+                        ; dereference the vtable pointer, reading the first entry
+call rax                ; call the function
 ```
 
-对比非虚函数的汇编伪代码（直接调用，一次跳转）：
+Compare with the assembly pseudocode for a non-virtual function (direct call, a single jump):
 
 ```asm
-; ptr->nonVirtual() 的汇编伪代码（静态绑定）
-call Base::nonVirtual  ; 直接调用已知地址，一次call指令
+; assembly pseudocode for ptr->nonVirtual() (static binding)
+call Base::nonVirtual  ; directly call a known address, a single call instruction
 ```
 
-虚函数调用的开销：
-  - 额外一次指针解引用（this → vptr → vtable → function）
-  - 无法内联优化（编译器不知道运行时实际调用哪个版本）
-  - vtable本身占用内存（每个类一份，每个对象多8字节的vptr）
+The overhead of a virtual function call:
+  - One extra pointer dereference (this -> vptr -> vtable -> function)
+  - Cannot be inlined (the compiler doesn't know which version will be called at runtime)
+  - The vtable itself takes memory (one per class, plus an extra 8-byte vptr per object)
 
-但相比虚函数的灵活性，这个开销在现代硬件上通常可以忽略不计。
-除非在最热路径的紧密循环中，否则不需要担心虚函数的性能影响。
+But compared with the flexibility of virtual functions, this overhead is usually negligible on modern hardware.
+Unless you are in a tight loop on the hottest path, you don't need to worry about the performance impact of virtual functions.
 
-【原理2-3】RTTI与type_info
+[Principle 2-3] RTTI and type_info
 
-vtable中还存储了RTTI（运行时类型信息），包括type_info对象，
-这使得dynamic_cast和typeid成为可能。
+The vtable also stores RTTI (Run-Time Type Information), including the type_info object,
+which is what makes dynamic_cast and typeid possible.
 
 ```cpp
 #include <typeinfo>
@@ -226,9 +226,9 @@ int main() {
 
     std::cout << "b1 type: " << typeid(*b1).name() << std::endl;
     std::cout << "b2 type: " << typeid(*b2).name() << std::endl;
-    // typeid(*ptr).name() 返回类型名称（因编译器而异）
+    // typeid(*ptr).name() returns the type name (varies by compiler)
 
-    // dynamic_cast安全的向下转型
+    // dynamic_cast: safe downcasting
     if (Derived* d = dynamic_cast<Derived*>(b2)) {
         std::cout << "b2 successfully cast to Derived*" << std::endl;
     } else {
@@ -247,10 +247,10 @@ int main() {
 }
 ```
 
-【原理2-4】构造函数和析构函数中的虚函数行为
+[Principle 2-4] Virtual function behavior in constructors and destructors
 
-在构造函数和析构函数中调用虚函数时，使用的是当前类的版本，
-而不是派生类的版本。这称为"构造函数中的静态绑定"。
+When a virtual function is called in a constructor or destructor, the current class's version is used,
+not the derived class's version. This is called "static binding in constructors".
 
 ```cpp
 #include <iostream>
@@ -259,14 +259,14 @@ class Base {
 public:
     Base() {
         std::cout << "Base constructor:" << std::endl;
-        virtualFunc();  // 此时调用Base::virtualFunc，不是Derived的！
+        virtualFunc();  // at this point Base::virtualFunc is called, not Derived's!
     }
     virtual void virtualFunc() {
         std::cout << "  Base::virtualFunc()" << std::endl;
     }
     virtual ~Base() {
         std::cout << "Base destructor:" << std::endl;
-        virtualFunc();  // 调用Base::virtualFunc
+        virtualFunc();  // calls Base::virtualFunc
     }
 };
 
@@ -274,14 +274,14 @@ class Derived : public Base {
 public:
     Derived() {
         std::cout << "Derived constructor:" << std::endl;
-        virtualFunc();  // 此时调用Derived::virtualFunc
+        virtualFunc();  // at this point Derived::virtualFunc is called
     }
     void virtualFunc() override {
         std::cout << "  Derived::virtualFunc()" << std::endl;
     }
     ~Derived() {
         std::cout << "Derived destructor:" << std::endl;
-        virtualFunc();  // 调用Derived::virtualFunc
+        virtualFunc();  // calls Derived::virtualFunc
     }
 };
 
@@ -289,24 +289,24 @@ int main() {
     Derived d;
     return 0;
 }
-/* 输出：
+/* Output:
 Base constructor:
-  Base::virtualFunc()         ← 基类构造时，vptr指向Base的vtable
+  Base::virtualFunc()         <- during base construction, vptr points to Base's vtable
 Derived constructor:
-  Derived::virtualFunc()      ← 派生类构造时，vptr已指向Derived的vtable
+  Derived::virtualFunc()      <- during derived construction, vptr already points to Derived's vtable
 Derived destructor:
-  Derived::virtualFunc()      ← 派生类析构时，vptr还在Derived的vtable
+  Derived::virtualFunc()      <- during derived destruction, vptr is still on Derived's vtable
 Base destructor:
-  Base::virtualFunc()         ← 基类析构时，vptr已退回Base的vtable
+  Base::virtualFunc()         <- during base destruction, vptr has reverted to Base's vtable
 */
 ```
 
-原因：vptr在构造过程中逐步更新。
-  - 进入Base构造时，vptr指向Base的vtable
-  - Base构造完成后进入Derived构造时，vptr指向Derived的vtable
-  - 析构过程相反
+Reason: the vptr is updated step by step during construction.
+  - On entering Base's constructor, the vptr points to Base's vtable
+  - After Base's construction completes and Derived's constructor is entered, the vptr points to Derived's vtable
+  - Destruction proceeds in reverse
 
-【原理2-5】虚函数对对象大小的影响
+[Principle 2-5] How virtual functions affect object size
 
 ```cpp
 #include <iostream>
@@ -320,66 +320,66 @@ public:
 class B {
     int x;
 public:
-    virtual void virtualFunc() {}  // 引入虚函数 → 添加vptr
+    virtual void virtualFunc() {}  // introducing a virtual function -> adds a vptr
 };
 
 class C {
 public:
     virtual void vfunc1() {}
     virtual void vfunc2() {}
-    // 无论多少虚函数，只有一个vptr
+    // no matter how many virtual functions, there is only one vptr
 };
 
 int main() {
-    std::cout << "sizeof(A) = " << sizeof(A) << std::endl;  // 4 (只有int)
+    std::cout << "sizeof(A) = " << sizeof(A) << std::endl;  // 4 (just the int)
     std::cout << "sizeof(B) = " << sizeof(B) << std::endl;  // 16 (vptr=8B + int=4B + padding=4B)
-    std::cout << "sizeof(C) = " << sizeof(C) << std::endl;  // 8 (只有vptr)
+    std::cout << "sizeof(C) = " << sizeof(C) << std::endl;  // 8 (just the vptr)
     return 0;
 }
 
-// 内存布局对比：
+// Memory layout comparison:
 // A: [x(4B)]
 // B: [vptr(8B)][x(4B)][padding(4B)]
 // C: [vptr(8B)]
-// vptr始终在对象开始处！
+// The vptr is always at the start of the object!
 ```
 
 ================================================================================
 
-                            === 第二节：所有用法大全（标准库/关键字/函数） ===
+                            === Section 2: Complete Guide to All Usages (Standard Library/Keywords/Functions) ===
 ================================================================================
 
-2.1 virtual关键字
+2.1 The virtual Keyword
 ------------------------------------
 
 ```cpp
-// virtual用于声明虚函数
+// virtual is used to declare virtual functions
 class Base {
 public:
-    virtual void func1() { }         // 普通虚函数
-    virtual void func2() = 0;        // 纯虚函数
-    virtual ~Base() { }              // 虚析构函数（重要性！）
+    virtual void func1() { }         // ordinary virtual function
+    virtual void func2() = 0;        // pure virtual function
+    virtual ~Base() { }              // virtual destructor (important!)
 
-    // virtual不能用于：
-    // 1. 静态成员函数（static）
-    // 2. 非成员函数（只有成员函数可以是虚函数）
-    // 3. 构造函数（构造时vptr还未设置好）
-    // 4. 模板函数（模板实例化发生在编译期）
+    // virtual cannot be used on:
+    // 1. Static member functions (static)
+    // 2. Non-member functions (only member functions can be virtual)
+    // 3. Constructors (the vptr isn't set up yet during construction)
+    // 4. Template functions (template instantiation happens at compile time)
 };
 
-// 派生类中的virtual关键字可以省略（但建议用override代替）
+// The virtual keyword can be omitted in the derived class (but override is recommended instead)
 class Derived : public Base {
 public:
-    // 以下三种写法等价（func1自动成为虚函数）：
-    void func1() { }                   // 自动是virtual（继承）
-    virtual void func1() { }           // 显式virtual（不推荐，用override）
-    void func1() override { }          // 推荐！编译期检查是否正确重写
+    // The following three forms are equivalent (func1 automatically becomes virtual):
+    void func1() { }                   // automatically virtual (inherited)
+    virtual void func1() { }           // explicit virtual (not recommended, use override)
+    void func1() override { }          // recommended! compile-time check that it is a correct override
 
-    void func2() override { }          // 必须实现纯虚函数
+    void func2() override { }          // the pure virtual function must be implemented
 };
 ```
 
-2.2 override关键字 (C++11)
+2.2 The override Keyword (C++11)
 ------------------------------------
 
 ```cpp
@@ -392,48 +392,48 @@ public:
 
 class Derived : public Base {
 public:
-    // override确保函数签名完全匹配
-    void draw(int x, int y) override { }   // OK，匹配Base::draw
+    // override ensures the function signature matches exactly
+    void draw(int x, int y) override { }   // OK, matches Base::draw
 
-    // 以下都不正确——override会报错！
-    // void draw(int x) override { }       // 错误：参数列表不同
-    // void draw(float x, float y) override { } // 错误：参数类型不同
-    // void resize(int factor) override { }    // 错误：int vs double
-    // std::string getName() override { }      // 错误：缺少const修饰！
+    // None of the following are correct -- override reports an error!
+    // void draw(int x) override { }       // Error: different parameter list
+    // void draw(float x, float y) override { } // Error: different parameter types
+    // void resize(int factor) override { }    // Error: int vs double
+    // std::string getName() override { }      // Error: missing const qualifier!
 
-    // 如果基类函数被修改（如添加参数），override能及时发现错误
-    // 这是使用override的最大好处
+    // If the base class function is modified (e.g. a parameter is added), override catches the error right away
+    // This is the biggest benefit of using override
 };
 ```
 
-override的好处：
-  1. 编译期保证确实重写了基类的虚函数
-  2. 如果基类更改了函数签名，派生类会得到编译错误（而非静默失败）
-  3. 提高代码可读性——明确标识这是一个重写函数
+Benefits of override:
+  1. Guarantees at compile time that you really are overriding a base class virtual function
+  2. If the base class changes the function signature, the derived class gets a compile error (instead of failing silently)
+  3. Improves readability -- clearly marks the function as an override
 
-2.3 纯虚函数(= 0)和抽象类
+2.3 Pure Virtual Functions (= 0) and Abstract Classes
 ------------------------------------
 
 ```cpp
-// 抽象类——包含至少一个纯虚函数，不能被实例化
+// Abstract class -- contains at least one pure virtual function and cannot be instantiated
 class Shape {
 public:
-    virtual double area() const = 0;        // 纯虚函数
-    virtual double perimeter() const = 0;   // 纯虚函数
-    virtual void draw() const = 0;          // 纯虚函数
+    virtual double area() const = 0;        // pure virtual function
+    virtual double perimeter() const = 0;   // pure virtual function
+    virtual void draw() const = 0;          // pure virtual function
 
-    // 抽象类可以有非虚成员函数
+    // An abstract class can have non-virtual member functions
     void setColor(const std::string& c) { color = c; }
 
-    // 抽象类可以有构造函数（由派生类调用）
+    // An abstract class can have constructors (called by derived classes)
     Shape(const std::string& c) : color(c) {}
 
-    virtual ~Shape() = default;  // 虚析构
+    virtual ~Shape() = default;  // virtual destructor
 protected:
     std::string color;
 };
 
-// 具体类——必须实现所有纯虚函数
+// Concrete class -- must implement all pure virtual functions
 class Circle : public Shape {
     double radius;
 public:
@@ -450,24 +450,24 @@ public:
     }
 };
 
-// Shape s;  // 错误！不能实例化抽象类
+// Shape s;  // Error! An abstract class cannot be instantiated
 // Circle c(5, "red");  // OK
 ```
 
-抽象类的特性：
-  1. 不能直接创建对象（new Shape()错误）
-  2. 可以有构造函数/析构函数
-  3. 可以有非虚成员函数和数据成员
-  4. 通过基类指针/引用访问派生类对象的多态行为
-  5. 纯虚函数可以有实现（很少见）：virtual void func() = 0 {} 
+Properties of abstract classes:
+  1. Objects cannot be created directly (new Shape() is an error)
+  2. Can have constructors/destructors
+  3. Can have non-virtual member functions and data members
+  4. Polymorphic behavior of derived objects is accessed through base class pointers/references
+  5. A pure virtual function can have an implementation (rare): virtual void func() = 0 {}
 
-2.4 虚析构函数
+2.4 Virtual Destructors
 ------------------------------------
 
 ```cpp
 #include <iostream>
 
-// 错误示例：没有虚析构函数
+// Wrong example: no virtual destructor
 class BadBase {
 public:
     ~BadBase() { std::cout << "~BadBase()" << std::endl; }
@@ -487,11 +487,11 @@ public:
 
 void badExample() {
     BadBase* ptr = new BadDerived();
-    delete ptr;  // 只调用~BadBase()！~BadDerived()不会被调用！
-                 // data泄漏！1000个int的内存永远不会被释放！
+    delete ptr;  // only ~BadBase() is called! ~BadDerived() is not called!
+                 // data leaks! The memory for 1000 ints is never freed!
 }
 
-// 正确示例：有虚析构函数
+// Correct example: with a virtual destructor
 class GoodBase {
 public:
     virtual ~GoodBase() { std::cout << "~GoodBase()" << std::endl; }
@@ -511,15 +511,15 @@ public:
 
 void goodExample() {
     GoodBase* ptr = new GoodDerived();
-    delete ptr;  // 调用~GoodDerived() → ~GoodBase()
-                 // 资源正确释放！
+    delete ptr;  // calls ~GoodDerived() -> ~GoodBase()
+                 // resources are released correctly!
 }
 
-// 规则：如果类中有虚函数，析构函数应该也是虚的
-// 如果类是作为基类设计的，析构函数必须是虚的
+// Rule: if a class has virtual functions, its destructor should also be virtual
+// If a class is designed to be a base class, its destructor must be virtual
 ```
 
-2.5 final修饰虚函数 (C++11)
+2.5 final on Virtual Functions (C++11)
 ------------------------------------
 
 ```cpp
@@ -528,7 +528,7 @@ public:
     virtual void func1() = 0;
     virtual void func2() { }
 
-    // final阻止进一步重写
+    // final prevents further overriding
     virtual void finalFunc() final {
         std::cout << "This cannot be overridden" << std::endl;
     }
@@ -538,24 +538,24 @@ class Derived : public Base {
 public:
     void func1() override { }
     void func2() override { }
-    // void finalFunc() override { }  // 错误！final函数不能重写
+    // void finalFunc() override { }  // Error! A final function cannot be overridden
 };
 
 class FurtherDerived : public Derived {
 public:
-    void func1() override { }  // OK，Base没有final修饰func1
-    void func2() override { }  // OK，Base没有final修饰func2
-    // void finalFunc() override { }  // 错误！最终函数
+    void func1() override { }  // OK, Base did not mark func1 final
+    void func2() override { }  // OK, Base did not mark func2 final
+    // void finalFunc() override { }  // Error! It is final
 };
 
-// final也可用于类（第5章已介绍）
+// final can also be used on classes (introduced in Chapter 5)
 class FinalClass final {
     // ...
 };
-// class Derived2 : public FinalClass {};  // 错误！
+// class Derived2 : public FinalClass {};  // Error!
 ```
 
-2.6 协变返回类型 (Covariant Return Type)
+2.6 Covariant Return Types
 ------------------------------------
 
 ```cpp
@@ -571,8 +571,8 @@ public:
 
 class Derived : public Base {
 public:
-    // 协变返回类型：返回Derived*而不是Base*
-    // 条件：返回类型是指针/引用，且Derived是Base的派生类
+    // Covariant return type: returns Derived* instead of Base*
+    // Condition: the return type is a pointer/reference, and Derived derives from Base
     Derived* clone() const override {
         std::cout << "Derived::clone()" << std::endl;
         return new Derived(*this);
@@ -584,24 +584,24 @@ int main() {
     Derived d;
     d.derivedData = 100;
 
-    // 协变返回类型的优势：不需要向下转型
-    Derived* cloned = d.clone();  // 返回Derived*，可以直接使用
+    // Advantage of covariant return types: no downcast needed
+    Derived* cloned = d.clone();  // returns Derived*, usable directly
     std::cout << "derivedData: " << cloned->derivedData << std::endl;
 
-    // 通过基类指针多态调用
+    // Polymorphic call through a base class pointer
     Base* ptr = &d;
-    Base* cloned2 = ptr->clone();  // 返回Base*，但实际是Derived*
-    // Derived* cloned3 = ptr->clone();  // 错误！静态类型是Base*，返回Base*
+    Base* cloned2 = ptr->clone();  // returns Base*, but it is actually a Derived*
+    // Derived* cloned3 = ptr->clone();  // Error! The static type is Base*, so it returns Base*
     delete cloned;
     delete cloned2;
     return 0;
 }
 
-// 协变返回类型的使用场景：
-// clone()工厂模式、getThis()方法等
+// Use cases for covariant return types:
+// the clone() factory pattern, getThis() methods, etc.
 ```
 
-2.7 虚函数默认参数的行为
+2.7 Behavior of Default Arguments in Virtual Functions
 ------------------------------------
 
 ```cpp
@@ -609,7 +609,7 @@ int main() {
 
 class Base {
 public:
-    // 虚函数有默认参数
+    // Virtual function with a default argument
     virtual void print(int x = 10) {
         std::cout << "Base::print(" << x << ")" << std::endl;
     }
@@ -617,8 +617,8 @@ public:
 
 class Derived : public Base {
 public:
-    // 重写虚函数——但默认参数不同！
-    void print(int x = 20) override {  // 注意：默认参数20而不是10
+    // Overrides the virtual function -- but with a different default argument!
+    void print(int x = 20) override {  // note: default argument is 20, not 10
         std::cout << "Derived::print(" << x << ")" << std::endl;
     }
 };
@@ -628,23 +628,23 @@ int main() {
     Base* ptr = &d;
     Derived* dptr = &d;
 
-    // 默认参数是静态绑定的！
-    d.print();       // Derived::print(20) —— 调用Derived版本，使用Derived默认值
-    ptr->print();    // Derived::print(10) —— 调用Derived版本，但在使用Base默认值！
-                     // 陷阱！虚函数是动态绑定，但默认参数是静态绑定！
+    // Default arguments are statically bound!
+    d.print();       // Derived::print(20) -- calls the Derived version with Derived's default
+    ptr->print();    // Derived::print(10) -- calls the Derived version but uses Base's default!
+                     // Pitfall! Virtual functions are dynamically bound, but default arguments are statically bound!
 
-    dptr->print();   // Derived::print(20) —— 静态类型和动态类型都是Derived
+    dptr->print();   // Derived::print(20) -- both static and dynamic types are Derived
     return 0;
 }
 
-// 核心规则：
-// 虚函数的动态绑定 → 运行时根据实际对象类型决定调用哪个函数
-// 默认参数的静态绑定 → 编译时根据指针的静态类型决定默认参数值
+// Core rule:
+// Dynamic binding of virtual functions -> which function is called is decided at runtime by the actual object type
+// Static binding of default arguments -> the default value is decided at compile time by the pointer's static type
 //
-// 最佳实践：永远不要在重写的虚函数中改变默认参数！
+// Best practice: never change default arguments in an overriding virtual function!
 ```
 
-2.8 typeid和dynamic_cast
+2.8 typeid and dynamic_cast
 ------------------------------------
 
 ```cpp
@@ -679,22 +679,22 @@ public:
 void processAnimal(Animal* animal) {
     std::cout << "Processing: " << animal->species() << std::endl;
 
-    // typeid判断类型——需要RTTI开启
+    // typeid checks the type -- requires RTTI to be enabled
     if (typeid(*animal) == typeid(Dog)) {
         std::cout << "  It's exactly a Dog!" << std::endl;
     } else if (typeid(*animal) == typeid(Cat)) {
         std::cout << "  It's exactly a Cat!" << std::endl;
     }
 
-    // dynamic_cast安全的类型转换
-    // 对指针：失败返回nullptr
+    // dynamic_cast: safe type conversion
+    // For pointers: returns nullptr on failure
     if (auto* dog = dynamic_cast<Dog*>(animal)) {
-        dog->bark();  // 安全地调用Dog特有的方法
+        dog->bark();  // safely call a Dog-specific method
     } else if (auto* cat = dynamic_cast<Cat*>(animal)) {
-        cat->meow();  // 安全地调用Cat特有的方法
+        cat->meow();  // safely call a Cat-specific method
     }
 
-    // 对引用：失败抛出std::bad_cast异常
+    // For references: throws std::bad_cast on failure
     try {
         Dog& dogRef = dynamic_cast<Dog&>(*animal);
         std::cout << "  Reference cast to Dog succeeded" << std::endl;
@@ -720,24 +720,24 @@ int main() {
 }
 ```
 
-dynamic_cast的使用场景：
-  1. 向下转型（从基类指针转到派生类指针）
-  2. 交叉转型（多重继承中从一个基类转到另一个基类）
-  3. 根据实际类型做特殊处理（虽然应尽量用虚函数替代）
+Use cases for dynamic_cast:
+  1. Downcasting (from a base class pointer to a derived class pointer)
+  2. Cross-casting (from one base class to another in multiple inheritance)
+  3. Special handling based on the actual type (though virtual functions should be used instead whenever possible)
 
-注意：dynamic_cast需要RTTI（运行时类型识别）支持。
-如果编译时禁用了RTTI（-fno-rtti），dynamic_cast将不可用。
+Note: dynamic_cast requires RTTI (Run-Time Type Identification) support.
+If RTTI is disabled at compile time (-fno-rtti), dynamic_cast is unavailable.
 
 ================================================================================
 
-                            === 第三节：实用代码案例（生活场景举例） ===
+                            === Section 3: Practical Code Cases (Real-Life Scenarios) ===
 ================================================================================
 
-案例1：动物园动物模拟（多态入门）
+Case 1: Zoo Animal Simulation (Introduction to Polymorphism)
 ------------------------------------
 
-【生活场景】动物园语音导览系统。游客选择动物后，系统播放该动物的叫声。
-使用纯虚函数定义动物接口，每种动物重写makeSound。
+[Real-life scenario] A zoo audio-guide system. After a visitor selects an animal, the system plays that animal's sound.
+Pure virtual functions define the animal interface, and each animal overrides makeSound.
 
 ```cpp
 #include <iostream>
@@ -746,7 +746,7 @@ dynamic_cast的使用场景：
 #include <memory>
 #include <iomanip>
 
-// ====== 调试宏（第2章）======
+// ====== Debug macro (Chapter 2) ======
 #ifdef ZOO_DEBUG
     #define ZOO_LOG(msg) std::cout << "[ZOO] " << msg << std::endl
 #else
@@ -755,12 +755,12 @@ dynamic_cast的使用场景：
 
 namespace zoo {
 
-// ====== 抽象基类：Animal ======
+// ====== Abstract base class: Animal ======
 class Animal {
 protected:
     std::string name;
     int age;
-    std::string habitat;   // 栖息地
+    std::string habitat;   // habitat
 
 public:
     Animal(const std::string& n, int a, const std::string& h)
@@ -768,24 +768,24 @@ public:
         ZOO_LOG("Animal born: " + n);
     }
 
-    // 虚析构函数——关键！
+    // Virtual destructor -- crucial!
     virtual ~Animal() {
         ZOO_LOG("Animal gone: " + name);
     }
 
-    // 纯虚函数——每个动物必须有叫声
+    // Pure virtual function -- every animal must have a sound
     virtual std::string makeSound() const = 0;
 
-    // 纯虚函数——获取食物
+    // Pure virtual function -- get the diet
     virtual std::string getDiet() const = 0;
 
-    // 普通虚函数——有默认实现
+    // Ordinary virtual function -- has a default implementation
     virtual std::string getInfo() const {
-        return name + " (年龄:" + std::to_string(age) +
-               ", 栖息地:" + habitat + ")";
+        return name + " (age:" + std::to_string(age) +
+               ", habitat:" + habitat + ")";
     }
 
-    // 非虚函数
+    // Non-virtual functions
     const std::string& getName() const { return name; }
     int getAge() const { return age; }
     void celebrateBirthday() { age++; }
@@ -793,208 +793,208 @@ public:
     virtual std::string getCategory() const = 0;
 };
 
-// ====== 派生类：Dog ======
+// ====== Derived class: Dog ======
 class Dog : public Animal {
 public:
     Dog(const std::string& n, int a)
-        : Animal(n, a, "陆地") {}
+        : Animal(n, a, "Land") {}
     ~Dog() override { ZOO_LOG("Dog destructed: " + name); }
 
     std::string makeSound() const override {
-        return "汪汪! Woof Woof! \xF0\x9F\x90\xB6";
+        return "Arf arf! Woof Woof! \xF0\x9F\x90\xB6";
     }
 
     std::string getDiet() const override {
-        return "杂食: 狗粮, 肉类, 蔬菜";
+        return "Omnivore: dog food, meat, vegetables";
     }
 
     std::string getInfo() const override {
-        return Animal::getInfo() + " [狗]";
+        return Animal::getInfo() + " [Dog]";
     }
 
-    std::string getCategory() const override { return "哺乳动物"; }
+    std::string getCategory() const override { return "Mammal"; }
 };
 
-// ====== 派生类：Cat ======
+// ====== Derived class: Cat ======
 class Cat : public Animal {
 public:
     Cat(const std::string& n, int a)
-        : Animal(n, a, "陆地") {}
+        : Animal(n, a, "Land") {}
     ~Cat() override { ZOO_LOG("Cat destructed: " + name); }
 
     std::string makeSound() const override {
-        return "喵喵! Meow~ \xF0\x9F\x90\xB1";
+        return "Mew mew! Meow~ \xF0\x9F\x90\xB1";
     }
 
     std::string getDiet() const override {
-        return "肉食: 猫粮, 鱼, 鸡肉";
+        return "Carnivore: cat food, fish, chicken";
     }
 
     std::string getInfo() const override {
-        return Animal::getInfo() + " [猫]";
+        return Animal::getInfo() + " [Cat]";
     }
 
-    std::string getCategory() const override { return "哺乳动物"; }
+    std::string getCategory() const override { return "Mammal"; }
 };
 
-// ====== 派生类：Bird ======
+// ====== Derived class: Bird ======
 class Bird : public Animal {
 private:
-    double wingspan;  // 翼展(cm)
+    double wingspan;  // wingspan (cm)
 
 public:
     Bird(const std::string& n, int a, double w)
-        : Animal(n, a, "天空/树林"), wingspan(w) {}
+        : Animal(n, a, "Sky/Forest"), wingspan(w) {}
     ~Bird() override { ZOO_LOG("Bird destructed: " + name); }
 
     std::string makeSound() const override {
-        return "啾啾! Chirp Chirp! \xF0\x9F\x90\xA6";
+        return "Tweet tweet! Chirp Chirp! \xF0\x9F\x90\xA6";
     }
 
     std::string getDiet() const override {
-        return "杂食: 种子, 昆虫, 浆果";
+        return "Omnivore: seeds, insects, berries";
     }
 
     std::string getInfo() const override {
-        return Animal::getInfo() + " [鸟] 翼展:" +
+        return Animal::getInfo() + " [Bird] wingspan:" +
                std::to_string(wingspan) + "cm";
     }
 
-    std::string getCategory() const override { return "鸟类"; }
+    std::string getCategory() const override { return "Bird"; }
 
     double getWingspan() const { return wingspan; }
 };
 
-// ====== 派生类：Lion ======
+// ====== Derived class: Lion ======
 class Lion : public Animal {
 public:
     Lion(const std::string& n, int a)
-        : Animal(n, a, "草原") {}
+        : Animal(n, a, "Savanna") {}
     ~Lion() override { ZOO_LOG("Lion destructed: " + name); }
 
     std::string makeSound() const override {
-        return "吼! ROAR! \xF0\x9F\xA6\x81";
+        return "Grr! ROAR! \xF0\x9F\xA6\x81";
     }
 
     std::string getDiet() const override {
-        return "肉食: 斑马, 羚羊, 野牛";
+        return "Carnivore: zebra, antelope, buffalo";
     }
 
     std::string getInfo() const override {
-        return Animal::getInfo() + " [狮子] 百兽之王";
+        return Animal::getInfo() + " [Lion] King of the beasts";
     }
 
-    std::string getCategory() const override { return "哺乳动物"; }
+    std::string getCategory() const override { return "Mammal"; }
 };
 
-// ====== 派生类：Snake ======
+// ====== Derived class: Snake ======
 class Snake : public Animal {
 private:
-    bool isVenomous;  // 是否有毒
+    bool isVenomous;  // whether it is venomous
 
 public:
     Snake(const std::string& n, int a, bool venomous)
-        : Animal(n, a, "丛林"), isVenomous(venomous) {}
+        : Animal(n, a, "Jungle"), isVenomous(venomous) {}
     ~Snake() override { ZOO_LOG("Snake destructed: " + name); }
 
     std::string makeSound() const override {
-        return "嘶嘶~ Hiss~ \xF0\x9F\x90\x8D";
+        return "Sss~ Hiss~ \xF0\x9F\x90\x8D";
     }
 
     std::string getDiet() const override {
-        return "肉食: 老鼠, 青蛙, 小鸟";
+        return "Carnivore: mice, frogs, small birds";
     }
 
     std::string getInfo() const override {
-        return Animal::getInfo() + " [蛇] " +
-               (isVenomous ? "有毒" : "无毒");
+        return Animal::getInfo() + " [Snake] " +
+               (isVenomous ? "venomous" : "non-venomous");
     }
 
-    std::string getCategory() const override { return "爬行动物"; }
+    std::string getCategory() const override { return "Reptile"; }
 
     bool isPoisonous() const { return isVenomous; }
 };
 
-// ====== 动物园导览函数 ======
+// ====== Zoo tour function ======
 void zooTour(const std::vector<std::unique_ptr<Animal>>& zoo) {
-    std::cout << "\n===== \xF0\x9F\xA6\x81 动物园语音导览 \xF0\x9F\xA6\x81 =====" << std::endl;
+    std::cout << "\n===== \xF0\x9F\xA6\x81 Zoo Audio Guide \xF0\x9F\xA6\x81 =====" << std::endl;
     for (size_t i = 0; i < zoo.size(); ++i) {
         std::cout << "\n[" << (i + 1) << "] " << zoo[i]->getInfo() << std::endl;
-        std::cout << "    分类: " << zoo[i]->getCategory() << std::endl;
-        std::cout << "    叫声: " << zoo[i]->makeSound() << std::endl;
-        std::cout << "    食物: " << zoo[i]->getDiet() << std::endl;
+        std::cout << "    Category: " << zoo[i]->getCategory() << std::endl;
+        std::cout << "    Sound: " << zoo[i]->makeSound() << std::endl;
+        std::cout << "    Diet: " << zoo[i]->getDiet() << std::endl;
     }
 }
 
-// 按类别统计
+// Statistics by category
 void zooStats(const std::vector<std::unique_ptr<Animal>>& zoo) {
-    std::cout << "\n===== 动物园统计 =====" << std::endl;
-    std::cout << "动物总数: " << zoo.size() << std::endl;
+    std::cout << "\n===== Zoo Statistics =====" << std::endl;
+    std::cout << "Total animals: " << zoo.size() << std::endl;
 
     int mammals = 0, birds = 0, reptiles = 0;
     for (const auto& a : zoo) {
-        if (a->getCategory() == "哺乳动物") mammals++;
-        else if (a->getCategory() == "鸟类") birds++;
-        else if (a->getCategory() == "爬行动物") reptiles++;
+        if (a->getCategory() == "Mammal") mammals++;
+        else if (a->getCategory() == "Bird") birds++;
+        else if (a->getCategory() == "Reptile") reptiles++;
     }
-    std::cout << "  哺乳动物: " << mammals << std::endl;
-    std::cout << "  鸟类:     " << birds << std::endl;
-    std::cout << "  爬行动物: " << reptiles << std::endl;
+    std::cout << "  Mammals:  " << mammals << std::endl;
+    std::cout << "  Birds:    " << birds << std::endl;
+    std::cout << "  Reptiles: " << reptiles << std::endl;
 }
 
 }  // namespace zoo
 
-// ========== 演示代码 ==========
+// ========== Demo code ==========
 int main() {
     using namespace zoo;
 
     std::vector<std::unique_ptr<Animal>> zoo;
 
-    // 创建动物——基类指针管理
-    zoo.push_back(std::make_unique<Dog>("旺财", 3));
-    zoo.push_back(std::make_unique<Cat>("咪咪", 2));
-    zoo.push_back(std::make_unique<Bird>("小黄", 1, 25.5));
-    zoo.push_back(std::make_unique<Lion>("辛巴", 5));
-    zoo.push_back(std::make_unique<Snake>("小绿", 4, false));
-    zoo.push_back(std::make_unique<Dog>("小黑", 1));
-    zoo.push_back(std::make_unique<Cat>("奶糖", 4));
-    zoo.push_back(std::make_unique<Bird>("鹦鹉", 2, 40.0));
+    // Create animals -- managed through base class pointers
+    zoo.push_back(std::make_unique<Dog>("Wangcai", 3));
+    zoo.push_back(std::make_unique<Cat>("Mimi", 2));
+    zoo.push_back(std::make_unique<Bird>("Goldie", 1, 25.5));
+    zoo.push_back(std::make_unique<Lion>("Simba", 5));
+    zoo.push_back(std::make_unique<Snake>("Greenie", 4, false));
+    zoo.push_back(std::make_unique<Dog>("Blackie", 1));
+    zoo.push_back(std::make_unique<Cat>("Toffee", 4));
+    zoo.push_back(std::make_unique<Bird>("Polly", 2, 40.0));
 
-    // 导览
+    // Tour
     zooTour(zoo);
 
-    // 统计
+    // Statistics
     zooStats(zoo);
 
-    // 单独操作——多态调用
-    std::cout << "\n===== 特殊操作 =====" << std::endl;
-    zoo[0]->celebrateBirthday();  // 旺财又长一岁
+    // Individual operation -- polymorphic call
+    std::cout << "\n===== Special Operations =====" << std::endl;
+    zoo[0]->celebrateBirthday();  // Wangcai is one year older
     std::cout << zoo[0]->getInfo() << std::endl;
 
-    // 验证虚析构函数
-    std::cout << "\n===== 动物园闭园（析构） =====" << std::endl;
+    // Verify the virtual destructor
+    std::cout << "\n===== Zoo Closing (Destruction) =====" << std::endl;
     return 0;
-    // unique_ptr自动释放，虚析构保证每个动物的析构函数正确调用
+    // unique_ptr frees automatically; the virtual destructor ensures each animal's destructor is called correctly
 }
 ```
 
-知识点融入：
-  - 抽象基类（Animal）与纯虚函数
-  - 动态多态——基类指针调用不同派生类的makeSound()
-  - 虚析构函数——正确释放派生类资源
-  - 虚函数（getInfo）有默认实现，可被重写
-  - unique_ptr管理内存（第4章）
-  - const成员函数
-  - 命名空间 zoo
-  - 调试宏
+Concepts applied:
+  - Abstract base class (Animal) and pure virtual functions
+  - Dynamic polymorphism -- a base class pointer calls makeSound() of different derived classes
+  - Virtual destructor -- correctly releases derived-class resources
+  - A virtual function (getInfo) with a default implementation that can be overridden
+  - Managing memory with unique_ptr (Chapter 4)
+  - const member functions
+  - Namespace zoo
+  - Debug macro
 
 ================================================================================
 
-案例2：图形绘制系统升级（多态 + 协变返回类型）
+Case 2: Upgraded Graphics Drawing System (Polymorphism + Covariant Return Types)
 ------------------------------------
 
-【生活场景】CAD软件需要绘制多种图形。基于第5章的Shape体系，
-加入多态的draw()和area()，展示完整的动态绑定。
+[Real-life scenario] CAD software needs to draw many kinds of shapes. Building on the Shape hierarchy from Chapter 5,
+polymorphic draw() and area() are added to demonstrate complete dynamic binding.
 
 ```cpp
 #include <iostream>
@@ -1004,7 +1004,7 @@ int main() {
 #include <cmath>
 #include <iomanip>
 
-// ====== 调试宏 ======
+// ====== Debug macro ======
 #define CAD_DEBUG 1
 #if CAD_DEBUG
     #define CAD_LOG(msg) std::cout << "[CAD] " << msg << std::endl
@@ -1014,14 +1014,14 @@ int main() {
 
 namespace cad {
 
-// ====== 抽象基类：Drawable ======
+// ====== Abstract base class: Drawable ======
 class Drawable {
 public:
     virtual void draw() const = 0;
     virtual ~Drawable() = default;
 };
 
-// ====== 抽象基类：Shape ======
+// ====== Abstract base class: Shape ======
 class Shape : public Drawable {
 protected:
     double x, y;
@@ -1045,9 +1045,9 @@ public:
     virtual double perimeter() const = 0;
     virtual std::string getType() const = 0;
 
-    // 协变返回类型——派生类可以返回派生类指针
+    // Covariant return type -- derived classes can return a derived class pointer
     virtual Shape* clone() const {
-        CAD_LOG("Shape::clone() — should be overridden");
+        CAD_LOG("Shape::clone() -- should be overridden");
         return nullptr;
     }
 
@@ -1067,7 +1067,7 @@ public:
 
 int Shape::shapeCount = 0;
 
-// ====== 派生类：Circle ======
+// ====== Derived class: Circle ======
 class Circle : public Shape {
 private:
     double radius;
@@ -1085,13 +1085,13 @@ public:
     }
 
     void draw() const override {
-        std::cout << "\xF0\x9F\x94\xB5 绘制圆形: 半径" << radius
-                  << " 面积" << area() << std::endl;
+        std::cout << "\xF0\x9F\x94\xB5 Drawing circle: radius " << radius
+                  << " area " << area() << std::endl;
     }
 
     std::string getType() const override { return "Circle"; }
 
-    // 协变返回类型——返回Circle*
+    // Covariant return type -- returns Circle*
     Circle* clone() const override {
         return new Circle(x, y, color, radius);
     }
@@ -1099,7 +1099,7 @@ public:
     double getRadius() const { return radius; }
 };
 
-// ====== 派生类：Rectangle ======
+// ====== Derived class: Rectangle ======
 class Rectangle : public Shape {
 private:
     double width, height;
@@ -1118,8 +1118,8 @@ public:
     }
 
     void draw() const override {
-        std::cout << "\xF0\x9F\x9F\xAB 绘制矩形: " << width << "x"
-                  << height << " 面积" << area() << std::endl;
+        std::cout << "\xF0\x9F\x9F\xAB Drawing rectangle: " << width << "x"
+                  << height << " area " << area() << std::endl;
     }
 
     std::string getType() const override { return "Rectangle"; }
@@ -1129,7 +1129,7 @@ public:
     }
 };
 
-// ====== 派生类：Triangle ======
+// ====== Derived class: Triangle ======
 class Triangle : public Shape {
 private:
     double sideA, sideB, sideC;
@@ -1139,7 +1139,7 @@ public:
              double a, double b, double sideCVal)
         : Shape(xVal, yVal, c), sideA(a), sideB(b), sideC(sideCVal) { }
 
-    // 海伦公式计算面积
+    // Compute the area with Heron's formula
     double area() const override {
         double s = (sideA + sideB + sideC) / 2.0;
         return std::sqrt(s * (s - sideA) * (s - sideB) * (s - sideC));
@@ -1150,9 +1150,9 @@ public:
     }
 
     void draw() const override {
-        std::cout << "\xF0\x9F\x94\xBA 绘制三角形: 边长("
+        std::cout << "\xF0\x9F\x94\xBA Drawing triangle: sides("
                   << sideA << "," << sideB << "," << sideC
-                  << ") 面积" << area() << std::endl;
+                  << ") area " << area() << std::endl;
     }
 
     std::string getType() const override { return "Triangle"; }
@@ -1162,9 +1162,9 @@ public:
     }
 };
 
-// ====== 多态操作 ======
+// ====== Polymorphic operations ======
 void renderScene(const std::vector<std::unique_ptr<Shape>>& scene) {
-    std::cout << "\n===== 渲染场景 =====" << std::endl;
+    std::cout << "\n===== Rendering Scene =====" << std::endl;
     for (const auto& shape : scene) {
         shape->draw();
     }
@@ -1173,31 +1173,31 @@ void renderScene(const std::vector<std::unique_ptr<Shape>>& scene) {
 double totalArea(const std::vector<std::unique_ptr<Shape>>& scene) {
     double total = 0.0;
     for (const auto& shape : scene) {
-        total += shape->area();  // 多态调用area()
+        total += shape->area();  // polymorphic call to area()
     }
     return total;
 }
 
-// 使用协变返回类型来克隆
+// Clone using covariant return types
 std::vector<std::unique_ptr<Shape>> cloneScene(
     const std::vector<std::unique_ptr<Shape>>& scene) {
     std::vector<std::unique_ptr<Shape>> cloned;
     for (const auto& shape : scene) {
         cloned.push_back(
-            std::unique_ptr<Shape>(shape->clone()));  // 协变返回类型
+            std::unique_ptr<Shape>(shape->clone()));  // covariant return type
     }
     return cloned;
 }
 
 }  // namespace cad
 
-// ========== 演示代码 ==========
+// ========== Demo code ==========
 int main() {
     using namespace cad;
 
-    std::cout << "===== CAD图形绘制系统 =====\n" << std::endl;
+    std::cout << "===== CAD Shape Drawing System =====\n" << std::endl;
 
-    // 创建场景
+    // Create the scene
     std::vector<std::unique_ptr<Shape>> scene;
 
     scene.push_back(std::make_unique<Circle>(100, 100, "red", 50));
@@ -1207,30 +1207,30 @@ int main() {
     scene.push_back(std::make_unique<Rectangle>(150, 250, "purple", 120, 80));
     scene.push_back(std::make_unique<Triangle>(50, 50, "orange", 30, 40, 50));
 
-    std::cout << "图形总数: " << Shape::getShapeCount() << std::endl;
+    std::cout << "Total shapes: " << Shape::getShapeCount() << std::endl;
 
-    // 渲染
+    // Render
     renderScene(scene);
 
-    // 统计
-    std::cout << "\n===== 统计 =====" << std::endl;
+    // Statistics
+    std::cout << "\n===== Statistics =====" << std::endl;
     for (const auto& s : scene) {
         s->printInfo();
-        std::cout << " 周长=" << s->perimeter() << std::endl;
+        std::cout << " perimeter=" << s->perimeter() << std::endl;
     }
-    std::cout << "\n图形总面积: " << std::fixed << std::setprecision(2)
+    std::cout << "\nTotal shape area: " << std::fixed << std::setprecision(2)
               << totalArea(scene) << std::endl;
 
-    // 克隆场景（协变返回类型演示）
-    std::cout << "\n===== 克隆场景 =====" << std::endl;
+    // Clone the scene (covariant return type demo)
+    std::cout << "\n===== Cloning Scene =====" << std::endl;
     auto clonedScene = cloneScene(scene);
-    std::cout << "克隆了 " << clonedScene.size() << " 个图形" << std::endl;
+    std::cout << "Cloned " << clonedScene.size() << " shapes" << std::endl;
 
-    // 移动所有图形
-    std::cout << "\n===== 移动图形 =====" << std::endl;
+    // Move all shapes
+    std::cout << "\n===== Moving Shapes =====" << std::endl;
     for (auto& s : scene) {
         s->move(10, 20);
-        std::cout << "移动后: " << s->getType() << " at ("
+        std::cout << "After moving: " << s->getType() << " at ("
                   << s->getX() << "," << s->getY() << ")" << std::endl;
     }
 
@@ -1238,23 +1238,23 @@ int main() {
 }
 ```
 
-知识点融入：
-  - 抽象基类与纯虚函数
-  - 动态多态（draw(), area(), perimeter()）
-  - 协变返回类型（clone()返回派生类指针）
-  - override确保正确重写
-  - 虚析构函数
-  - unique_ptr管理对象
-  - 命名空间 cad
-  - 调试宏
+Concepts applied:
+  - Abstract base classes and pure virtual functions
+  - Dynamic polymorphism (draw(), area(), perimeter())
+  - Covariant return types (clone() returns a derived class pointer)
+  - override ensures correct overriding
+  - Virtual destructors
+  - Managing objects with unique_ptr
+  - Namespace cad
+  - Debug macro
 
 ================================================================================
 
-案例3：支付系统（多态 + 工厂模式）
+Case 3: Payment System (Polymorphism + Factory Pattern)
 ------------------------------------
 
-【生活场景】电商结算页面支持多种支付方式（支付宝、微信、银行卡、信用卡）。
-使用抽象基类定义支付接口，每种支付方式重写支付逻辑。
+[Real-life scenario] An e-commerce checkout page supports multiple payment methods (Alipay, WeChat Pay, bank card, credit card).
+An abstract base class defines the payment interface, and each payment method overrides the payment logic.
 
 ```cpp
 #include <iostream>
@@ -1265,7 +1265,7 @@ int main() {
 #include <chrono>
 #include <random>
 
-// ====== 调试宏 ======
+// ====== Debug macro ======
 #define PAY_DEBUG 1
 #if PAY_DEBUG
     #define PAY_LOG(msg) std::cout << "[PAY] " << msg << std::endl
@@ -1275,14 +1275,14 @@ int main() {
 
 namespace payment {
 
-// ====== 抽象基类：PaymentMethod ======
+// ====== Abstract base class: PaymentMethod ======
 class PaymentMethod {
 protected:
-    std::string accountID;    // 账户标识
-    std::string accountName;  // 账户持有人姓名
-    double balance;           // 账户余额
-    static int totalTransactions;  // 总交易次数
-    static double totalAmount;     // 总交易金额
+    std::string accountID;    // account identifier
+    std::string accountName;  // account holder's name
+    double balance;           // account balance
+    static int totalTransactions;  // total number of transactions
+    static double totalAmount;     // total transaction amount
 
 public:
     PaymentMethod(const std::string& id, const std::string& name,
@@ -1295,24 +1295,24 @@ public:
         PAY_LOG("PaymentMethod destroyed: " + accountName);
     }
 
-    // 纯虚函数——每种支付方式的具体实现
+    // Pure virtual function -- the concrete implementation for each payment method
     virtual bool pay(double amount) = 0;
 
-    // 纯虚函数——获取支付方式名称
+    // Pure virtual function -- get the payment method name
     virtual std::string getMethodName() const = 0;
 
-    // 虚函数——获取折扣（某些支付方式有折扣）
+    // Virtual function -- get the discount (some payment methods offer discounts)
     virtual double getDiscount(double amount) const {
-        return 0.0;  // 默认无折扣
+        return 0.0;  // no discount by default
     }
 
-    // 实际支付金额 = 原价 - 折扣
+    // Actual amount paid = original price - discount
     double getActualAmount(double amount) const {
         double discount = getDiscount(amount);
         return amount - discount;
     }
 
-    // 非虚函数——账户信息
+    // Non-virtual functions -- account information
     const std::string& getAccountID()   const { return accountID; }
     const std::string& getAccountName() const { return accountName; }
     double getBalance()                 const { return balance; }
@@ -1321,7 +1321,7 @@ public:
         std::cout << std::left
                   << std::setw(15) << getMethodName()
                   << std::setw(20) << accountName
-                  << "余额: $" << std::fixed << std::setprecision(2)
+                  << "Balance: $" << std::fixed << std::setprecision(2)
                   << balance;
     }
 
@@ -1332,7 +1332,7 @@ public:
 int PaymentMethod::totalTransactions = 0;
 double PaymentMethod::totalAmount = 0.0;
 
-// ====== 派生类：AliPay ======
+// ====== Derived class: AliPay ======
 class AliPay : public PaymentMethod {
 public:
     AliPay(const std::string& id, const std::string& name, double bal)
@@ -1341,35 +1341,35 @@ public:
     }
 
     bool pay(double amount) override {
-        std::cout << "[支付宝] ";
+        std::cout << "[Alipay] ";
         if (amount > balance) {
-            std::cout << "支付失败! 余额不足 ($" << balance
+            std::cout << "Payment failed! Insufficient balance ($" << balance
                       << " < $" << amount << ")" << std::endl;
             return false;
         }
         balance -= amount;
         totalTransactions++;
         totalAmount += amount;
-        std::cout << "支付成功! ￥" << amount
-                  << " (余额: ￥" << balance << ")" << std::endl;
+        std::cout << "Payment successful! ¥" << amount
+                  << " (balance: ¥" << balance << ")" << std::endl;
         return true;
     }
 
     std::string getMethodName() const override {
-        return "支付宝";
+        return "Alipay";
     }
 
     double getDiscount(double amount) const override {
-        // 支付宝满100减5
+        // Alipay: 5 off on orders of 100 or more
         if (amount >= 100) return 5.0;
         return 0.0;
     }
 };
 
-// ====== 派生类：WeChatPay ======
+// ====== Derived class: WeChatPay ======
 class WeChatPay : public PaymentMethod {
 private:
-    int memberLevel;  // 会员等级（1-5）
+    int memberLevel;  // membership level (1-5)
 
 public:
     WeChatPay(const std::string& id, const std::string& name,
@@ -1380,35 +1380,35 @@ public:
     }
 
     bool pay(double amount) override {
-        std::cout << "[微信支付] ";
+        std::cout << "[WeChat Pay] ";
         if (amount > balance) {
-            std::cout << "支付失败! 余额不足" << std::endl;
+            std::cout << "Payment failed! Insufficient balance" << std::endl;
             return false;
         }
         balance -= amount;
         totalTransactions++;
         totalAmount += amount;
-        std::cout << "支付成功! ￥" << amount
-                  << " (余额: ￥" << balance << ")" << std::endl;
+        std::cout << "Payment successful! ¥" << amount
+                  << " (balance: ¥" << balance << ")" << std::endl;
         return true;
     }
 
     std::string getMethodName() const override {
-        return "微信支付";
+        return "WeChat Pay";
     }
 
     double getDiscount(double amount) const override {
-        // 微信会员等级越高折扣越多
+        // The higher the WeChat membership level, the bigger the discount
         double discount = memberLevel * 1.0;
         return (discount > amount * 0.1) ? amount * 0.1 : discount;
     }
 };
 
-// ====== 派生类：BankCard ======
+// ====== Derived class: BankCard ======
 class BankCard : public PaymentMethod {
 private:
-    std::string bankName;       // 银行名称
-    std::string cardNumber;     // 卡号
+    std::string bankName;       // bank name
+    std::string cardNumber;     // card number
 
 public:
     BankCard(const std::string& id, const std::string& name,
@@ -1420,26 +1420,26 @@ public:
     bool pay(double amount) override {
         std::cout << "[" << bankName << "] ";
         if (amount > balance) {
-            std::cout << "支付失败! 余额不足" << std::endl;
+            std::cout << "Payment failed! Insufficient balance" << std::endl;
             return false;
         }
         balance -= amount;
         totalTransactions++;
         totalAmount += amount;
-        std::cout << "银行卡支付成功! ￥" << amount
-                  << " (余额: ￥" << balance << ")" << std::endl;
+        std::cout << "Bank card payment successful! ¥" << amount
+                  << " (balance: ¥" << balance << ")" << std::endl;
         return true;
     }
 
     std::string getMethodName() const override {
-        return "银行卡(" + bankName + ")";
+        return "Bank Card(" + bankName + ")";
     }
 };
 
-// ====== 派生类：CreditCard ======
+// ====== Derived class: CreditCard ======
 class CreditCard : public PaymentMethod {
 private:
-    double creditLimit;   // 信用额度
+    double creditLimit;   // credit limit
     std::string bankName;
 
 public:
@@ -1452,13 +1452,13 @@ public:
     }
 
     bool pay(double amount) override {
-        std::cout << "[信用卡-" << bankName << "] ";
-        // 信用卡可用额度 = 余额 + 信用额度
+        std::cout << "[Credit Card-" << bankName << "] ";
+        // Available credit = balance + credit limit
         if (amount > balance + creditLimit) {
-            std::cout << "支付失败! 超过信用额度" << std::endl;
+            std::cout << "Payment failed! Credit limit exceeded" << std::endl;
             return false;
         }
-        // 优先用余额支付
+        // Pay from the balance first
         if (amount <= balance) {
             balance -= amount;
         } else {
@@ -1466,23 +1466,23 @@ public:
             double fromCredit = amount - balance;
             balance = 0;
             creditLimit -= fromCredit;
-            std::cout << "(使用余额$" << fromBalance
-                      << " + 透支$" << fromCredit << ") ";
+            std::cout << "(using balance $" << fromBalance
+                      << " + overdraft $" << fromCredit << ") ";
         }
         totalTransactions++;
         totalAmount += amount;
-        std::cout << "支付成功! ￥" << amount << std::endl;
+        std::cout << "Payment successful! ¥" << amount << std::endl;
         return true;
     }
 
     std::string getMethodName() const override {
-        return "信用卡(" + bankName + ")";
+        return "Credit Card(" + bankName + ")";
     }
 
     double getCreditLimit() const { return creditLimit; }
 };
 
-// ====== 工厂函数——根据用户选择创建支付方式 ======
+// ====== Factory function -- creates a payment method based on the user's choice ======
 enum class PaymentType {
     ALIPAY,
     WECHAT,
@@ -1499,54 +1499,54 @@ std::unique_ptr<PaymentMethod> createPayment(PaymentType type) {
         case PaymentType::BANK_CARD:
             return std::make_unique<BankCard>(
                 "BC001", "Charlie", 8000.0,
-                "工商银行", "6222034567890123");
+                "ICBC", "6222034567890123");
         case PaymentType::CREDIT_CARD:
             return std::make_unique<CreditCard>(
-                "CC001", "Diana", 2000.0, 10000.0, "招商银行");
+                "CC001", "Diana", 2000.0, 10000.0, "China Merchants Bank");
         default:
             return nullptr;
     }
 }
 
-// ====== 处理支付 ======
+// ====== Process a payment ======
 void processPayment(PaymentMethod& method, double amount) {
-    std::cout << "\n--- 处理支付 ---" << std::endl;
-    std::cout << "支付方式: " << method.getMethodName() << std::endl;
-    std::cout << "订单金额: ￥" << amount << std::endl;
+    std::cout << "\n--- Processing payment ---" << std::endl;
+    std::cout << "Payment method: " << method.getMethodName() << std::endl;
+    std::cout << "Order amount: ¥" << amount << std::endl;
 
     double discount = method.getDiscount(amount);
     if (discount > 0) {
-        std::cout << "优惠: -￥" << discount << " (享受"
-                  << method.getMethodName() << "优惠)" << std::endl;
+        std::cout << "Discount: -¥" << discount << " (applied "
+                  << method.getMethodName() << " promotion)" << std::endl;
     }
 
     double actualAmount = method.getActualAmount(amount);
-    std::cout << "实付金额: ￥" << actualAmount << std::endl;
+    std::cout << "Amount due: ¥" << actualAmount << std::endl;
 
     bool success = method.pay(actualAmount);
     if (success) {
-        std::cout << "\xE2\x9C\x85 支付完成!" << std::endl;
+        std::cout << "\xE2\x9C\x85 Payment complete!" << std::endl;
     } else {
-        std::cout << "\xE2\x9D\x8C 支付失败!" << std::endl;
+        std::cout << "\xE2\x9D\x8C Payment failed!" << std::endl;
     }
 }
 
 }  // namespace payment
 
-// ========== 演示代码 ==========
+// ========== Demo code ==========
 int main() {
     using namespace payment;
 
-    std::cout << "===== \xF0\x9F\x92\xB0 支付系统 =====" << std::endl;
+    std::cout << "===== \xF0\x9F\x92\xB0 Payment System =====" << std::endl;
 
-    // 创建多种支付方式
+    // Create several payment methods
     auto alipay = createPayment(PaymentType::ALIPAY);
     auto wechat = createPayment(PaymentType::WECHAT);
     auto bankCard = createPayment(PaymentType::BANK_CARD);
     auto creditCard = createPayment(PaymentType::CREDIT_CARD);
 
-    // 显示账户信息
-    std::cout << "\n可用支付方式:" << std::endl;
+    // Display account information
+    std::cout << "\nAvailable payment methods:" << std::endl;
     alipay->displayInfo();
     std::cout << std::endl;
     wechat->displayInfo();
@@ -1556,35 +1556,35 @@ int main() {
     creditCard->displayInfo();
     std::cout << std::endl;
 
-    // 模拟多笔支付（多态调用）
+    // Simulate several payments (polymorphic calls)
     std::vector<double> orders = { 88.50, 256.00, 999.99, 15000.00, 45.00 };
 
     for (size_t i = 0; i < orders.size(); ++i) {
-        std::cout << "\n===== 订单 #" << (i + 1)
-                  << " (￥" << orders[i] << ") =====" << std::endl;
+        std::cout << "\n===== Order #" << (i + 1)
+                  << " (¥" << orders[i] << ") =====" << std::endl;
 
-        // 根据订单金额选择不同支付方式
+        // Choose a payment method based on the order amount
         PaymentMethod* method = nullptr;
         if (orders[i] > 10000) {
-            method = creditCard.get();   // 大额用信用卡
+            method = creditCard.get();   // large amounts use the credit card
         } else if (orders[i] > 500) {
-            method = bankCard.get();     // 中等金额用银行卡
+            method = bankCard.get();     // medium amounts use the bank card
         } else if (orders[i] > 100) {
-            method = alipay.get();       // 小额用支付宝（有折扣）
+            method = alipay.get();       // small amounts use Alipay (with discount)
         } else {
-            method = wechat.get();       // 零钱用微信
+            method = wechat.get();       // pocket change uses WeChat
         }
         processPayment(*method, orders[i]);
     }
 
-    // 统计
-    std::cout << "\n===== 支付统计 =====" << std::endl;
-    std::cout << "总交易数: " << PaymentMethod::getTotalTransactions()
+    // Statistics
+    std::cout << "\n===== Payment Statistics =====" << std::endl;
+    std::cout << "Total transactions: " << PaymentMethod::getTotalTransactions()
               << std::endl;
-    std::cout << "总交易额: ￥" << std::fixed << std::setprecision(2)
+    std::cout << "Total transaction amount: ¥" << std::fixed << std::setprecision(2)
               << PaymentMethod::getTotalAmount() << std::endl;
 
-    std::cout << "\n最终账户余额:" << std::endl;
+    std::cout << "\nFinal account balances:" << std::endl;
     alipay->displayInfo();    std::cout << std::endl;
     wechat->displayInfo();    std::cout << std::endl;
     bankCard->displayInfo();  std::cout << std::endl;
@@ -1594,24 +1594,24 @@ int main() {
 }
 ```
 
-知识点融入：
-  - 抽象基类 + 纯虚函数（pay, getMethodName）
-  - 动态多态（不同支付方式的pay实现）
-  - override确保正确重写
-  - 虚函数默认实现（getDiscount）
-  - 工厂模式（createPayment）
-  - static成员统计
-  - 命名空间 payment
-  - unique_ptr管理内存
-  - 调试宏
+Concepts applied:
+  - Abstract base class + pure virtual functions (pay, getMethodName)
+  - Dynamic polymorphism (different pay implementations for different payment methods)
+  - override ensures correct overriding
+  - Virtual function with a default implementation (getDiscount)
+  - Factory pattern (createPayment)
+  - static member counters
+  - Namespace payment
+  - Managing memory with unique_ptr
+  - Debug macro
 
 ================================================================================
 
-案例4：媒体播放器框架（接口 + 模板方法模式 + 虚函数默认参数陷阱）
+Case 4: Media Player Framework (Interface + Template Method Pattern + Virtual Function Default Argument Pitfall)
 ------------------------------------
 
-【生活场景】万能媒体播放器。通过接口定义播放器行为，
-展示模板方法模式，并演示虚函数默认参数的陷阱。
+[Real-life scenario] A universal media player. An interface defines the player's behavior,
+showcasing the Template Method pattern and demonstrating the pitfall of default arguments in virtual functions.
 
 ```cpp
 #include <iostream>
@@ -1620,7 +1620,7 @@ int main() {
 #include <memory>
 #include <iomanip>
 
-// ====== 调试宏 ======
+// ====== Debug macro ======
 #define MEDIA_DEBUG 1
 #if MEDIA_DEBUG
     #define MEDIA_LOG(msg) std::cout << "[MEDIA] " << msg << std::endl
@@ -1630,19 +1630,19 @@ int main() {
 
 namespace media {
 
-// ====== 播放状态 ======
+// ====== Playback state ======
 enum class PlayState {
     STOPPED,
     PLAYING,
     PAUSED
 };
 
-// ====== 抽象接口：IMediaPlayer ======
+// ====== Abstract interface: IMediaPlayer ======
 class IMediaPlayer {
 protected:
     std::string title;
     std::string artist;
-    double duration;      // 秒
+    double duration;      // seconds
     PlayState state;
 
 public:
@@ -1651,27 +1651,27 @@ public:
         MEDIA_LOG("Media loaded: " + t);
     }
 
-    // 虚析构——接口类必须要有！
+    // Virtual destructor -- an interface class must have one!
     virtual ~IMediaPlayer() {
         MEDIA_LOG("Media unloaded: " + title);
     }
 
-    // 纯虚函数——子类必须实现的底层播放逻辑
+    // Pure virtual functions -- low-level playback logic that subclasses must implement
     virtual void doPlay() = 0;
     virtual void doPause() = 0;
     virtual void doStop() = 0;
     virtual void doSeek(double position) = 0;
 
-    // 纯虚函数——媒体类型
+    // Pure virtual functions -- media type
     virtual std::string getMediaType() const = 0;
     virtual std::string getFormatInfo() const = 0;
 
-    // ====== 模板方法模式：基类实现算法框架，调用派生类的纯虚函数 ======
-    // 注意：这里刻意在虚函数play中使用默认参数，演示陷阱！
-    virtual bool play(int volume = 50) {  // 默认参数！
+    // ====== Template Method pattern: the base class implements the algorithm skeleton and calls the derived classes' pure virtual functions ======
+    // Note: a default argument is deliberately used in the virtual function play here to demonstrate the pitfall!
+    virtual bool play(int volume = 50) {  // default argument!
         state = PlayState::PLAYING;
         doPlay();
-        std::cout << "  音量: " << volume << "%" << std::endl;
+        std::cout << "  Volume: " << volume << "%" << std::endl;
         return true;
     }
 
@@ -1695,7 +1695,7 @@ public:
         return true;
     }
 
-    // 非虚函数
+    // Non-virtual functions
     const std::string& getTitle() const { return title; }
     double getDuration() const { return duration; }
     PlayState getState() const { return state; }
@@ -1704,13 +1704,13 @@ public:
         std::cout << std::left
                   << "[" << std::setw(12) << getMediaType() << "] "
                   << std::setw(25) << title
-                  << " 时长: " << std::setw(6) << duration << "s"
-                  << " 格式: " << getFormatInfo()
+                  << " Duration: " << std::setw(6) << duration << "s"
+                  << " Format: " << getFormatInfo()
                   << std::endl;
     }
 };
 
-// ====== 派生类：MP3Player ======
+// ====== Derived class: MP3Player ======
 class MP3Player : public IMediaPlayer {
 private:
     int bitrate;  // kbps
@@ -1721,33 +1721,33 @@ public:
         : IMediaPlayer(t, a, dur), bitrate(br) {}
 
     void doPlay() override {
-        std::cout << "\xF0\x9F\x8E\xB5 MP3播放: " << title
+        std::cout << "\xF0\x9F\x8E\xB5 MP3 playing: " << title
                   << " [" << bitrate << "kbps]" << std::endl;
     }
 
     void doPause() override {
-        std::cout << "\xE2\x8F\xB8 MP3暂停: " << title << std::endl;
+        std::cout << "\xE2\x8F\xB8 MP3 paused: " << title << std::endl;
     }
 
     void doStop() override {
-        std::cout << "\xE2\x8F\xB9 MP3停止: " << title << std::endl;
+        std::cout << "\xE2\x8F\xB9 MP3 stopped: " << title << std::endl;
     }
 
     void doSeek(double position) override {
-        std::cout << "\xE2\x8F\xA9 MP3跳转到: " << position << "s"
+        std::cout << "\xE2\x8F\xA9 MP3 seeked to: " << position << "s"
                   << std::endl;
     }
 
-    std::string getMediaType() const override { return "MP3音频"; }
+    std::string getMediaType() const override { return "MP3 Audio"; }
     std::string getFormatInfo() const override {
         return "MP3 " + std::to_string(bitrate) + "kbps";
     }
 };
 
-// ====== 派生类：VideoPlayer ======
+// ====== Derived class: VideoPlayer ======
 class VideoPlayer : public IMediaPlayer {
 private:
-    int width, height;  // 分辨率
+    int width, height;  // resolution
     int fps;
 
 public:
@@ -1756,31 +1756,31 @@ public:
         : IMediaPlayer(t, a, dur), width(w), height(h), fps(f) {}
 
     void doPlay() override {
-        std::cout << "\xF0\x9F\x8E\xAC 视频播放: " << title
+        std::cout << "\xF0\x9F\x8E\xAC Video playing: " << title
                   << " [" << width << "x" << height << " " << fps
                   << "fps]" << std::endl;
     }
 
     void doPause() override {
-        std::cout << "\xE2\x8F\xB8 视频暂停: " << title << std::endl;
+        std::cout << "\xE2\x8F\xB8 Video paused: " << title << std::endl;
     }
 
     void doStop() override {
-        std::cout << "\xE2\x8F\xB9 视频停止: " << title << std::endl;
+        std::cout << "\xE2\x8F\xB9 Video stopped: " << title << std::endl;
     }
 
     void doSeek(double position) override {
-        std::cout << "\xE2\x8F\xA9 视频跳转到: " << position << "s"
+        std::cout << "\xE2\x8F\xA9 Video seeked to: " << position << "s"
                   << std::endl;
     }
 
-    std::string getMediaType() const override { return "视频"; }
+    std::string getMediaType() const override { return "Video"; }
     std::string getFormatInfo() const override {
         return std::to_string(width) + "x" + std::to_string(height);
     }
 };
 
-// ====== 派生类：StreamingPlayer ======
+// ====== Derived class: StreamingPlayer ======
 class StreamingPlayer : public IMediaPlayer {
 private:
     std::string sourceURL;
@@ -1792,37 +1792,37 @@ public:
         : IMediaPlayer(t, a, dur), sourceURL(url), bufferSize(buf) {}
 
     void doPlay() override {
-        std::cout << "\xF0\x9F\x8C\x90 流媒体播放: " << title
-                  << " (缓冲" << bufferSize << "MB)" << std::endl;
-        std::cout << "  来源: " << sourceURL << std::endl;
+        std::cout << "\xF0\x9F\x8C\x90 Stream playing: " << title
+                  << " (buffer " << bufferSize << "MB)" << std::endl;
+        std::cout << "  Source: " << sourceURL << std::endl;
     }
 
     void doPause() override {
-        std::cout << "\xE2\x8F\xB8 流媒体暂停: " << title << std::endl;
+        std::cout << "\xE2\x8F\xB8 Stream paused: " << title << std::endl;
     }
 
     void doStop() override {
-        std::cout << "\xE2\x8F\xB9 流媒体停止: " << title << std::endl;
+        std::cout << "\xE2\x8F\xB9 Stream stopped: " << title << std::endl;
     }
 
     void doSeek(double position) override {
-        std::cout << "\xE2\x8F\xA9 流媒体缓冲跳转到: " << position
-                  << "s (重新缓冲...)" << std::endl;
+        std::cout << "\xE2\x8F\xA9 Stream buffer seeked to: " << position
+                  << "s (rebuffering...)" << std::endl;
     }
 
-    // 重写play并改变默认参数（演示陷阱！）
-    bool play(int volume = 80) override {  // 注意：默认参数80！
-        std::cout << "  流媒体音量: " << volume << "%" << std::endl;
+    // Override play and change the default argument (demonstrating the pitfall!)
+    bool play(int volume = 80) override {  // note: default argument is 80!
+        std::cout << "  Stream volume: " << volume << "%" << std::endl;
         return IMediaPlayer::play(volume);
     }
 
-    std::string getMediaType() const override { return "流媒体"; }
+    std::string getMediaType() const override { return "Streaming"; }
     std::string getFormatInfo() const override {
         return sourceURL.substr(0, 25) + "...";
     }
 };
 
-// ====== 播放列表管理 ======
+// ====== Playlist management ======
 class Playlist {
 private:
     std::vector<std::unique_ptr<IMediaPlayer>> tracks;
@@ -1838,10 +1838,10 @@ public:
     }
 
     void playAll() {
-        std::cout << "\n===== 播放列表: " << name << " =====" << std::endl;
+        std::cout << "\n===== Playlist: " << name << " =====" << std::endl;
         for (auto& track : tracks) {
             track->displayInfo();
-            track->play();  // 多态调用
+            track->play();  // polymorphic call
             std::cout << std::endl;
         }
     }
@@ -1849,85 +1849,85 @@ public:
     size_t size() const { return tracks.size(); }
 };
 
-// ====== 演示虚函数默认参数陷阱 ======
+// ====== Demonstrate the virtual function default argument pitfall ======
 void demonstrateDefaultParamTrap() {
-    std::cout << "\n===== 虚函数默认参数陷阱演示 =====" << std::endl;
+    std::cout << "\n===== Virtual Function Default Argument Pitfall Demo =====" << std::endl;
 
-    StreamingPlayer stream("在线音乐", "Various", 240, "https://music.example.com/song1", 10);
+    StreamingPlayer stream("Online Music", "Various", 240, "https://music.example.com/song1", 10);
 
-    // 通过基类指针调用
+    // Call through a base class pointer
     IMediaPlayer* basePtr = &stream;
-    basePtr->play();   // 输出：音量80%还是50%？
-                        // 答案：50%！因为默认参数是静态绑定的！
-                        // 基类中play的默认参数是50
+    basePtr->play();   // Output: is the volume 80% or 50%?
+                        // Answer: 50%! Because default arguments are statically bound!
+                        // The default argument of play in the base class is 50
 
-    // 通过派生类指针调用
+    // Call through a derived class pointer
     StreamingPlayer* derivedPtr = &stream;
-    derivedPtr->play();  // 输出：音量80%（使用派生类的默认参数）
+    derivedPtr->play();  // Output: volume 80% (uses the derived class's default argument)
 
-    std::cout << "\n陷阱说明:" << std::endl;
-    std::cout << "  basePtr->play()     → 音量50% (使用基类默认参数)" << std::endl;
-    std::cout << "  derivedPtr->play()  → 音量80% (使用派生类默认参数)" << std::endl;
-    std::cout << "  虚函数动态绑定，但默认参数静态绑定!" << std::endl;
+    std::cout << "\nPitfall explained:" << std::endl;
+    std::cout << "  basePtr->play()     -> volume 50% (uses the base class default argument)" << std::endl;
+    std::cout << "  derivedPtr->play()  -> volume 80% (uses the derived class default argument)" << std::endl;
+    std::cout << "  Virtual functions bind dynamically, but default arguments bind statically!" << std::endl;
 }
 
 }  // namespace media
 
-// ========== 演示代码 ==========
+// ========== Demo code ==========
 int main() {
     using namespace media;
 
-    std::cout << "===== \xF0\x9F\x8E\xAC 万能媒体播放器 =====\n" << std::endl;
+    std::cout << "===== \xF0\x9F\x8E\xAC Universal Media Player =====\n" << std::endl;
 
-    Playlist myPlaylist("我的最爱");
+    Playlist myPlaylist("My Favorites");
 
-    // 添加各类媒体
+    // Add various media
     myPlaylist.addTrack(std::make_unique<MP3Player>(
-        "晴天", "周杰伦", 269, 320));
+        "Sunny Day", "Jay Chou", 269, 320));
     myPlaylist.addTrack(std::make_unique<VideoPlayer>(
-        "星际穿越", "Christopher Nolan", 10140, 1920, 1080, 24));
+        "Interstellar", "Christopher Nolan", 10140, 1920, 1080, 24));
     myPlaylist.addTrack(std::make_unique<StreamingPlayer>(
-        "C++教程直播", "编程频道", 3600, "https://live.example.com/cpp", 8));
+        "C++ Tutorial Live", "Coding Channel", 3600, "https://live.example.com/cpp", 8));
     myPlaylist.addTrack(std::make_unique<MP3Player>(
-        "卡农", "Pachelbel", 326, 256));
+        "Canon", "Pachelbel", 326, 256));
     myPlaylist.addTrack(std::make_unique<VideoPlayer>(
-        "猫咪视频", "网友上传", 180, 1280, 720, 30));
+        "Cat Video", "User Upload", 180, 1280, 720, 30));
 
-    std::cout << "播放列表中有 " << myPlaylist.size() << " 个曲目" << std::endl;
+    std::cout << "The playlist has " << myPlaylist.size() << " tracks" << std::endl;
 
-    // 播放所有
+    // Play everything
     myPlaylist.playAll();
 
-    // 演示默认参数陷阱
+    // Demonstrate the default argument pitfall
     demonstrateDefaultParamTrap();
 
-    // 单独控制
-    std::cout << "\n===== 播放控制 =====" << std::endl;
-    // 使用pause/stop等模板方法
+    // Individual control
+    std::cout << "\n===== Playback Control =====" << std::endl;
+    // Use template methods such as pause/stop
 
-    // 可视化效果（省略）
+    // Visualization effects (omitted)
 
     return 0;
 }
 ```
 
-知识点融入：
-  - 接口类（IMediaPlayer）
-  - 纯虚函数（doPlay, doPause, doStop, doSeek）
-  - 模板方法模式（基类play()调用派生类doPlay()）
-  - 虚函数默认参数陷阱（重要！）
-  - 动态多态
-  - unique_ptr管理
-  - 命名空间 media
-  - 调试宏
+Concepts applied:
+  - Interface class (IMediaPlayer)
+  - Pure virtual functions (doPlay, doPause, doStop, doSeek)
+  - Template Method pattern (base class play() calls derived class doPlay())
+  - The virtual function default argument pitfall (important!)
+  - Dynamic polymorphism
+  - Managing with unique_ptr
+  - Namespace media
+  - Debug macro
 
 ================================================================================
 
-案例5：跨平台UI控件库（全面综合）
+Case 5: Cross-Platform UI Widget Library (Comprehensive)
 ------------------------------------
 
-【生活场景】GUI框架设计。Widget抽象基类定义控件接口，
-多种控件重写渲染/点击/悬停行为。使用dynamic_cast做类型判断。
+[Real-life scenario] GUI framework design. The abstract base class Widget defines the widget interface,
+and various widgets override rendering/click/hover behavior. dynamic_cast is used for type checks.
 
 ```cpp
 #include <iostream>
@@ -1937,8 +1937,8 @@ int main() {
 #include <iomanip>
 #include <algorithm>
 
-// ====== 前6章知识综合 ======
-// 第2章：调试宏
+// ====== Combining knowledge from the first 6 chapters ======
+// Chapter 2: debug macro
 #define UI_DEBUG 1
 #if UI_DEBUG
     #define UI_LOG(msg) std::cout << "[UI] " << msg << std::endl
@@ -1948,13 +1948,13 @@ int main() {
 
 namespace ui {
 
-// ====== 坐标点 ======
+// ====== Point ======
 struct Point {
     int x, y;
     Point(int xVal = 0, int yVal = 0) : x(xVal), y(yVal) { }
 };
 
-// ====== 矩形区域 ======
+// ====== Rectangular region ======
 struct Rect {
     int x, y, width, height;
     Rect(int xVal = 0, int yVal = 0, int w = 0, int h = 0)
@@ -1966,7 +1966,7 @@ struct Rect {
     }
 };
 
-// ====== 抽象基类：Widget ======
+// ====== Abstract base class: Widget ======
 class Widget {
 protected:
     std::string id;
@@ -1987,17 +1987,17 @@ public:
         UI_LOG("Widget created: " + id);
     }
 
-    // ====== 虚析构 ======
+    // ====== Virtual destructor ======
     virtual ~Widget() {
         widgetCount--;
         UI_LOG("Widget destroyed: " + id);
     }
 
-    // ====== 纯虚函数 ======
+    // ====== Pure virtual functions ======
     virtual void render() const = 0;
     virtual std::string getType() const = 0;
 
-    // ====== 虚函数——可重写的默认实现 ======
+    // ====== Virtual functions -- overridable default implementations ======
     virtual void onClick(const Point& p) {
         std::cout << "  [" << id << "] clicked at ("
                   << p.x << "," << p.y << ")" << std::endl;
@@ -2018,7 +2018,7 @@ public:
                   << std::endl;
     }
 
-    // ====== 非虚函数 ======
+    // ====== Non-virtual functions ======
     void show() { visible = true; }
     void hide() { visible = false; }
     void enable() { enabled = true; }
@@ -2063,11 +2063,11 @@ public:
 
 int Widget::widgetCount = 0;
 
-// ====== 派生类：Button ======
+// ====== Derived class: Button ======
 class Button : public Widget {
 private:
-    bool isDefault;  // 是否为默认按钮
-    std::string icon; // 图标
+    bool isDefault;  // whether this is the default button
+    std::string icon; // icon
 
 public:
     Button(const std::string& widgetId, const Rect& b,
@@ -2083,7 +2083,7 @@ public:
         std::cout << "  [RENDER] Button \"" << text << "\" "
                   << backgroundColor << " "
                   << bounds.width << "x" << bounds.height
-                  << (isDefault ? " (默认)" : "")
+                  << (isDefault ? " (default)" : "")
                   << std::endl;
     }
 
@@ -2096,7 +2096,7 @@ public:
     }
 };
 
-// ====== 派生类：TextBox ======
+// ====== Derived class: TextBox ======
 class TextBox : public Widget {
 private:
     std::string value;
@@ -2117,8 +2117,8 @@ public:
     void render() const override {
         std::cout << "  [RENDER] TextBox " << bounds.width
                   << "x" << bounds.height
-                  << (multiline ? " (多行)" : "")
-                  << " 内容: \"" << (value.empty() ? text : value)
+                  << (multiline ? " (multiline)" : "")
+                  << " content: \"" << (value.empty() ? text : value)
                   << "\"" << std::endl;
     }
 
@@ -2128,7 +2128,7 @@ public:
         if (value.length() < maxLength) {
             value += key;
             std::cout << "\xF0\x9F\x8C\x90 TextBox \"" << id
-                      << "\" 输入: '" << key << "' (当前: \""
+                      << "\" input: '" << key << "' (current: \""
                       << value << "\")" << std::endl;
         }
     }
@@ -2137,7 +2137,7 @@ public:
     const std::string& getValue() const { return value; }
 };
 
-// ====== 派生类：ComboBox ======
+// ====== Derived class: ComboBox ======
 class ComboBox : public Widget {
 private:
     std::vector<std::string> items;
@@ -2146,7 +2146,7 @@ private:
 
 public:
     ComboBox(const std::string& widgetId, const Rect& b)
-        : Widget(widgetId, b, "请选择..."), selectedIndex(-1),
+        : Widget(widgetId, b, "Please select..."), selectedIndex(-1),
           dropped(false) {
         backgroundColor = "#F2F2F7";
         UI_LOG("ComboBox created: " + widgetId);
@@ -2159,8 +2159,8 @@ public:
     void render() const override {
         std::cout << "  [RENDER] ComboBox "
                   << (selectedIndex >= 0 ? items[selectedIndex] : text)
-                  << " (" << items.size() << "项)"
-                  << (dropped ? " [展开]" : "")
+                  << " (" << items.size() << " items)"
+                  << (dropped ? " [expanded]" : "")
                   << std::endl;
     }
 
@@ -2169,11 +2169,11 @@ public:
     void onClick(const Point& p) override {
         dropped = !dropped;
         if (dropped) {
-            std::cout << "\xF0\x9F\x93\x8B ComboBox 展开, "
-                      << items.size() << " 个选项" << std::endl;
+            std::cout << "\xF0\x9F\x93\x8B ComboBox expanded, "
+                      << items.size() << " options" << std::endl;
         } else {
             if (selectedIndex >= 0) {
-                std::cout << "\xF0\x9F\x93\x8B ComboBox 选中: "
+                std::cout << "\xF0\x9F\x93\x8B ComboBox selected: "
                           << items[selectedIndex] << std::endl;
             }
         }
@@ -2187,7 +2187,7 @@ public:
     }
 };
 
-// ====== 派生类：Label ======
+// ====== Derived class: Label ======
 class Label : public Widget {
 public:
     Label(const std::string& widgetId, const Rect& b,
@@ -2205,7 +2205,7 @@ public:
     std::string getType() const override { return "Label"; }
 };
 
-// ====== 派生类：Slider ======
+// ====== Derived class: Slider ======
 class Slider : public Widget {
 private:
     int minValue, maxValue;
@@ -2223,14 +2223,14 @@ public:
     void render() const override {
         std::cout << "  [RENDER] Slider " << minValue << "..."
                   << currentValue << "..." << maxValue
-                  << (vertical ? " (垂直)" : " (水平)")
+                  << (vertical ? " (vertical)" : " (horizontal)")
                   << std::endl;
     }
 
     std::string getType() const override { return "Slider"; }
 
     void onHover(const Point& p) override {
-        std::cout << "\xF0\x9F\x8E\x9A Slider 值: " << currentValue
+        std::cout << "\xF0\x9F\x8E\x9A Slider value: " << currentValue
                   << "/" << maxValue << std::endl;
     }
 
@@ -2242,7 +2242,7 @@ public:
     int getValue() const { return currentValue; }
 };
 
-// ====== 工厂函数创建控件 ======
+// ====== Factory function to create widgets ======
 enum class WidgetType {
     BUTTON,
     TEXTBOX,
@@ -2257,11 +2257,11 @@ std::unique_ptr<Widget> createWidget(WidgetType type,
         case WidgetType::BUTTON:
             return std::make_unique<Button>(id, bounds, "Click Me");
         case WidgetType::TEXTBOX:
-            return std::make_unique<TextBox>(id, bounds, "请输入...");
+            return std::make_unique<TextBox>(id, bounds, "Enter text...");
         case WidgetType::COMBOBOX:
             return std::make_unique<ComboBox>(id, bounds);
         case WidgetType::LABEL:
-            return std::make_unique<Label>(id, bounds, "欢迎使用!");
+            return std::make_unique<Label>(id, bounds, "Welcome!");
         case WidgetType::SLIDER:
             return std::make_unique<Slider>(id, bounds, 0, 100, 50);
         default:
@@ -2269,7 +2269,7 @@ std::unique_ptr<Widget> createWidget(WidgetType type,
     }
 }
 
-// ====== 应用窗口 ======
+// ====== Application window ======
 class Application {
 private:
     std::vector<std::unique_ptr<Widget>> widgets;
@@ -2280,7 +2280,7 @@ public:
     }
 
     void render() const {
-        std::cout << "\n===== 渲染UI =====" << std::endl;
+        std::cout << "\n===== Rendering UI =====" << std::endl;
         for (const auto& w : widgets) {
             if (w->isVisible()) {
                 w->render();
@@ -2289,17 +2289,17 @@ public:
     }
 
     void handleClick(const Point& p) {
-        std::cout << "\n===== 处理点击事件 =====" << std::endl;
+        std::cout << "\n===== Handling Click Event =====" << std::endl;
         for (auto& w : widgets) {
             if (w->isVisible() && w->isEnabled() &&
                 w->getBounds().contains(p)) {
                 w->onClick(p);
 
-                // 使用dynamic_cast做类型判断
+                // Use dynamic_cast for type checks
                 if (dynamic_cast<Button*>(w.get())) {
-                    std::cout << "  → 触发按钮事件" << std::endl;
+                    std::cout << "  -> Button event triggered" << std::endl;
                 } else if (dynamic_cast<ComboBox*>(w.get())) {
-                    std::cout << "  → 触发展开/选择事件" << std::endl;
+                    std::cout << "  -> Expand/select event triggered" << std::endl;
                 }
             }
         }
@@ -2317,7 +2317,7 @@ public:
     void handleKeyPress(char key) {
         for (auto& w : widgets) {
             if (w->isVisible() && w->isEnabled()) {
-                // dynamic_cast判断是否为TextBox
+                // dynamic_cast checks whether it is a TextBox
                 if (auto* textBox = dynamic_cast<TextBox*>(w.get())) {
                     textBox->onKeyPress(key);
                 }
@@ -2344,15 +2344,15 @@ public:
 
 }  // namespace ui
 
-// ========== 演示代码 ==========
+// ========== Demo code ==========
 int main() {
     using namespace ui;
 
-    std::cout << "===== \xF0\x9F\x96\xA5 GUI框架设计 =====\n" << std::endl;
+    std::cout << "===== \xF0\x9F\x96\xA5 GUI Framework Design =====\n" << std::endl;
 
     Application app;
 
-    // 使用工厂创建控件
+    // Create widgets with the factory
     app.addWidget(createWidget(WidgetType::LABEL, "title",
                                Rect(10, 10, 200, 30)));
     app.addWidget(createWidget(WidgetType::TEXTBOX, "nameInput",
@@ -2366,141 +2366,141 @@ int main() {
     app.addWidget(createWidget(WidgetType::SLIDER, "volumeSlider",
                                Rect(10, 180, 200, 30)));
 
-    // 自定义配置
+    // Custom configuration
     if (auto* title = dynamic_cast<Label*>(
             app.findWidget("title"))) {
-        title->setText("C++ GUI框架示例");
+        title->setText("C++ GUI Framework Example");
     }
     if (auto* submitBtn = dynamic_cast<Button*>(
             app.findWidget("submitBtn"))) {
-        submitBtn->setText("确定");
+        submitBtn->setText("OK");
     }
     if (auto* cancelBtn = dynamic_cast<Button*>(
             app.findWidget("cancelBtn"))) {
-        cancelBtn->setText("取消");
+        cancelBtn->setText("Cancel");
     }
     if (auto* combo = dynamic_cast<ComboBox*>(
             app.findWidget("themeSelect"))) {
-        combo->addItem("浅色主题");
-        combo->addItem("深色主题");
-        combo->addItem("跟随系统");
+        combo->addItem("Light Theme");
+        combo->addItem("Dark Theme");
+        combo->addItem("Follow System");
     }
 
-    // 显示控件树
+    // Show the widget tree
     app.printWidgetTree();
-    std::cout << "\n控件总数: " << Widget::getWidgetCount() << std::endl;
+    std::cout << "\nTotal widgets: " << Widget::getWidgetCount() << std::endl;
 
-    // 渲染
+    // Render
     app.render();
 
-    // 模拟用户操作
-    app.handleClick(Point(60, 105));   // 点击确定按钮
-    app.handleHover(Point(60, 195));   // 悬停在音量滑块上
-    app.handleKeyPress('H');           // 在文本框中输入
-    app.handleKeyPress('i');           // 继续输入
+    // Simulate user actions
+    app.handleClick(Point(60, 105));   // click the OK button
+    app.handleHover(Point(60, 195));   // hover over the volume slider
+    app.handleKeyPress('H');           // type in the text box
+    app.handleKeyPress('i');           // keep typing
 
-    // 点击下拉框
+    // Click the drop-down box
     app.handleClick(Point(50, 150));
 
     return 0;
 }
 ```
 
-知识点融入（全面综合前6章）：
-  - 抽象基类Widget + 纯虚函数（render, getType）
-  - 虚函数（onClick, onHover, onDoubleClick, onKeyPress）
-  - 动态多态——多样控件重写不同行为
-  - override确保正确重写
-  - 虚析构函数
-  - dynamic_cast运行时类型判断
-  - 工厂模式创建控件
-  - 命名空间 ui（第3章）
-  - 调试宏（第2章）
-  - unique_ptr管理（第4章）
-  - 继承体系（第5章）
-  - static成员统计
+Concepts applied (comprehensive review of the first 6 chapters):
+  - Abstract base class Widget + pure virtual functions (render, getType)
+  - Virtual functions (onClick, onHover, onDoubleClick, onKeyPress)
+  - Dynamic polymorphism -- various widgets override different behaviors
+  - override ensures correct overriding
+  - Virtual destructors
+  - Runtime type checks with dynamic_cast
+  - Creating widgets with the factory pattern
+  - Namespace ui (Chapter 3)
+  - Debug macro (Chapter 2)
+  - Managing with unique_ptr (Chapter 4)
+  - Inheritance hierarchy (Chapter 5)
+  - static member counters
 
 ================================================================================
 
-                            === 第四节：课后习题 ===
+                            === Section 4: Exercises ===
 ================================================================================
 
-习题：设计一个"员工工作流系统" Employee
+Exercise: Design an "Employee Workflow System" Employee
 ======================================================
 
-【生活场景】
-一家软件公司需要开发内部的工作流管理系统。不同类型的员工
-（开发、设计、管理、销售）有不同的工作内容和薪资计算方式。
+[Real-life scenario]
+A software company needs to develop an internal workflow management system. Different types of employees
+(developers, designers, managers, salespeople) have different job duties and salary calculation methods.
 
-【要求】
+[Requirements]
 
-1. 抽象基类：Employee
-   纯虚函数：
-   - work() const = 0:                   模拟一天的工作内容
-   - getRole() const = 0:                返回职位名称
-   - calculateSalary() const = 0:        计算月薪
-   受保护的成员变量：
+1. Abstract base class: Employee
+   Pure virtual functions:
+   - work() const = 0:                   simulate a day's work
+   - getRole() const = 0:                return the job title
+   - calculateSalary() const = 0:        calculate the monthly salary
+   Protected member variables:
    - name, employeeID, baseSalary, yearsOfService
-   虚析构函数！
+   A virtual destructor!
 
-2. 派生类：
-   (a) Developer（开发者）
-       新增属性：programmingLanguages (std::vector<std::string>)
+2. Derived classes:
+   (a) Developer
+       New attributes: programmingLanguages (std::vector<std::string>)
                 isSenior (bool)
-       work(): 输出"写代码、调试程序、参加代码评审"
-       calculateSalary(): 高级开发者基础薪资上浮30%
+       work(): prints "Writing code, debugging programs, attending code reviews"
+       calculateSalary(): senior developers get a 30% raise on base salary
 
-   (b) Designer（设计师）
-       新增属性：designTools (std::vector<std::string>)
+   (b) Designer
+       New attributes: designTools (std::vector<std::string>)
                 portfolioRating (double, 1-5)
-       work(): 输出"设计界面、制作原型图、设计交互"
-       calculateSalary(): 根据作品集评分增加奖金
+       work(): prints "Designing interfaces, building prototypes, designing interactions"
+       calculateSalary(): add a bonus based on the portfolio rating
 
-   (c) Manager（管理者）
-       新增属性：teamMembers (std::vector<std::shared_ptr<Employee>>)
+   (c) Manager
+       New attributes: teamMembers (std::vector<std::shared_ptr<Employee>>)
                 department (std::string)
-       work(): 输出"召开会议、审批需求、制定计划"
-       calculateSalary(): 基础薪资 + 管理津贴 + 团队绩效奖金
-       提供: addTeamMember(), removeTeamMember() 管理团队成员
+       work(): prints "Holding meetings, approving requirements, making plans"
+       calculateSalary(): base salary + management allowance + team performance bonus
+       Provides: addTeamMember(), removeTeamMember() to manage team members
 
-   (d) SalesPerson（销售人员）
-       新增属性：monthlySales (double), commissionRate (double)
-       work(): 输出"拜访客户、撰写方案、谈判签约"
-       calculateSalary(): 基础薪资 + 销售提成
+   (d) SalesPerson
+       New attributes: monthlySales (double), commissionRate (double)
+       work(): prints "Visiting clients, writing proposals, negotiating and closing deals"
+       calculateSalary(): base salary + sales commission
 
-3. 全局函数：
+3. Global function:
    processPayroll(const std::vector<Employee*>& employees):
-      遍历所有员工，打印每个员工的职位、姓名、薪资
-      计算并输出薪资总额
+      Iterate over all employees and print each employee's role, name, and salary
+      Calculate and print the total payroll
 
-4. 主函数要求：
-   - 创建一个基类指针数组（vector<Employee*> 或 vector<unique_ptr<Employee>>）
-   - 存储至少5个不同类型的员工对象
-   - 创建至少一个Manager并添加团队成员
-   - 多态调用每个员工的work()方法
-   - 调用processPayroll()批量处理薪资
-   - 使用dynamic_cast判断员工是否为Manager类型，
-     如果是，打印该Manager管理的团队信息
-   - 使用虚析构函数确保内存正确释放
+4. Requirements for main:
+   - Create an array of base class pointers (vector<Employee*> or vector<unique_ptr<Employee>>)
+   - Store at least 5 employee objects of different types
+   - Create at least one Manager and add team members
+   - Call each employee's work() method polymorphically
+   - Call processPayroll() to process payroll in bulk
+   - Use dynamic_cast to check whether an employee is a Manager;
+     if so, print the information about the team that Manager manages
+   - Use virtual destructors to ensure memory is released correctly
 
-【评分要点】
-- 抽象基类设计合理（纯虚函数使用正确） (+2分)
-- 多态正确实现（基类指针调用派生类方法） (+2分)
-- 虚析构函数正确使用 (+1分)
-- dynamic_cast类型判断正确 (+1分)
-- Manager管理团队成员功能 (+1分)
-- processPayroll函数实现正确 (+2分)
-- override关键字使用 (+1分)
-- 代码组织和注释 (+1分)
-- main函数完整演示 (+1分)
-总分：12分
+[Grading Criteria]
+- The abstract base class is well designed (pure virtual functions used correctly) (+2 points)
+- Polymorphism is implemented correctly (base class pointers call derived class methods) (+2 points)
+- Virtual destructors are used correctly (+1 point)
+- dynamic_cast type checks are correct (+1 point)
+- Manager's team-member management functionality (+1 point)
+- processPayroll is implemented correctly (+2 points)
+- Use of the override keyword (+1 point)
+- Code organization and comments (+1 point)
+- main demonstrates everything completely (+1 point)
+Total: 12 points
 
 ================================================================================
 
-                            === 附：深入理解与实践要点 ===
+                            === Appendix: In-Depth Understanding and Practical Points ===
 ================================================================================
 
-一、虚函数性能深入分析
+I. In-Depth Analysis of Virtual Function Performance
 ------------------------------------
 
 ```cpp
@@ -2508,7 +2508,7 @@ int main() {
 #include <chrono>
 #include <vector>
 
-// 虚函数调用的实际开销测试
+// Measuring the real overhead of virtual function calls
 class Base {
 public:
     virtual int compute(int x) { return x * 2; }
@@ -2519,68 +2519,68 @@ public:
     int compute(int x) override { return x * 3; }
 };
 
-// 非虚函数版本（用于对比）
+// Non-virtual version (for comparison)
 class StaticBase {
 public:
     int compute(int x) { return x * 2; }
 };
 
-// 虚函数开销来源：
-// 1. 间接跳转（至少多一次指针解引用）
-// 2. 无法内联优化（编译器不知道运行时类型）
-// 3. 可能造成缓存未命中（vtable不在同一缓存行）
-// 4. 分支预测失败（多个派生类时）
+// Sources of virtual function overhead:
+// 1. Indirect jump (at least one extra pointer dereference)
+// 2. Cannot be inlined (the compiler doesn't know the runtime type)
+// 3. Possible cache misses (the vtable is not on the same cache line)
+// 4. Branch mispredictions (when there are multiple derived classes)
 
-// 但在现代CPU上，除非在极热的紧密循环中，虚函数开销通常<5%
-// 如果性能至关重要，考虑以下替代方案：
-//   a. CRTP（奇异递归模板模式）—— 第8章学习
-//   b. std::variant + std::visit —— C++17
-//   c. 类型标签 + switch（有限类型集时）
+// But on modern CPUs, unless you are in an extremely hot tight loop, virtual function overhead is usually <5%
+// If performance is critical, consider these alternatives:
+//   a. CRTP (Curiously Recurring Template Pattern) -- covered in Chapter 8
+//   b. std::variant + std::visit -- C++17
+//   c. Type tags + switch (when the set of types is limited)
 
-// 优化建议：
-// 1. 不要为了性能而避免多态——先写可维护的代码
-// 2. 用profiler定位真正的瓶颈
-// 3. 只有在确认虚函数是瓶颈时才优化
+// Optimization advice:
+// 1. Don't avoid polymorphism for the sake of performance -- write maintainable code first
+// 2. Use a profiler to find the real bottlenecks
+// 3. Only optimize once you've confirmed virtual functions are the bottleneck
 ```
 
-二、多态设计模式速览
+II. A Quick Tour of Polymorphic Design Patterns
 ------------------------------------
 
-【模板方法模式（Template Method）】
-基类定义算法框架，派生类重写具体步骤：
+[Template Method Pattern]
+The base class defines the algorithm skeleton, and derived classes override specific steps:
 
 ```cpp
 class DocumentGenerator {
 public:
-    void generate() {                // 模板方法——不可重写(final)
-        openDocument();              // 1. 打开文档
-        writeHeader();               // 2. 写头部
-        writeBody();                 // 3. 写主体
-        writeFooter();               // 4. 写页脚
-        closeDocument();             // 5. 关闭文档
+    void generate() {                // template method -- not overridable (final)
+        openDocument();              // 1. open the document
+        writeHeader();               // 2. write the header
+        writeBody();                 // 3. write the body
+        writeFooter();               // 4. write the footer
+        closeDocument();             // 5. close the document
     }
 protected:
-    virtual void writeHeader() = 0;  // 子类实现不同的头部
-    virtual void writeBody() = 0;    // 子类实现不同的主体
-    virtual void writeFooter() = 0;  // 子类实现不同的页脚
-    void openDocument()  { /* 通用实现 */ }
-    void closeDocument() { /* 通用实现 */ }
+    virtual void writeHeader() = 0;  // subclasses implement different headers
+    virtual void writeBody() = 0;    // subclasses implement different bodies
+    virtual void writeFooter() = 0;  // subclasses implement different footers
+    void openDocument()  { /* common implementation */ }
+    void closeDocument() { /* common implementation */ }
 };
 
 class PDFGenerator : public DocumentGenerator {
-    void writeHeader() override { /* PDF头部 */ }
-    void writeBody()   override { /* PDF主体 */ }
-    void writeFooter() override { /* PDF页脚 */ }
+    void writeHeader() override { /* PDF header */ }
+    void writeBody()   override { /* PDF body */ }
+    void writeFooter() override { /* PDF footer */ }
 };
 ```
 
-【工厂方法模式（Factory Method）】
+[Factory Method Pattern]
 
 ```cpp
 class Creator {
 public:
     virtual std::unique_ptr<Product> createProduct() = 0;
-    // 创建产品的工厂方法——由子类决定具体产品类型
+    // Factory method for creating products -- subclasses decide the concrete product type
 };
 
 class ConcreteCreatorA : public Creator {
@@ -2590,8 +2590,8 @@ class ConcreteCreatorA : public Creator {
 };
 ```
 
-【策略模式（Strategy）】
-将算法封装成类，通过组合和多态实现算法切换：
+[Strategy Pattern]
+Encapsulate algorithms as classes and switch between them through composition and polymorphism:
 
 ```cpp
 class SortStrategy {
@@ -2601,11 +2601,11 @@ public:
 };
 
 class QuickSort : public SortStrategy {
-    void sort(std::vector<int>& data) override { /* 快速排序 */ }
+    void sort(std::vector<int>& data) override { /* quicksort */ }
 };
 
 class MergeSort : public SortStrategy {
-    void sort(std::vector<int>& data) override { /* 归并排序 */ }
+    void sort(std::vector<int>& data) override { /* merge sort */ }
 };
 
 class Sorter {
@@ -2615,57 +2615,57 @@ public:
         strategy = std::move(s);
     }
     void sort(std::vector<int>& data) {
-        strategy->sort(data);  // 多态调用
+        strategy->sort(data);  // polymorphic call
     }
 };
 ```
 
-三、常见虚拟函数面试题
+III. Common Virtual Function Interview Questions
 ------------------------------------
 
-【问题1】虚函数表（vtable）在什么时候创建？
-答：vtable是编译期生成的静态数据，存储在只读数据段(.rodata)中。
-   每个含虚函数的类在编译时生成一个vtable，所有该类对象共享。
+[Question 1] When is the virtual function table (vtable) created?
+Answer: The vtable is static data generated at compile time and stored in the read-only data segment (.rodata).
+   Each class with virtual functions gets one vtable at compile time, shared by all objects of that class.
 
-【问题2】vptr在什么时候初始化？
-答：在构造函数执行期间初始化。具体过程：
-   1. 进入Base构造 → vptr指向Base的vtable → 执行Base构造函数体
-   2. 进入Derived构造 → vptr更新为指向Derived的vtable → 执行Derived构造函数体
-   这就解释了为什么构造/析构函数中虚函数是静态绑定的。
+[Question 2] When is the vptr initialized?
+Answer: It is initialized while the constructor runs. Specifically:
+   1. Entering Base's constructor -> vptr points to Base's vtable -> Base's constructor body runs
+   2. Entering Derived's constructor -> vptr is updated to point to Derived's vtable -> Derived's constructor body runs
+   This explains why virtual functions are statically bound in constructors/destructors.
 
-【问题3】虚析构函数为什么要用virtual？
-答：当通过基类指针delete派生类对象时，若析构函数不是虚的，
-   编译器只调用基类的析构函数，派生类特有的资源无法释放，造成内存泄漏。
-   delete basePtr 时，编译器通过vptr找到vtable中的正确析构函数地址。
+[Question 3] Why should the destructor be virtual?
+Answer: When a derived object is deleted through a base class pointer and the destructor is not virtual,
+   the compiler only calls the base class destructor, so resources specific to the derived class are not released, causing a memory leak.
+   On delete basePtr, the compiler finds the correct destructor address in the vtable through the vptr.
 
-【问题4】纯虚函数可以有实现吗？
-答：可以。纯虚函数的声明和实现是分离的：
-   virtual void func() = 0;           // 声明（接口）
-   void Base::func() { /* 实现 */ }   // 实现（可选）
-   纯虚函数的实现通常是提供默认行为，派生类通过Base::func()显式调用。
+[Question 4] Can a pure virtual function have an implementation?
+Answer: Yes. The declaration and the implementation of a pure virtual function are separate:
+   virtual void func() = 0;           // declaration (interface)
+   void Base::func() { /* impl */ }   // implementation (optional)
+   The implementation of a pure virtual function usually provides default behavior, which derived classes call explicitly via Base::func().
 
-【问题5】为什么构造函数不能是虚函数？
-答：虚函数调用依赖vptr，而vptr在构造函数执行过程中才初始化。
-   如果构造是虚的，那么构造自身时vptr还未设置好，无法确定调用哪个版本。
-   这形成了一个先有鸡还是先有蛋的悖论。
+[Question 5] Why can't a constructor be virtual?
+Answer: Virtual function calls depend on the vptr, and the vptr is only initialized while the constructor runs.
+   If the constructor were virtual, the vptr would not yet be set up when constructing the object itself, so there would be no way to decide which version to call.
+   This forms a chicken-and-egg paradox.
 
-四、多态设计的SOLID原则应用
+IV. Applying SOLID Principles to Polymorphic Design
 ------------------------------------
 
-面向对象设计中最重要的原则之一是"开放封闭原则（OCP）"：
-对扩展开放，对修改封闭。多态是实现OCP的关键机制。
+One of the most important principles in object-oriented design is the "Open-Closed Principle (OCP)":
+open for extension, closed for modification. Polymorphism is the key mechanism for achieving OCP.
 
 ```cpp
-// ❌ 违反OCP——每次新增图形都需要修改此函数
+// ❌ Violates OCP -- this function must be modified every time a new shape is added
 double calculateArea(const std::string& type, double param1, double param2) {
     if (type == "circle") return 3.14 * param1 * param1;
     else if (type == "rectangle") return param1 * param2;
     else if (type == "triangle") return 0.5 * param1 * param2;
-    // 新增图形 → 必须修改此函数！
+    // Adding a new shape -> this function must be modified!
     return 0;
 }
 
-// ✅ 遵循OCP——通过多态，新增图形只需新增类，不需修改现有代码
+// ✅ Follows OCP -- through polymorphism, adding a shape only requires a new class, no changes to existing code
 class Shape {
 public:
     virtual double area() const = 0;
@@ -2679,9 +2679,9 @@ public:
     double area() const override { return 3.14 * radius * radius; }
 };
 
-// 新增椭圆——只需新增类，不用修改现有的任何代码
+// Adding an ellipse -- just add a new class, without modifying any existing code
 class Ellipse : public Shape {
-    double a, b;  // 半长轴、半短轴
+    double a, b;  // semi-major axis, semi-minor axis
 public:
     Ellipse(double ma, double mb) : a(ma), b(mb) {}
     double area() const override { return 3.14 * a * b; }
@@ -2689,5 +2689,5 @@ public:
 ```
 
 ================================================================================
-                       第六章完 —— 继续学习第七章：运算符重载与友元
+                       End of Chapter 6 -- Continue with Chapter 7: Operator Overloading and Friends
 ================================================================================

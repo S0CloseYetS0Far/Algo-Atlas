@@ -1,9 +1,9 @@
 /*
-一个图中连通三元组的最小度数
+Minimum Degree of a Connected Trio in a Graph
 
-度数小→度数大
-度数相等则小编号→大编号
-经典三元环trio枚举优化
+lower degree → higher degree
+if degrees are equal, smaller id → larger id
+Classic optimization for enumerating triangles (trios)
 */
 class Solution {
 public:

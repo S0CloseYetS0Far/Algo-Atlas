@@ -1,11 +1,11 @@
-// 返回一个二维列表，其中 (i,j) 这一项表示从 i 到 j 的最短路长度
-// 如果无法从 i 到 j，则最短路长度为 LLONG_MAX / 2
-// 允许负数边权
-// 如果计算完毕后，存在 i，使得从 i 到 i 的最短路长度小于 0，说明图中有负环
-// 节点编号从 0 到 n-1
-// 时间复杂度 O(n^3 + m)，其中 m 是 edges 的长度
+// Returns a 2D list where entry (i,j) is the shortest path length from i to j
+// If j is unreachable from i, the shortest path length is LLONG_MAX / 2
+// Negative edge weights are allowed
+// If, after computation, some i has a shortest path from i to i less than 0, the graph has a negative cycle
+// Nodes are numbered from 0 to n-1
+// Time complexity O(n^3 + m), where m is the length of edges
 vector<vector<long long>> shortestPathFloyd(int n, vector<vector<int>>& edges) {
-    const long long INF = LLONG_MAX / 2; // 防止加法溢出
+    const long long INF = LLONG_MAX / 2; // prevent overflow on addition
     vector f(n, vector<long long>(n, INF));
     for (int i = 0; i < n; i++) {
         f[i][i] = 0;
@@ -14,13 +14,13 @@ vector<vector<long long>> shortestPathFloyd(int n, vector<vector<int>>& edges) {
     for (auto& e : edges) {
         int x = e[0], y = e[1];
         long long wt = e[2];
-        f[x][y] = min(f[x][y], wt); // 如果有重边，取边权最小值
-        f[y][x] = min(f[y][x], wt); // 无向图
+        f[x][y] = min(f[x][y], wt); // with parallel edges, take the minimum weight
+        f[y][x] = min(f[y][x], wt); // undirected graph
     }
 
     for (int k = 0; k < n; k++) {
         for (int i = 0; i < n; i++) {
-            if (f[i][k] == INF) { // 针对稀疏图的优化
+            if (f[i][k] == INF) { // optimization for sparse graphs
                 continue;
             }
             for (int j = 0; j < n; j++) {

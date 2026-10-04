@@ -3,8 +3,8 @@ public:
     int minMaxWaitingTime(vector<int>& demand, vector<int>& fuel) {
         unordered_map<int, pair<int, int>> memo;
 
-        // 加油机 0 在 wait0 秒后空闲，剩余燃料量 fuel0
-        // 加油机 1 在 wait1 秒后空闲，剩余燃料量 fuel1
+        // fuel pump 0 becomes free after wait0 seconds, with fuel0 fuel remaining
+        // fuel pump 1 becomes free after wait1 seconds, with fuel1 fuel remaining
         auto dfs = [&](this auto&& dfs, int i, int wait0, int wait1, int fuel0, int fuel1) -> pair<int, int> {
             if (i == demand.size()) {
                 return {};
@@ -19,14 +19,14 @@ public:
             int best_wait_time = 0;
             int d = demand[i];
 
-            // 选择加油机 0，等 wait0 秒开始加油，加油机 1 的等待时间减少 wait0 秒
+            // choose pump 0: wait wait0 seconds to start refueling; pump 1's wait time decreases by wait0 seconds
             if (d <= fuel0) {
                 auto [num, time] = dfs(i + 1, d, max(wait1 - wait0, 0), fuel0 - d, fuel1);
                 max_num = num + 1;
                 best_wait_time = max(time, wait0);
             }
 
-            // 选择加油机 1，等 wait1 秒开始加油，加油机 0 的等待时间减少 wait1 秒
+            // choose pump 1: wait wait1 seconds to start refueling; pump 0's wait time decreases by wait1 seconds
             if (d <= fuel1) {
                 auto [num, time] = dfs(i + 1, max(wait0 - wait1, 0), d, fuel0, fuel1 - d);
                 num++;

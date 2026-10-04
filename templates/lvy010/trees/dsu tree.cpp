@@ -1,8 +1,8 @@
 /*
-树上启发式合并
-对每个颜色 c
-找出树上同色两点之间的最大距离
-（深度和减两倍LCA深度）
+DSU on tree (small-to-large merging)
+For each color c,
+find the maximum distance between two nodes of the same color in the tree
+(sum of depths minus twice the LCA depth)
 */
 void solve()
 {

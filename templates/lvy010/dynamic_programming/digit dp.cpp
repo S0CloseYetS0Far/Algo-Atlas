@@ -5,7 +5,7 @@ compute modular product via total exponent difference in range.
 
 class Solution {
     int pow(long long x, long long n, long long mod) {
-        long long res = 1 % mod; // 注意 mod 可能等于 1
+        long long res = 1 % mod; // note: mod may equal 1
         for (; n; n /= 2) {
             if (n % 2) {
                 res = res * x % mod;
@@ -18,19 +18,19 @@ class Solution {
     long long sum_e(long long k) {
         long long res = 0, n = 0, cnt1 = 0, sum_i = 0;
         for (long long i = __lg(k + 1); i >= 0; i--) {
-            long long c = (cnt1 << i) + (i << i >> 1); // 新增的幂次个数
+            long long c = (cnt1 << i) + (i << i >> 1); // number of newly added powers
             if (c <= k) {
                 k -= c;
                 res += (sum_i << i) + ((i * (i - 1) / 2) << i >> 1);
-                sum_i += i; // 之前填的 1 的幂次之和
-                cnt1++; // 之前填的 1 的个数
-                n |= 1LL << i; // 填 1
+                sum_i += i; // sum of the exponents of the 1s filled so far
+                cnt1++; // number of 1s filled so far
+                n |= 1LL << i; // fill in a 1
             }
         }
-        // 剩余的 k 个幂次，由 n 的低 k 个 1 补充
+        // the remaining k powers are supplied by the lowest k 1-bits of n
         while (k--) {
             res += __builtin_ctzll(n);
-            n &= n - 1; // 去掉最低位的 1（置为 0）
+            n &= n - 1; // remove the lowest 1-bit (set it to 0)
         }
         return res;
     }

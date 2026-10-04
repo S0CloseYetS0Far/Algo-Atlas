@@ -2,208 +2,208 @@
 
 ![algo](./png/Re_Algo.png)
 
-# 从零开始的算法学习之路
+# The Road to Learning Algorithms from Zero
 
 **Re:Algo - Starting Algorithms from Zero**
 
-### 前言
+### Preface
 
-大学幸运的发现了编程很有趣，开始了学习
+In university I was lucky enough to discover that programming is fun, and so I started learning.
 
-下面是结合自身学习思路的一些整理和分享，亲测0基础只要科学计划完全可以入门
+Below are some notes and resources organized around my own learning path. From personal experience: even with zero background, you can absolutely get started as long as you follow a sensible plan.
 
 ## Algo-Atlas
 
-**主要分为三个部分**
+**It is divided into three main parts**
 
-### 1. 系统搭框架
+### 1. Build a Systematic Framework
 
-将网上丰富的学习资源 (网课+博客+资料..) 系统整理一份笔记
+Systematically organize the wealth of learning resources available online (online courses + blogs + materials...) into a set of notes.
 
-有了自己的框架之后刷题大脑可以自动归档，可以参考下面分类来搭建自己的框架
+Once you have your own framework, your brain will automatically file away each problem you solve. You can use the categories below as a reference for building your own framework.
 
-- [100道典型例题](#100道典型例题)
-- [递归，搜索与回溯](#递归搜索与回溯)
-- [动态规划](#动态规划)
-- [贪心算法](#贪心算法)
+- [100 Classic Problems](#100-classic-problems)
+- [Recursion, Search, and Backtracking](#recursion-search-and-backtracking)
+- [Dynamic Programming](#dynamic-programming)
+- [Greedy Algorithms](#greedy-algorithms)
 
-下面是概览的标题，点击可以跳转到我整理的题解
+Below are the overview titles; click any of them to jump to the write-ups I put together (the linked articles are in Chinese).
 
-#### 100道典型例题
+#### 100 Classic Problems
 
-1. [\[Lc\(1\)双指针_1\] 移动零 | 复写零 | 快乐数](https://lvynote.blog.csdn.net/article/details/145915942)
-2. [\[Lc\(1\)双指针_3\] 双指针 | 三数 | 四数之和](https://lvynote.blog.csdn.net/article/details/145950432)
-3. [\[Lc\(1\)双指针_2\] 盛水最多的容器 | 有效三角形的个数 | 和为S的两个数字](https://lvynote.blog.csdn.net/article/details/145951495)
-4. [\[Lc\(2\)滑动窗口_1\] 长度最小的数组 | 无重复字符的最长子串 | 最大连续1的个数 III | 将 x 减到 0 的最小操作数](https://lvynote.blog.csdn.net/article/details/145970938)
-5. [\[Lc\(2\)滑动窗口_2\] 水果成篮 | 字符串中所有字母异位词 | 串联所有单词的子串](https://lvynote.blog.csdn.net/article/details/146012994)
-6. [\[Lc\(4\)前缀和_1\] 一维/二维模板 | 寻找数组的中心下标 | 除自身以外数组的乘积](https://lvynote.blog.csdn.net/article/details/146050787)
-7. [\[Lc5 位运算_1\] 常见用法 | 判定字符是否唯一 | 丢失的数字 | 两整数之和 | 只出现一次的数字 II](https://lvynote.blog.csdn.net/article/details/146076791)
-8. [\[Lc6_模拟\] 替换所有的问号 | 提莫攻击 | Z 字形变换 | 外观数列](https://lvynote.blog.csdn.net/article/details/146102647)
-9. [\[Lc7_分治-快排\] 分治 | 颜色分类 | 快速排序](https://lvynote.blog.csdn.net/article/details/146120346)
-10. [\[Lc7_分治-快排\] 快速选择排序 | 数组中的第K个最大元素 | 库存管理 III](https://lvynote.blog.csdn.net/article/details/146123800)
-11. [\[Lc10_hash\] 总结 | 两数之和 | 字符重排 | 存在重复元素 i ii | 字母异位词分组](https://lvynote.blog.csdn.net/article/details/146165252)
-12. [\[Lc11_字符串\] 最长公共前缀 | 最长回文子串 | 二进制求和](https://lvynote.blog.csdn.net/article/details/146177257)
-13. [\[Lc12_栈\] 删除相邻重复项 | 比较含退格的字符串 | 基本计算器 II](https://lvynote.blog.csdn.net/article/details/146190941)
-14. [\[Lc13_queue+bfs\] N 叉树的层序遍历 | 锯齿形层序遍历 | 二叉树最大宽度 | 每个树行中找最大值](https://lvynote.blog.csdn.net/article/details/146281585)
-15. [\[Lc14_priority_queue\] 最后一块石头重量 | 数据流中的第 K 大元素 | 前K个高频单词 | 数据流的中位数](https://lvynote.blog.csdn.net/article/details/146329248)
-16. [\[Lc15_bfs+floodfill\] 图像渲染 | 岛屿数量 | 岛屿的最大面积 | 被围绕的区域](https://lvynote.blog.csdn.net/article/details/146347318)
-17. [\[Lc16_bfs最短路\] 迷宫中离入口最近的出口 | 最小基因变化](https://lvynote.blog.csdn.net/article/details/146373986)
-18. [\[Lc16_bfs最短路_2\] 单词接龙 | 为高尔夫比赛砍树](https://lvynote.blog.csdn.net/article/details/146402944)
-19. [\[Lc17_多源 BFS_最短路\] 矩阵 | 飞地的数量 | 地图中的最高点 | 地图分析](https://lvynote.blog.csdn.net/article/details/146463490)
-20. [\[Lc18_BFS拓扑排序\] 邻接表 | 课程表I II](https://lvynote.blog.csdn.net/article/details/146483372)
-21. [\[Lc18_拓扑排序\] string+queue+map | 火星字典](https://lvynote.blog.csdn.net/article/details/146508282)
+1. [\[Lc\(1\) Two Pointers_1\] Move Zeroes | Duplicate Zeros | Happy Number](https://lvynote.blog.csdn.net/article/details/145915942)
+2. [\[Lc\(1\) Two Pointers_3\] Two Pointers | 3Sum | 4Sum](https://lvynote.blog.csdn.net/article/details/145950432)
+3. [\[Lc\(1\) Two Pointers_2\] Container With Most Water | Valid Triangle Number | Two Numbers That Sum to S](https://lvynote.blog.csdn.net/article/details/145951495)
+4. [\[Lc\(2\) Sliding Window_1\] Minimum Size Subarray Sum | Longest Substring Without Repeating Characters | Max Consecutive Ones III | Minimum Operations to Reduce X to Zero](https://lvynote.blog.csdn.net/article/details/145970938)
+5. [\[Lc\(2\) Sliding Window_2\] Fruit Into Baskets | Find All Anagrams in a String | Substring with Concatenation of All Words](https://lvynote.blog.csdn.net/article/details/146012994)
+6. [\[Lc\(4\) Prefix Sum_1\] 1D/2D Templates | Find Pivot Index | Product of Array Except Self](https://lvynote.blog.csdn.net/article/details/146050787)
+7. [\[Lc5 Bit Manipulation_1\] Common Tricks | Is Unique | Missing Number | Sum of Two Integers | Single Number II](https://lvynote.blog.csdn.net/article/details/146076791)
+8. [\[Lc6_Simulation\] Replace All ?'s to Avoid Consecutive Repeating Characters | Teemo Attacking | Zigzag Conversion | Count and Say](https://lvynote.blog.csdn.net/article/details/146102647)
+9. [\[Lc7_Divide and Conquer - Quicksort\] Divide and Conquer | Sort Colors | Quicksort](https://lvynote.blog.csdn.net/article/details/146120346)
+10. [\[Lc7_Divide and Conquer - Quicksort\] Quickselect | Kth Largest Element in an Array | Inventory Management III](https://lvynote.blog.csdn.net/article/details/146123800)
+11. [\[Lc10_hash\] Summary | Two Sum | Check Permutation | Contains Duplicate I II | Group Anagrams](https://lvynote.blog.csdn.net/article/details/146165252)
+12. [\[Lc11_Strings\] Longest Common Prefix | Longest Palindromic Substring | Add Binary](https://lvynote.blog.csdn.net/article/details/146177257)
+13. [\[Lc12_Stack\] Remove All Adjacent Duplicates In String | Backspace String Compare | Basic Calculator II](https://lvynote.blog.csdn.net/article/details/146190941)
+14. [\[Lc13_queue+bfs\] N-ary Tree Level Order Traversal | Zigzag Level Order Traversal | Maximum Width of Binary Tree | Find Largest Value in Each Tree Row](https://lvynote.blog.csdn.net/article/details/146281585)
+15. [\[Lc14_priority_queue\] Last Stone Weight | Kth Largest Element in a Stream | Top K Frequent Words | Find Median from Data Stream](https://lvynote.blog.csdn.net/article/details/146329248)
+16. [\[Lc15_bfs+floodfill\] Flood Fill | Number of Islands | Max Area of Island | Surrounded Regions](https://lvynote.blog.csdn.net/article/details/146347318)
+17. [\[Lc16_BFS Shortest Path\] Nearest Exit from Entrance in Maze | Minimum Genetic Mutation](https://lvynote.blog.csdn.net/article/details/146373986)
+18. [\[Lc16_BFS Shortest Path_2\] Word Ladder | Cut Off Trees for Golf Event](https://lvynote.blog.csdn.net/article/details/146402944)
+19. [\[Lc17_Multi-source BFS_Shortest Path\] 01 Matrix | Number of Enclaves | Map of Highest Peak | As Far from Land as Possible](https://lvynote.blog.csdn.net/article/details/146463490)
+20. [\[Lc18_BFS Topological Sort\] Adjacency List | Course Schedule I II](https://lvynote.blog.csdn.net/article/details/146483372)
+21. [\[Lc18_Topological Sort\] string+queue+map | Alien Dictionary](https://lvynote.blog.csdn.net/article/details/146508282)
 
-#### 递归，搜索与回溯
+#### Recursion, Search, and Backtracking
 
-- 搜索是递归中的一个分支
-- 回溯是搜索中的一个分支
-- 因此我们学习顺序是递归、搜索、回溯。
+- Search is a branch of recursion
+- Backtracking is a branch of search
+- So the order to learn them in is: recursion, search, backtracking.
 
-总结详见：[\[Lc_1 递归\] 递归，搜索与回溯总结 | 详解汉诺塔问题](https://lvynote.blog.csdn.net/article/details/146394374)
+For a full summary, see: [\[Lc_1 Recursion\] Recursion, Search, and Backtracking Summary | Tower of Hanoi Explained](https://lvynote.blog.csdn.net/article/details/146394374)
 
-[Lc递归，搜索与回溯]
+[Lc Recursion, Search, and Backtracking]
 
-1. [\[Lc_1 递归\] 递归，搜索与回溯总结 | 详解汉诺塔问题](https://lvynote.blog.csdn.net/article/details/146394374)
-2. [\[Lc_1 递归_2\] 合并两个有序链表 | 反转链表 | 两两交换链表中的节点 | Pow\(x, n\)-快速幂](https://lvynote.blog.csdn.net/article/details/146417585)
-3. [\[Lc_2 二叉树dfs\] 布尔二叉树的值 | 根节点到叶节点数字之和 | 二叉树剪枝](https://lvynote.blog.csdn.net/article/details/146447593)
-4. [\[Graph\] 邻接矩阵 | 邻接表](https://lvynote.blog.csdn.net/article/details/146471098)
-5. [\[Lc_2 二叉树dfs_2\] 验证二叉搜索树 | 第K小的元素 | 二叉树的所有路径](https://lvynote.blog.csdn.net/article/details/146482519)
-6. [\[Lc_3 回溯\] 决策树 | 全排列 | 子集](https://lvynote.blog.csdn.net/article/details/146527379)
-7. [\[Lc4_dfs\] 括号生成 | 组合 | 目标和](https://lvynote.blog.csdn.net/article/details/146541082)
-8. [\[Lc4_dfs\] 找出所有子集的异或求和 | 全排列 II | 电话号码的字母组合](https://lvynote.blog.csdn.net/article/details/146534475)
-9. [\[Lc4_dfs\] 组合总和 | 字母大小写全排列 | 优美的排列](https://lvynote.blog.csdn.net/article/details/146556074)
-10. [\[Lc4_dfs\] N 皇后 | 有效的数独](https://lvynote.blog.csdn.net/article/details/146631296)
-11. [\[Lc4_dfs\] 解数独 | 单词搜索](https://lvynote.blog.csdn.net/article/details/146703524)
-12. [\[Lc4_dfs\] 黄金矿工 | 不同路径 III](https://lvynote.blog.csdn.net/article/details/146711533)
-13. [\[Lc5_dfs+floodfill\] 简介 | 图像渲染 | 岛屿数量](https://lvynote.blog.csdn.net/article/details/146779689)
-14. [\[Lc5_dfs+floodfill\] 岛屿的最大面积\(&传参\) | 被围绕的区域 | 太平洋大西洋水流问题（双标记位传参）](https://lvynote.blog.csdn.net/article/details/146877352)
-15. [\[Lc6_记忆化搜索\] 扫雷游戏 | 理解 递归vs记忆化搜索vs dp](https://lvynote.blog.csdn.net/article/details/146925124)
-16. [\[Lc6_记忆化搜索\] 不同路径 | 解决智力问题 | 有序三元组中的最大值](https://lvynote.blog.csdn.net/article/details/146953129)
-17. [\[Lc6_记忆化搜索\] 最长递增子序列 | 矩阵中的最长递增路径](https://lvynote.blog.csdn.net/article/details/146965208)
+1. [\[Lc_1 Recursion\] Recursion, Search, and Backtracking Summary | Tower of Hanoi Explained](https://lvynote.blog.csdn.net/article/details/146394374)
+2. [\[Lc_1 Recursion_2\] Merge Two Sorted Lists | Reverse Linked List | Swap Nodes in Pairs | Pow\(x, n\) - Fast Exponentiation](https://lvynote.blog.csdn.net/article/details/146417585)
+3. [\[Lc_2 Binary Tree DFS\] Evaluate Boolean Binary Tree | Sum Root to Leaf Numbers | Binary Tree Pruning](https://lvynote.blog.csdn.net/article/details/146447593)
+4. [\[Graph\] Adjacency Matrix | Adjacency List](https://lvynote.blog.csdn.net/article/details/146471098)
+5. [\[Lc_2 Binary Tree DFS_2\] Validate Binary Search Tree | Kth Smallest Element in a BST | Binary Tree Paths](https://lvynote.blog.csdn.net/article/details/146482519)
+6. [\[Lc_3 Backtracking\] Decision Trees | Permutations | Subsets](https://lvynote.blog.csdn.net/article/details/146527379)
+7. [\[Lc4_dfs\] Generate Parentheses | Combinations | Target Sum](https://lvynote.blog.csdn.net/article/details/146541082)
+8. [\[Lc4_dfs\] Sum of All Subset XOR Totals | Permutations II | Letter Combinations of a Phone Number](https://lvynote.blog.csdn.net/article/details/146534475)
+9. [\[Lc4_dfs\] Combination Sum | Letter Case Permutation | Beautiful Arrangement](https://lvynote.blog.csdn.net/article/details/146556074)
+10. [\[Lc4_dfs\] N-Queens | Valid Sudoku](https://lvynote.blog.csdn.net/article/details/146631296)
+11. [\[Lc4_dfs\] Sudoku Solver | Word Search](https://lvynote.blog.csdn.net/article/details/146703524)
+12. [\[Lc4_dfs\] Path with Maximum Gold | Unique Paths III](https://lvynote.blog.csdn.net/article/details/146711533)
+13. [\[Lc5_dfs+floodfill\] Introduction | Flood Fill | Number of Islands](https://lvynote.blog.csdn.net/article/details/146779689)
+14. [\[Lc5_dfs+floodfill\] Max Area of Island \(passing by &\) | Surrounded Regions | Pacific Atlantic Water Flow \(passing two marker flags\)](https://lvynote.blog.csdn.net/article/details/146877352)
+15. [\[Lc6_Memoized Search\] Minesweeper | Understanding Recursion vs. Memoized Search vs. DP](https://lvynote.blog.csdn.net/article/details/146925124)
+16. [\[Lc6_Memoized Search\] Unique Paths | Solving Questions With Brainpower | Maximum Value of an Ordered Triplet](https://lvynote.blog.csdn.net/article/details/146953129)
+17. [\[Lc6_Memoized Search\] Longest Increasing Subsequence | Longest Increasing Path in a Matrix](https://lvynote.blog.csdn.net/article/details/146965208)
 
-#### 动态规划
+#### Dynamic Programming
 
-动态规划最核心的思想，就在于 拆分子问题，记住过往，减少重复计算。
+The core idea of dynamic programming is: break the problem into subproblems, remember past results, and avoid repeated computation.
 
-0基础可以先通过[\[dp_0\] 第 N 个泰波那契数 | 三步问题](https://lvynote.blog.csdn.net/article/details/146769412)建立直觉
+If you're starting from zero, you can first build intuition with [\[dp_0\] N-th Tribonacci Number | Three Steps Problem](https://lvynote.blog.csdn.net/article/details/146769412)
 
-[动态规划]
+[Dynamic Programming]
 
-1. [\[dp_0\] 第 N 个泰波那契数 | 三步问题](https://lvynote.blog.csdn.net/article/details/146769412)
-2. [\[dp_1\] 使用最小花费爬楼梯 | 解码方法 | 虚拟dp\[0\]=0](https://lvynote.blog.csdn.net/article/details/146959182)
-3. [\[dp_3 路径问题\] 不同路径 | 障碍物 II | 珠宝的最高价值](https://lvynote.blog.csdn.net/article/details/146978842)
-4. [\[dp4_路径问题\] 下降路径最小和 | 最小路径和 | 地下城游戏](https://lvynote.blog.csdn.net/article/details/146989648)
-5. [\[dp5_多状态dp\] 按摩师 | 打家劫舍 II | 删除并获得点数 | 粉刷房子](https://lvynote.blog.csdn.net/article/details/146990449)
-6. [\[dp_6\] 多状态 | 买卖股票的最佳时机 I II III IV | 含冷冻期 | 手续费 | 交易次数](https://lvynote.blog.csdn.net/article/details/147001829)
-7. [\[dp7_子数组\] 最大子数组和 | 环形 | 最大子数组乘积](https://lvynote.blog.csdn.net/article/details/147191370)
-8. [\[dp8_子数组\] 乘积为正数的最长子数组长度 | 等差数列划分 | 最长湍流子数组](https://lvynote.blog.csdn.net/article/details/147196822)
-9. [\[dp9_子数组\] 单词拆分 | 环绕字符串中唯一的子字符串](https://lvynote.blog.csdn.net/article/details/147197123)
-10. [\[dp10_子序列\] 最长递增子序列 | 摆动序列 | 最长递增子序列的个数](https://lvynote.blog.csdn.net/article/details/147209933)
-11. [\[dp11_最长子序列\(不连续\)\] 最长数对链 | 最长定差子序列 | 最长的斐波那契子序列的长度](https://lvynote.blog.csdn.net/article/details/147227513)
-12. [\[dp12_回文子串\] 最长回文子串 | 分割回文串 IV](https://lvynote.blog.csdn.net/article/details/147223002)
-13. [\[dp_13\] 最长等差数列\(len\) | 等差数列划分 II - 子序列\(num\)](https://lvynote.blog.csdn.net/article/details/147249758)
-14. [\[dp14_回文串\] 分割回文串 II | 最长回文子序列 | 让字符串成为回文串的最少插入次数](https://lvynote.blog.csdn.net/article/details/147283142)
-15. [\[dp15_两个数组/二维\] 最长公共子序列 | 不相交的线 | 不同的子序列 | 再论动态规划](https://lvynote.blog.csdn.net/article/details/147303748)
-16. [\[dp16_两个数组\] 通配符匹配 | 交错字符串 | 两个字符串的最小ASCII删除和](https://lvynote.blog.csdn.net/article/details/147312970)
-17. [\[dp17_两个数组\] 正则表达式匹配 | 最长重复子数组](https://lvynote.blog.csdn.net/article/details/147333088)
-18. [\[dp18_背包问题\] 介绍 | 01背包 | 分割等和子集](https://lvynote.blog.csdn.net/article/details/147340192)
-19. [\[dp19_01背包\] 目标和 | 最后一块石头的重量 II](https://lvynote.blog.csdn.net/article/details/147350631)
-20. [\[dp20_完全背包\] 介绍 | 零钱兑换](https://lvynote.blog.csdn.net/article/details/147353087)
-21. [\[dp21_完全背包\] 零钱兑换 II | 完全平方数](https://lvynote.blog.csdn.net/article/details/147361030)
-22. [\[dp22_二维背包\] 一和零 | 盈利计划](https://lvynote.blog.csdn.net/article/details/147366232)
-23. [\[dp23_似包非包\] 组合总和 Ⅳ | 不同的二叉搜索树 | 卡特兰数](https://lvynote.blog.csdn.net/article/details/147374698)
+1. [\[dp_0\] N-th Tribonacci Number | Three Steps Problem](https://lvynote.blog.csdn.net/article/details/146769412)
+2. [\[dp_1\] Min Cost Climbing Stairs | Decode Ways | Virtual dp\[0\]=0](https://lvynote.blog.csdn.net/article/details/146959182)
+3. [\[dp_3 Path Problems\] Unique Paths | Obstacles II | Maximum Value of Jewelry](https://lvynote.blog.csdn.net/article/details/146978842)
+4. [\[dp4_Path Problems\] Minimum Falling Path Sum | Minimum Path Sum | Dungeon Game](https://lvynote.blog.csdn.net/article/details/146989648)
+5. [\[dp5_Multi-state DP\] The Masseuse | House Robber II | Delete and Earn | Paint House](https://lvynote.blog.csdn.net/article/details/146990449)
+6. [\[dp_6\] Multi-state | Best Time to Buy and Sell Stock I II III IV | With Cooldown | With Transaction Fee | Transaction Limit](https://lvynote.blog.csdn.net/article/details/147001829)
+7. [\[dp7_Subarrays\] Maximum Subarray | Circular | Maximum Product Subarray](https://lvynote.blog.csdn.net/article/details/147191370)
+8. [\[dp8_Subarrays\] Maximum Length of Subarray With Positive Product | Arithmetic Slices | Longest Turbulent Subarray](https://lvynote.blog.csdn.net/article/details/147196822)
+9. [\[dp9_Subarrays\] Word Break | Unique Substrings in Wraparound String](https://lvynote.blog.csdn.net/article/details/147197123)
+10. [\[dp10_Subsequences\] Longest Increasing Subsequence | Wiggle Subsequence | Number of Longest Increasing Subsequence](https://lvynote.blog.csdn.net/article/details/147209933)
+11. [\[dp11_Longest Subsequence \(Non-contiguous\)\] Maximum Length of Pair Chain | Longest Arithmetic Subsequence of Given Difference | Length of Longest Fibonacci Subsequence](https://lvynote.blog.csdn.net/article/details/147227513)
+12. [\[dp12_Palindromic Substrings\] Longest Palindromic Substring | Palindrome Partitioning IV](https://lvynote.blog.csdn.net/article/details/147223002)
+13. [\[dp_13\] Longest Arithmetic Subsequence \(len\) | Arithmetic Slices II - Subsequence \(num\)](https://lvynote.blog.csdn.net/article/details/147249758)
+14. [\[dp14_Palindromes\] Palindrome Partitioning II | Longest Palindromic Subsequence | Minimum Insertion Steps to Make a String Palindrome](https://lvynote.blog.csdn.net/article/details/147283142)
+15. [\[dp15_Two Arrays/2D\] Longest Common Subsequence | Uncrossed Lines | Distinct Subsequences | Revisiting Dynamic Programming](https://lvynote.blog.csdn.net/article/details/147303748)
+16. [\[dp16_Two Arrays\] Wildcard Matching | Interleaving String | Minimum ASCII Delete Sum for Two Strings](https://lvynote.blog.csdn.net/article/details/147312970)
+17. [\[dp17_Two Arrays\] Regular Expression Matching | Maximum Length of Repeated Subarray](https://lvynote.blog.csdn.net/article/details/147333088)
+18. [\[dp18_Knapsack Problems\] Introduction | 0/1 Knapsack | Partition Equal Subset Sum](https://lvynote.blog.csdn.net/article/details/147340192)
+19. [\[dp19_0/1 Knapsack\] Target Sum | Last Stone Weight II](https://lvynote.blog.csdn.net/article/details/147350631)
+20. [\[dp20_Unbounded Knapsack\] Introduction | Coin Change](https://lvynote.blog.csdn.net/article/details/147353087)
+21. [\[dp21_Unbounded Knapsack\] Coin Change II | Perfect Squares](https://lvynote.blog.csdn.net/article/details/147361030)
+22. [\[dp22_2D Knapsack\] Ones and Zeroes | Profitable Schemes](https://lvynote.blog.csdn.net/article/details/147366232)
+23. [\[dp23_Knapsack-like Problems\] Combination Sum IV | Unique Binary Search Trees | Catalan Numbers](https://lvynote.blog.csdn.net/article/details/147374698)
 
-> tips: 多刷题多体会~
+> tips: Solve lots of problems and reflect on them~
 
-#### 贪心算法
+#### Greedy Algorithms
 
-- 与其说是贪心算法，不如说是贪心策略。
+- Rather than calling it a greedy algorithm, it's more accurate to call it a greedy strategy.
 
-贪心策略：解决问题的策略( 局部最优 —> 全局最优)。
+Greedy strategy: a strategy for solving problems (local optimum —> global optimum).
 
-- 把解决问题的过程分为若干步；
-- 解决每一步的时候，都选择当前看起来 “最优的” 解法；
-- “希望” 得到全局最优解。
+- Split the process of solving the problem into several steps;
+- At each step, choose the solution that currently looks "best";
+- "Hope" to arrive at the global optimum.
 
-遇到不会的贪心题，很正常，把心态放平。
+It's completely normal to run into greedy problems you can't solve, so stay calm.
 
-1. 前期学习的时候，把重点放在贪心的策略上，把这个策略当成经验吸收。往后遇到相同类型的题目时可以用经验去解决这道问题。
-2. 当知道贪心是正确的时候，要想到如何去证明。
+1. In the early stages of learning, focus on the greedy strategy itself and absorb it as experience. Later, when you meet a problem of the same type, you can use that experience to solve it.
+2. When you know a greedy approach is correct, think about how to prove it.
 
-可以从[\[贪心_1\] 介绍 | 柠檬水找零](https://lvynote.blog.csdn.net/article/details/147386582)等题目入手，体会贪心策略如何落地。
+You can start with problems like [\[Greedy_1\] Introduction | Lemonade Change](https://lvynote.blog.csdn.net/article/details/147386582) to get a feel for how greedy strategies are put into practice.
 
-[贪心算法]
+[Greedy Algorithms]
 
-1. [\[贪心_1\] 介绍 | 柠檬水找零](https://lvynote.blog.csdn.net/article/details/147386582)
-2. [\[贪心_2\] \(含证明\)将数组和减半的最少操作次数 | 最大数](https://lvynote.blog.csdn.net/article/details/147398154)
-3. [\[贪心_3\] 摆动序列 | 最长递增子序列](https://lvynote.blog.csdn.net/article/details/147422746)
-4. [\[贪心_4\] 递增的三元子序列 | 最长连续递增序列 | 买卖股票的最佳时机 | & ||](https://lvynote.blog.csdn.net/article/details/147457750)
-5. [\[贪心_5\] K 次取反后最大化的数组和 | 按身高排序](https://lvynote.blog.csdn.net/article/details/147475655)
-6. [\[贪心_6\] 田忌赛马 | 最长回文串 | 增减字符串匹配 | 分发饼干](https://lvynote.blog.csdn.net/article/details/147500909)
-7. [\[贪心_7\] 最优除法 | 跳跃游戏 II | 加油站](https://lvynote.blog.csdn.net/article/details/147518447)
-8. [\[贪心_8\] 跳跃游戏 | 单调递增的数字 | 坏了的计算器](https://lvynote.blog.csdn.net/article/details/147528980)
-9. [\[贪心_9\] 合并区间 | 无重叠区间 | 用最少数量的箭引爆气球](https://lvynote.blog.csdn.net/article/details/147539504)
+1. [\[Greedy_1\] Introduction | Lemonade Change](https://lvynote.blog.csdn.net/article/details/147386582)
+2. [\[Greedy_2\] \(With Proof\) Minimum Operations to Halve Array Sum | Largest Number](https://lvynote.blog.csdn.net/article/details/147398154)
+3. [\[Greedy_3\] Wiggle Subsequence | Longest Increasing Subsequence](https://lvynote.blog.csdn.net/article/details/147422746)
+4. [\[Greedy_4\] Increasing Triplet Subsequence | Longest Continuous Increasing Subsequence | Best Time to Buy and Sell Stock | & ||](https://lvynote.blog.csdn.net/article/details/147457750)
+5. [\[Greedy_5\] Maximize Sum of Array After K Negations | Sort the People](https://lvynote.blog.csdn.net/article/details/147475655)
+6. [\[Greedy_6\] Advantage Shuffle \(Tian Ji's Horse Racing\) | Longest Palindrome | DI String Match | Assign Cookies](https://lvynote.blog.csdn.net/article/details/147500909)
+7. [\[Greedy_7\] Optimal Division | Jump Game II | Gas Station](https://lvynote.blog.csdn.net/article/details/147518447)
+8. [\[Greedy_8\] Jump Game | Monotone Increasing Digits | Broken Calculator](https://lvynote.blog.csdn.net/article/details/147528980)
+9. [\[Greedy_9\] Merge Intervals | Non-overlapping Intervals | Minimum Number of Arrows to Burst Balloons](https://lvynote.blog.csdn.net/article/details/147539504)
 
-按题型整理思路，记录解题步骤与常见坑点，形成可复用的知识框架。
+Organize your thinking by problem type, record the solution steps and common pitfalls, and build a reusable knowledge framework.
 
-**笔记思路：** 可以参考这篇文章中t4数据流的中位数的梳理方法 [\[Lc14_priority_queue\] 最后一块石头重量 | 数据流中的第 K 大元素 | 前K个高频单词 | 数据流的中位数](https://lvynote.blog.csdn.net/article/details/146329248)
+**Note-taking approach:** For reference, see how problem t4 (Find Median from Data Stream) is broken down in this article: [\[Lc14_priority_queue\] Last Stone Weight | Kth Largest Element in a Stream | Top K Frequent Words | Find Median from Data Stream](https://lvynote.blog.csdn.net/article/details/146329248)
 
-> tips:记录的时候可以多思考，可能写一篇需要3-4个小时，但在之后刷题中可提效远不止3-4小时
+> tips: Think deeply while writing notes. One write-up might take 3-4 hours, but the time it saves you in later practice will be far more than 3-4 hours.
 
-### 好用的笔记工具
+### Handy Note-taking Tools
 
 - **draw.io**
-  电脑绘图工具：写笔记的时候思考如何清晰地让别人也可以看懂，可以帮助更好地理解学习。
-  示例图：
-  ![draw.io 示例](./png/draw_io_test.png)
+  Desktop diagramming tool: when writing notes, think about how to make them clear enough for others to understand. That helps you understand and learn better yourself.
+  Example diagram:
+  ![draw.io example](./png/draw_io_test.png)
 - **xmind**
-  导图工具：以前几天每日一题中的区间贪心为例，可以借助导图清晰梳理题解（参考 [\[贪心_9\] 合并区间 | 无重叠区间 | 用最少数量的箭引爆气球](https://lvynote.blog.csdn.net/article/details/147539504)）。
+  Mind-mapping tool: taking the interval greedy problems from the daily problems a few days ago as an example, a mind map helps lay out the solutions clearly (see [\[Greedy_9\] Merge Intervals | Non-overlapping Intervals | Minimum Number of Arrows to Burst Balloons](https://lvynote.blog.csdn.net/article/details/147539504)).
 - **Goodnotes**
-  iPad 手绘工具：多种颜色画笔，可以清晰地对下面2个部分进行写写画画。
+  iPad hand-drawing tool: with pens in many colors, you can clearly sketch and annotate the following two phases.
 
-  1. 写代码前：模拟代码，例如 [N 皇后 | 有效的数独](https://lvynote.blog.csdn.net/article/details/146631296)。
-  2. 写代码后：梳理代码，以 [正则表达式匹配](https://lvynote.blog.csdn.net/article/details/147333088) 为例，提炼关键状态转移并总结心得。
-- **LICEcup**
-  录屏 gif 动图，可用于演示 [递增的三元子序列 | 最长连续递增序列 | 买卖股票的最佳时机](https://lvynote.blog.csdn.net/article/details/147457750) 等题目的贪心过程。
+  1. Before writing code: simulate the code, e.g. [N-Queens | Valid Sudoku](https://lvynote.blog.csdn.net/article/details/146631296).
+  2. After writing code: review the code, e.g. [Regular Expression Matching](https://lvynote.blog.csdn.net/article/details/147333088), extracting the key state transitions and summarizing takeaways.
+- **LICEcap**
+  Screen recording to animated GIFs, useful for demonstrating the greedy process in problems such as [Increasing Triplet Subsequence | Longest Continuous Increasing Subsequence | Best Time to Buy and Sell Stock](https://lvynote.blog.csdn.net/article/details/147457750).
 
-### 2. 定期复习
+### 2. Review Regularly
 
-复习是一件随时都可以做的事情，手机写代码不是很方便，可以想到的时候用来看代码，给代码做注释，就像是和代码二次对话一样
+Reviewing is something you can do anytime. Writing code on a phone isn't very convenient, but whenever something comes to mind you can use it to read code and annotate it. It's like having a second conversation with the code.
 
-### 3. 刷题练习
+### 3. Practice Problems
 
-“工欲善其事必先利其器”，配置好环境可以让坐在电脑前刷题变的更加快乐：[VSCode配置LeetCode调试环境](https://lvynote.blog.csdn.net/article/details/145949237)（I love vscode）
+"A craftsman must first sharpen his tools." Setting up a good environment makes sitting at the computer solving problems a lot more enjoyable: [Setting up a LeetCode Debugging Environment in VSCode](https://lvynote.blog.csdn.net/article/details/145949237) (I love vscode)
 
-题单：灵神的伟大无需多言(ㄒoㄒ）[分享｜如何科学刷题？](https://leetcode.cn/discuss/post/3141566/ru-he-ke-xue-shua-ti-by-endlesscheng-q3yd/)
+Problem lists: the greatness of Ling Shen (endlesscheng) needs no introduction (ㄒoㄒ) [Share | How to Practice Problems Scientifically?](https://leetcode.cn/discuss/post/3141566/ru-he-ke-xue-shua-ti-by-endlesscheng-q3yd/)
 
-## 碎碎念
+## Random Thoughts
 
-脑袋刷卡了可以换一件事情做，可以去 跑步/打球/ 游泳/爬山/组乐队/发呆...尽量从电子设备抽离，接触现实世界
+When your brain gets stuck from grinding problems, switch to something else: go running / play ball / swim / hike / start a band / zone out... Try to get away from electronic devices and connect with the real world.
 
-(偶尔steam也行，可以进入到另一个世界，如果长时间看屏幕注意滴眼药水保护视力
+(Steam now and then is fine too, it lets you step into another world. If you stare at screens for long periods, remember to use eye drops to protect your eyesight.)
 
-学会放松和学会刷题一样重要，健康的身心才可以更好的去做喜欢的事情
+Learning to relax is just as important as learning to solve problems. A healthy body and mind let you do the things you love even better.
 
 ---
 
-### 使用指南
+### Usage Guide
 
-- git clone 到本地，用 Typora 打开，可以直接对源.md文件进行自己的批注
-- 所有笔记 & 代码均为开源，支持自由获取/引用/改造，二创可以fork一份
+- `git clone` it locally and open it with Typora, so you can add your own annotations directly to the source .md files
+- All notes & code are open source. Feel free to take / cite / adapt them; for derivative works, you can fork a copy
 
-tips:如果没使用过 GitHub，复制仓库链接给 AI 并提问——“我该如何把这个仓库 clone 到本地使用”，碰到问题继续追问 AI，刚好实践学一下GitHub使用方法~
+tips: If you've never used GitHub, copy the repo link to an AI and ask "How do I clone this repository to use it locally?". If you run into problems, keep asking the AI. It's a good chance to learn GitHub hands-on~
 
 ---
 
 ### co-creation
 
-好的模板大家可以在仓库中分享开源出来 共同学习进步
+Everyone is welcome to share good templates in this repo as open source, so we can learn and improve together.
 
-way:fork一份，在templates文件夹下创建自己name的子文件，就可以从0开始维护自己的算法模板啦
+How: fork a copy, create a subfolder with your own name under the templates folder, and you can start maintaining your own algorithm templates from scratch!
 
-templates部分包含各种算法模板，欢迎大家提issue/pr/email me: 开源自己的算法模板/补充想法/提出问题/完善提单/学习交流...
+The templates section contains all kinds of algorithm templates. Feel free to open an issue/PR or email me: open-source your own algorithm templates / add ideas / ask questions / improve the problem lists / learn and exchange ideas...
 
-如果你也想为这个仓库做一些贡献，可以pr提交一些完善/模板后email me become contributors~
+If you'd also like to contribute to this repo, you can submit improvements/templates via PR, then email me to become a contributor~
 
 ## Contributors
 
@@ -217,43 +217,43 @@ Thank you to all the people who have already contributed to this repo templates
 
 ---
 
-## 算法之外(in process)
+## Beyond Algorithms (in process)
 
-后续计划对系列文章进行总结整理，更新至repo:[X-Plore](https://github.com/lvy010/ThoughtMap)/从零开始的X学习之路 下
+I plan to summarize and organize my article series and publish them in the repo [X-Plore](https://github.com/lvy010/ThoughtMap) under "The Road to Learning X from Zero".
 
-内容比较多，需要一些时间，可以先mark一下，有什么感兴趣的想先看到，可以在issue中对↓专栏文章进行选题投票(in process)
+There's quite a lot of content, so it will take some time. Feel free to bookmark it for now. If there's something you'd like to see first, you can vote on topics for the column articles below ↓ in the issues (in process)
 
 ![x](./png/x.png)
 
 ### example content
 
-#### 从零开始的Linux学习之路
+#### The Road to Learning Linux from Zero
 
 ![Linux](./png/linux.png)
 
-#### 从零开始的LLM学习之路
+#### The Road to Learning LLMs from Zero
 
 ![LLM](./png/llm.png)
 
-#### 从零开始的Redis学习之路
+#### The Road to Learning Redis from Zero
 
 ![Redis](./png/redis.png)
 
-#### 从零开始的CUDA学习之路
+#### The Road to Learning CUDA from Zero
 
 ![CUDA](./png/cuda.png)
 
 ... ...(more)
 
-**期待一切有助于学习&进步的建议与共创~可以直接提issue/email me**
+**Looking forward to any suggestions and collaboration that help with learning & progress~ Feel free to open an issue / email me**
 
 ---
 
-附录：
-"那一天,人们回想起了这个仓库的起因,那篇被删掉的文章..."
+Appendix:
+"On that day, people remembered the origin of this repository, that deleted article..."
 
-仓库由来：[leetcode题单分享_第一版完整的原文截图](./other/Share_the_original_text.md)原文因为一些原因已经不存在了，这是一份备份。
+Origin of the repo: [LeetCode problem list share_full original-text screenshots of the first version](./other/Share_the_original_text.md). The original article no longer exists for various reasons; this is a backup.
 
-<!-- 赞助说明 -->
+<!-- Sponsorship note -->
 
-> [DolOffer](https://doloffer.com) ：如果在使用 ChatGPT Plus 或 Claude Pro，可以看看，支持正规订阅，价格相对实惠。感谢赞助 :p
+> [DolOffer](https://doloffer.com): If you use ChatGPT Plus or Claude Pro, take a look. It supports legitimate subscriptions at relatively affordable prices. Thanks for the sponsorship :p

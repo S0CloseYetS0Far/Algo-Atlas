@@ -1,5 +1,5 @@
-//查找树的直径端点 对找直径算法稍作修改
-//两次BFS/DFS：先从任意点找最远点u，再从u找最远点v，u-v即为树的直径
+//Find the endpoints of a tree's diameter, a slight modification of the diameter algorithm
+//Two BFS/DFS passes: first find the farthest node u from any node, then the farthest node v from u; u-v is the diameter
 class Solution {
     int n;
     vector<vector<int>> graph;

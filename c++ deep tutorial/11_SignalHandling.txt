@@ -1,205 +1,215 @@
 ================================================================================
-  C++深化教程  第十一章: 信号处理 (Signal Handling)
+  C++ Deep Dive Tutorial  Chapter 11: Signal Handling
 ================================================================================
 
-【章节导读】
-信号是操作系统提供的进程间异步通知机制。虽然信号处理在C++中应用范围
-不如前几章广泛，但它是编写守护进程、服务器程序、CLI工具时不可或缺的
-知识点。本章从操作系统内核的信号机制出发，全面讲解C++信号处理接口。
+[Chapter Overview]
+Signals are an asynchronous inter-process notification mechanism provided by the
+operating system. Although signal handling is not used as widely in C++ as the
+topics of previous chapters, it is essential knowledge for writing daemons,
+server programs, and CLI tools. Starting from the kernel's signal mechanism, this
+chapter gives a complete tour of the C++ signal handling interfaces.
 
 ================================================================================
-### 第一节: 基础示例代码 + 计算机底层原理
+### Section 1: Basic Example Code + Low-Level Computer Principles
 ================================================================================
 
-一、signal() 基础示例
+I. Basic signal() Example
 
 ---------------------------------------------------------------
-// ---- 基础示例：捕获 SIGINT (Ctrl+C) ----
+// ---- Basic example: catching SIGINT (Ctrl+C) ----
 #include <iostream>
 #include <csignal>
 #include <unistd.h>
 
-// 信号处理函数
+// Signal handler
 volatile sig_atomic_t g_keepRunning = 1;
 
 void signalHandler(int signum) {
-    std::cout << "\n收到信号: " << signum << " (Ctrl+C)" << std::endl;
-    std::cout << "正在安全退出..." << std::endl;
-    g_keepRunning = 0;  // 设置退出标志
+    std::cout << "\nReceived signal: " << signum << " (Ctrl+C)" << std::endl;
+    std::cout << "Exiting safely..." << std::endl;
+    g_keepRunning = 0;  // Set the exit flag
 }
 
 int main() {
-    // 注册信号处理函数
+    // Register the signal handler
     signal(SIGINT, signalHandler);
 
-    std::cout << "程序运行中... 按 Ctrl+C 退出" << std::endl;
+    std::cout << "Program running... press Ctrl+C to exit" << std::endl;
 
     int iteration = 0;
     while (g_keepRunning) {
-        std::cout << "循环 " << ++iteration << std::endl;
-        sleep(1);  // 模拟工作
+        std::cout << "Iteration " << ++iteration << std::endl;
+        sleep(1);  // Simulate work
     }
 
-    std::cout << "程序安全退出" << std::endl;
+    std::cout << "Program exited safely" << std::endl;
     return 0;
 }
 ---------------------------------------------------------------
 
-二、操作系统信号机制 —— 底层原理
+II. The OS Signal Mechanism -- Low-Level Principles
 
-1. 什么是信号？
+1. What is a signal?
 
-   信号是UNIX/Linux系统中进程间通信(IPC)的一种异步通知机制。
-   它类似于"软件中断"：一个进程（或内核）向另一个进程发送信号，
-   目标进程在合适的时机处理该信号。
+   A signal is an asynchronous notification mechanism for inter-process
+   communication (IPC) on UNIX/Linux systems. It is similar to a "software
+   interrupt": one process (or the kernel) sends a signal to another process,
+   and the target process handles that signal at an appropriate moment.
 
-   信号的三个关键阶段：
-   ┌──────────────┬──────────────────────────────────────────┐
-   │ 阶段          │ 描述                                      │
-   ├──────────────┼──────────────────────────────────────────┤
-   │ 产生(Generate)│ 内核或其他进程发送信号                     │
-   │ 未决(Pending) │ 信号已发送但目标进程尚未处理               │
-   │ 递达(Deliver) │ 目标进程执行信号处理函数                    │
-   └──────────────┴──────────────────────────────────────────┘
+   The three key stages of a signal:
+   ┌──────────────┬──────────────────────────────────────────────┐
+   │ Stage        │ Description                                  │
+   ├──────────────┼──────────────────────────────────────────────┤
+   │ Generate     │ The kernel or another process sends a signal │
+   │ Pending      │ Sent, but not yet handled by the target      │
+   │ Deliver      │ The target process runs the signal handler   │
+   └──────────────┴──────────────────────────────────────────────┘
 
-2. 内核发送信号的流程
+2. How the kernel sends a signal
 
-   当内核向进程发送信号时，涉及的数据结构：
+   When the kernel sends a signal to a process, these data structures are involved:
 
    ┌─────────────────────────────────────────────────────────┐
-   │         进程 task_struct (内核中的进程描述符)            │
+   │  Process task_struct (process descriptor in the kernel) │
    ├─────────────────────────────────────────────────────────┤
    │  struct task_struct {                                   │
    │      ...                                                │
-   │      struct signal_struct *signal;  // 共享信号描述符    │
-   │      struct sighand_struct *sighand; // 信号处理表       │
-   │      sigset_t blocked;       // 阻塞(屏蔽)的信号集       │
-   │      struct sigpending pending; // 私有未决信号集        │
+   │      struct signal_struct *signal;  // shared sig desc  │
+   │      struct sighand_struct *sighand; // handler table   │
+   │      sigset_t blocked;       // blocked (masked) set    │
+   │      struct sigpending pending; // private pending set  │
    │      ...                                                │
    │  };                                                     │
    │                                                         │
    │  struct sigpending {                                    │
-   │      struct list_head list;  // 未决信号链表             │
-   │      sigset_t signal;        // 未决信号位图             │
+   │      struct list_head list;  // pending signal list     │
+   │      sigset_t signal;        // pending signal bitmap   │
    │  };                                                     │
    └─────────────────────────────────────────────────────────┘
 
-   发送过程（以 kill(pid, SIGINT) 为例）：
+   The sending process (using kill(pid, SIGINT) as an example):
 
-   步骤1: 内核验证发送进程的权限（同用户或root）。
-   步骤2: 在目标进程的 task_struct->pending.signal 位图中
-          设置 SIGINT 对应位。
-   步骤3: 将信号信息节点加入 pending.list 链表。
-   步骤4: 若目标进程正在睡眠，唤醒之（设置 TASK_INTERRUPTIBLE）。
-   步骤5: 当目标进程被调度运行时，在返回到用户态之前，
-          内核检查 pending.signal 位图。
-   步骤6: 若有未决信号且未被屏蔽，内核设置用户态栈帧，
-          使进程返回到用户态时执行信号处理函数。
-   步骤7: 信号处理函数执行完毕后，通过 sigreturn 系统调用
-          恢复被中断的正常执行。
+   Step 1: The kernel verifies the sender's permissions (same user or root).
+   Step 2: In the target process's task_struct->pending.signal bitmap,
+           the bit corresponding to SIGINT is set.
+   Step 3: A signal info node is appended to the pending.list linked list.
+   Step 4: If the target process is sleeping, it is woken up (if it is in
+           TASK_INTERRUPTIBLE).
+   Step 5: When the target process is scheduled to run, before returning to
+           user mode, the kernel checks the pending.signal bitmap.
+   Step 6: If there is a pending signal that is not blocked, the kernel sets up
+           a user-mode stack frame so that the process runs the signal handler
+           when it returns to user mode.
+   Step 7: After the signal handler finishes, the sigreturn system call
+           restores the interrupted normal execution.
 
-3. 信号处理的执行上下文
+3. The execution context of a signal handler
 
-   信号处理函数在用户态执行，但它"打断"了进程的正常执行流：
+   The signal handler runs in user mode, but it "interrupts" the normal flow
+   of execution of the process:
 
-   正常执行流:
-   main() -> funcA() -> funcB() -> [被信号打断]
+   Normal execution flow:
+   main() -> funcA() -> funcB() -> [interrupted by signal]
                                      ↓
-                              执行信号处理函数
+                              run the signal handler
                                      ↓
-                              恢复执行 funcB()
+                              resume executing funcB()
 
-   关键限制：
-   - 信号处理函数是"异步"调用的（不在正常调用链中）
-   - 它使用进程的用户栈（或内核信号栈，如果设置了 sigaltstack）
-   - 信号处理函数中能安全调用的函数非常有限
+   Key restrictions:
+   - The signal handler is invoked "asynchronously" (not in the normal call chain)
+   - It uses the process's user stack (or an alternate signal stack, if
+     sigaltstack has been set up)
+   - Very few functions can be safely called from a signal handler
 
-4. 异步信号安全函数 (Async-Signal-Safe Functions)
+4. Async-Signal-Safe Functions
 
-   由于信号处理函数可能在任意时刻打断正常代码（包括在malloc()、
-   printf()等库函数执行到一半时），重用这些函数可能导致死锁
-   （例如malloc()内部有锁，信号处理函数再调malloc就会死锁）。
+   Because a signal handler can interrupt normal code at any moment (including
+   halfway through library functions such as malloc() or printf()), re-entering
+   these functions may cause deadlock (e.g. malloc() holds an internal lock; if
+   the signal handler calls malloc again, it deadlocks).
 
-   POSIX标准定义了一组"异步信号安全"的函数，在信号处理函数中
-   可以安全调用。常见的安全函数包括：
+   The POSIX standard defines a set of "async-signal-safe" functions that can be
+   safely called from a signal handler. Common safe functions include:
 
    ┌───────────────────────────────────────────────────────┐
-   │ _Exit(), _exit()        进程退出                       │
-   │ abort()                 异常终止                       │
-   │ signal()                注册信号处理                    │
-   │ write()                 写文件描述符                    │
-   │ read()                  读文件描述符                    │
-   │ open(), close()         打开/关闭文件                  │
-   │ fork(), exec()          创建/执行进程                   │
-   │ waitpid()              等待子进程                      │
-   │ kill(), raise()         发送信号                       │
-   │ alarm()                设置闹钟                        │
-   │ sleep()                睡眠                            │
+   │ _Exit(), _exit()        Terminate the process         │
+   │ abort()                 Abnormal termination          │
+   │ signal()                Register a signal handler     │
+   │ write()                 Write to a file descriptor    │
+   │ read()                  Read from a file descriptor   │
+   │ open(), close()         Open/close a file             │
+   │ fork(), exec()          Create/execute a process      │
+   │ waitpid()               Wait for a child process      │
+   │ kill(), raise()         Send a signal                 │
+   │ alarm()                 Set an alarm                  │
+   │ sleep()                 Sleep                         │
    └───────────────────────────────────────────────────────┘
 
-   不安全函数的典型例子（禁止在信号处理函数中调用）：
-   - printf / cout (内部使用缓冲区锁)
-   - malloc / new (内存分配器有全局锁)
-   - exit() (调用全局析构，涉及多种锁)
-   - std::string 操作 (可能涉及内存分配)
+   Typical examples of unsafe functions (must NOT be called in a signal handler):
+   - printf / cout (use buffer locks internally)
+   - malloc / new (the memory allocator has global locks)
+   - exit() (runs global destructors, involving many locks)
+   - std::string operations (may allocate memory)
 
-5. 可靠信号 vs 不可靠信号
+5. Reliable vs Unreliable Signals
 
-   早期UNIX的信号机制是"不可靠"的：
-   - 信号可能丢失（多个相同信号被合并为一个）
-   - 信号处理函数每次执行后自动恢复为默认处理
-   - 无法阻塞/屏蔽信号
+   The signal mechanism of early UNIX was "unreliable":
+   - Signals could be lost (multiple identical signals merged into one)
+   - The handler was automatically reset to the default after each invocation
+   - Signals could not be blocked/masked
 
-   现代POSIX信号是"可靠"的：
-   - 实时信号(SIGRTMIN~SIGRTMAX)支持排队，不会丢失
-   - 可以用 sigprocmask 阻塞/屏蔽信号
-   - sigaction 替代 signal()，行为更可预测
+   Modern POSIX signals are "reliable":
+   - Real-time signals (SIGRTMIN~SIGRTMAX) are queued and are not lost
+   - Signals can be blocked/masked with sigprocmask
+   - sigaction replaces signal() and behaves more predictably
 
-   但C++标准库的 signal() 函数基于早期的不可靠信号模型。
-   实际开发中，如需可靠信号处理，使用POSIX的 sigaction。
+   However, the C++ standard library signal() function is based on the early
+   unreliable signal model. In real-world development, if you need reliable
+   signal handling, use POSIX sigaction.
 
-6. 信号处理函数与 volatile sig_atomic_t
+6. Signal handlers and volatile sig_atomic_t
 
-   sig_atomic_t 是一个整数类型，对它的读写操作是原子的
-   （不会被信号中断)。它是信号处理函数与主程序之间通信
-   的唯一安全方式。
+   sig_atomic_t is an integer type whose reads and writes are atomic
+   (cannot be interrupted by a signal). It is the only safe way for a signal
+   handler to communicate with the main program.
 
-   注意：C++11 后 volatile 不再是多线程安全机制，
-   但 volatile sig_atomic_t 在信号处理中有其特殊语义：
-   - volatile 告诉编译器不要优化对该变量的访问
-   - sig_atomic_t 保证读写不被信号中断
+   Note: since C++11, volatile is no longer a thread-safety mechanism,
+   but volatile sig_atomic_t has special semantics in signal handling:
+   - volatile tells the compiler not to optimize away accesses to the variable
+   - sig_atomic_t guarantees that reads/writes are not interrupted by signals
 
    volatile sig_atomic_t flag = 0;
 
    void handler(int sig) {
-       flag = 1;  // 安全：原子写入
+       flag = 1;  // Safe: atomic write
    }
 
    int main() {
        signal(SIGINT, handler);
        while (!flag) {
-           // 安全：原子读取
+           // Safe: atomic read
        }
    }
 
-7. 信号与C++异常的对比
+7. Signals compared with C++ exceptions
 
-   ┌──────────────┬──────────────────────┬──────────────────────┐
-   │ 特性         │ 信号 (Signal)         │ 异常 (Exception)     │
-   ├──────────────┼──────────────────────┼──────────────────────┤
-   │ 触发源       │ 外部（内核/其他进程）   │ 内部（程序逻辑）      │
-   │ 同步/异步     │ 异步（任意时刻到达）    │ 同步（代码调用链）    │
-   │ 处理方式     │ 信号处理函数           │ try-catch            │
-   │ 可恢复性     │ 很难可靠恢复           │ 可以灵活恢复          │
-   │ 控制粒度     │ 进程级                 │ 函数/代码块级         │
-   │ 跨平台       │ 依赖操作系统           │ C++标准              │
-   │ 适用场景     │ 外部事件通知           │ 程序内部错误处理      │
-    └──────────────┴──────────────────────┴──────────────────────┘
+   ┌──────────────┬────────────────────────┬────────────────────────┐
+   │ Feature      │ Signal                 │ Exception              │
+   ├──────────────┼────────────────────────┼────────────────────────┤
+   │ Source       │ External (kernel/procs)│ Internal (prog. logic) │
+   │ Sync/async   │ Async (arrives anytime)│ Sync (code call chain) │
+   │ Handling     │ Signal handler         │ try-catch              │
+   │ Recoverable  │ Hard to recover safely │ Flexible recovery      │
+   │ Granularity  │ Process level          │ Function/block level   │
+   │ Portability  │ OS dependent           │ C++ standard           │
+   │ Use case     │ External event notify  │ Internal error handling│
+    └──────────────┴────────────────────────┴────────────────────────┘
 
-8. sigaction vs signal —— POSIX可靠信号处理
+8. sigaction vs signal -- reliable POSIX signal handling
 
-   C标准库的 signal() 在不同UNIX系统上行为不一致（有的会重置为默认，
-   有的不会）。POSIX 提供了 sigaction() 以获得更精确的控制：
+   The C standard library signal() behaves inconsistently across UNIX systems
+   (some reset the handler to the default, some don't). POSIX provides
+   sigaction() for more precise control:
 
    ---------------------------------------------------------------
    #include <iostream>
@@ -209,11 +219,11 @@ int main() {
 
    volatile sig_atomic_t g_exitFlag = 0;
 
-   // sigaction 使用的信号处理函数
+   // Signal handler used with sigaction
    void sigactionHandler(int signum, siginfo_t* info, void* context) {
        char msg[128];
        int len = snprintf(msg, sizeof(msg),
-           "[sigaction] 信号 %d 来自 PID=%d (UID=%d)\n",
+           "[sigaction] signal %d from PID=%d (UID=%d)\n",
            signum,
            info ? info->si_pid : -1,
            info ? info->si_uid : -1);
@@ -225,47 +235,47 @@ int main() {
    int main() {
        struct sigaction sa;
        memset(&sa, 0, sizeof(sa));
-       sa.sa_sigaction = sigactionHandler;  // 使用扩展处理函数
-       sa.sa_flags = SA_SIGINFO;             // 启用额外信息
-       sigemptyset(&sa.sa_mask);             // 不屏蔽额外信号
+       sa.sa_sigaction = sigactionHandler;  // Use the extended handler
+       sa.sa_flags = SA_SIGINFO;             // Enable extra info
+       sigemptyset(&sa.sa_mask);             // Do not mask extra signals
 
-       // 注册
+       // Register
        sigaction(SIGINT, &sa, nullptr);
        sigaction(SIGTERM, &sa, nullptr);
 
        std::cout << "PID=" << getpid() << std::endl
-                 << "sigaction 提供的信息比 signal() 更丰富:" << std::endl
-                 << " - 可获取发送者的PID和UID" << std::endl
-                 << " - 可指定信号处理期间屏蔽哪些信号" << std::endl
-                 << " - 可控制SA_RESTART(自动重启被中断的系统调用)" << std::endl
-                 << " - 行为在各UNIX系统上一致" << std::endl;
+                 << "sigaction provides richer information than signal():" << std::endl
+                 << " - Can obtain the sender's PID and UID" << std::endl
+                 << " - Can specify which signals to mask during handling" << std::endl
+                 << " - Can control SA_RESTART (auto-restart interrupted syscalls)" << std::endl
+                 << " - Behavior is consistent across UNIX systems" << std::endl;
 
        while (!g_exitFlag) {
            std::cout << "." << std::flush;
            sleep(1);
        }
 
-       std::cout << "\n安全退出" << std::endl;
+       std::cout << "\nExited safely" << std::endl;
        return 0;
    }
    ---------------------------------------------------------------
 
-   signal() vs sigaction() 对比：
-   ┌──────────────────┬─────────────────┬──────────────────────┐
-   │ 特性             │ signal()        │ sigaction()          │
-   ├──────────────────┼─────────────────┼──────────────────────┤
-   │ 跨平台           │ C++ 标准        │ POSIX                │
-   │ 处理期间屏蔽信号  │ 不可控           │ 可精确设置           │
-   │ 获取发送者信息   │ 不支持           │ SA_SIGINFO 支持      │
-   │ 自动恢复         │ 行为不一致       │ 明确控制              │
-   │ 重启系统调用     │ 平台依赖         │ SA_RESTART 控制      │
-   │ 实时信号         │ 不支持           │ 支持                  │
-   └──────────────────┴─────────────────┴──────────────────────┘
+   signal() vs sigaction() comparison:
+   ┌──────────────────────┬─────────────────┬──────────────────────┐
+   │ Feature              │ signal()        │ sigaction()          │
+   ├──────────────────────┼─────────────────┼──────────────────────┤
+   │ Portability          │ C++ standard    │ POSIX                │
+   │ Mask during handling │ Not controllable│ Precisely settable   │
+   │ Sender info          │ Not supported   │ Via SA_SIGINFO       │
+   │ Auto reset           │ Inconsistent    │ Explicit control     │
+   │ Restart syscalls     │ Platform-dep.   │ SA_RESTART controls  │
+   │ Real-time signals    │ Not supported   │ Supported            │
+   └──────────────────────┴─────────────────┴──────────────────────┘
 
-9. 信号屏蔽与阻塞
+9. Signal masking and blocking
 
-   进程可以暂时"阻塞"（屏蔽）某些信号，被阻塞的信号处于"未决"状态，
-   解除阻塞后才会被递达处理：
+   A process can temporarily "block" (mask) certain signals. A blocked signal
+   stays in the "pending" state and is delivered only after it is unblocked:
 
    ---------------------------------------------------------------
    #include <iostream>
@@ -276,106 +286,107 @@ int main() {
    volatile sig_atomic_t g_interrupted = 0;
 
    void criticalHandler(int s) {
-       write(STDOUT_FILENO, "信号在关键段外被处理\n", 33);
+       write(STDOUT_FILENO, "Signal handled outside critical section\n", 40);
        g_interrupted = 1;
    }
 
    int main() {
        signal(SIGINT, criticalHandler);
 
-       // 定义信号集
+       // Define the signal set
        sigset_t newMask, oldMask;
        sigemptyset(&newMask);
-       sigaddset(&newMask, SIGINT);    // 阻塞 SIGINT
+       sigaddset(&newMask, SIGINT);    // Block SIGINT
 
        std::cout << "PID=" << getpid() << std::endl;
 
-       // 关键代码段：阻塞SIGINT，使其不会被中断
-       std::cout << "进入关键代码段（SIGINT被阻塞）..." << std::endl;
+       // Critical section: block SIGINT so it cannot interrupt us
+       std::cout << "Entering critical section (SIGINT blocked)..." << std::endl;
        sigprocmask(SIG_BLOCK, &newMask, &oldMask);
 
-       // 模拟关键操作（不能被打断的数据更新）
+       // Simulate a critical operation (data update that must not be interrupted)
        for (int i = 0; i < 3; i++) {
-           std::cout << "  关键操作 " << (i+1) << std::endl;
+           std::cout << "  Critical operation " << (i+1) << std::endl;
            sleep(1);
        }
 
-       // 检查是否有被阻塞的SIGINT
+       // Check whether a SIGINT was blocked
        sigset_t pending;
        sigpending(&pending);
        if (sigismember(&pending, SIGINT)) {
-           std::cout << "检测到被阻塞的SIGINT，将在退出关键段后处理"
+           std::cout << "Blocked SIGINT detected; it will be handled after leaving the critical section"
                      << std::endl;
        }
 
-       // 退出关键段，恢复原始信号屏蔽字
-       std::cout << "退出关键代码段（SIGINT可以递达）" << std::endl;
+       // Leave the critical section and restore the original signal mask
+       std::cout << "Leaving critical section (SIGINT can be delivered)" << std::endl;
        sigprocmask(SIG_SETMASK, &oldMask, nullptr);
 
-       // 此时之前被阻塞的信号自动递达
+       // The previously blocked signal is now delivered automatically
 
        sleep(1);
-       std::cout << "程序结束" << std::endl;
+       std::cout << "Program finished" << std::endl;
        return 0;
    }
    ---------------------------------------------------------------
 
-   信号阻塞的应用场景：
-   - 保护银行转账等不可中断的关键操作
-   - 避免日志写入被信号中断导致数据损坏
-   - 防止信号处理函数重入（递归调用）导致栈溢出
+   Use cases for signal blocking:
+   - Protecting critical operations that must not be interrupted, like bank transfers
+   - Preventing log writes from being interrupted by a signal and corrupting data
+   - Preventing re-entry (recursive invocation) of the signal handler, which can
+     overflow the stack
 
 ================================================================================
-### 第二节: 所有用法大全（标准库/关键字/函数）
+### Section 2: Complete Usage Reference (Standard Library/Keywords/Functions)
 ================================================================================
 
-一、<csignal> 头文件和 signal() 函数
+I. The <csignal> Header and the signal() Function
 
 ---------------------------------------------------------------
 #include <iostream>
 #include <csignal>
 #include <unistd.h>
 
-// 多个信号处理函数
+// Multiple signal handlers
 volatile sig_atomic_t sigintReceived = 0;
 volatile sig_atomic_t sigtermReceived = 0;
 volatile sig_atomic_t sigusr1Received = 0;
 
 void handleSIGINT(int signum) {
-    // 只能安全调用异步信号安全函数
-    const char msg[] = "收到 SIGINT\n";
+    // Only async-signal-safe functions may be called safely
+    const char msg[] = "Received SIGINT\n";
     write(STDOUT_FILENO, msg, sizeof(msg) - 1);
     sigintReceived = 1;
 }
 
 void handleSIGTERM(int signum) {
-    const char msg[] = "收到 SIGTERM\n";
+    const char msg[] = "Received SIGTERM\n";
     write(STDOUT_FILENO, msg, sizeof(msg) - 1);
     sigtermReceived = 1;
 }
 
 void handleSIGUSR1(int signum) {
-    const char msg[] = "收到 SIGUSR1\n";
+    const char msg[] = "Received SIGUSR1\n";
     write(STDOUT_FILENO, msg, sizeof(msg) - 1);
     sigusr1Received = 1;
 }
 
 int main() {
-    std::cout << "进程PID: " << getpid() << std::endl;
+    std::cout << "Process PID: " << getpid() << std::endl;
 
-    // 注册多个信号处理函数
+    // Register multiple signal handlers
     signal(SIGINT, handleSIGINT);    // Ctrl+C
-    signal(SIGTERM, handleSIGTERM);  // kill命令
-    signal(SIGUSR1, handleSIGUSR1);  // 用户自定义信号1
+    signal(SIGTERM, handleSIGTERM);  // the kill command
+    signal(SIGUSR1, handleSIGUSR1);  // user-defined signal 1
 
-    // 忽略某个信号
-    signal(SIGHUP, SIG_IGN);         // 忽略挂断信号
+    // Ignore a signal
+    signal(SIGHUP, SIG_IGN);         // Ignore the hangup signal
 
-    // 恢复默认处理
+    // Restore the default handling
     // signal(SIGINT, SIG_DFL);
 
-    std::cout << "等待信号... (用 kill -USR1 " << getpid()
-              << " 发送信号测试)" << std::endl;
+    std::cout << "Waiting for signals... (test with kill -USR1 " << getpid()
+              << ")" << std::endl;
 
     int count = 0;
     while (!sigintReceived && !sigtermReceived && count < 30) {
@@ -383,19 +394,19 @@ int main() {
         sleep(1);
         count++;
 
-        // 处理SIGUSR1（在信号处理函数中设置了标志）
+        // Handle SIGUSR1 (the flag was set in the signal handler)
         if (sigusr1Received) {
             sigusr1Received = 0;
-            std::cout << "\n[主程序] 处理SIGUSR1" << std::endl;
+            std::cout << "\n[main] Handling SIGUSR1" << std::endl;
         }
     }
 
-    std::cout << "\n程序退出" << std::endl;
+    std::cout << "\nProgram exiting" << std::endl;
     return 0;
 }
 ---------------------------------------------------------------
 
-二、raise() 函数 — 向自身发送信号
+II. The raise() Function -- Sending a Signal to Yourself
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -412,64 +423,64 @@ void alarmHandler(int signum) {
 int main() {
     signal(SIGALRM, alarmHandler);
 
-    std::cout << "设置定时3秒..." << std::endl;
-    std::cout << "raise(SIGALRM) 会立即触发信号" << std::endl;
+    std::cout << "Setting a 3-second timer..." << std::endl;
+    std::cout << "raise(SIGALRM) triggers the signal immediately" << std::endl;
 
-    // raise()：立即向本进程发送信号
-    raise(SIGALRM);  // 等价于 kill(getpid(), SIGALRM)
+    // raise(): immediately send a signal to this process
+    raise(SIGALRM);  // Equivalent to kill(getpid(), SIGALRM)
 
-    // alarm()：设置3秒后由内核发送SIGALRM
+    // alarm(): have the kernel send SIGALRM after 3 seconds
     alarm(3);
 
     while (!alarmFlag) {
-        std::cout << "等待告警..." << std::endl;
+        std::cout << "Waiting for alarm..." << std::endl;
         sleep(1);
     }
 
-    std::cout << "告警触发" << std::endl;
-    alarm(0);  // 取消定时器
+    std::cout << "Alarm fired" << std::endl;
+    alarm(0);  // Cancel the timer
     return 0;
 }
 ---------------------------------------------------------------
 
-三、常见信号一览
+III. Overview of Common Signals
 
 ---------------------------------------------------------------
 #include <iostream>
 #include <csignal>
 
 void printSignalInfo() {
-    // 标准信号（POSIX定义）
-    std::cout << "===== 常见信号 =====" << std::endl;
-    std::cout << "SIGINT   = " << SIGINT   << " (中断 Ctrl+C)"   << std::endl;
-    std::cout << "SIGTERM  = " << SIGTERM  << " (终止 kill)"      << std::endl;
-    std::cout << "SIGKILL  = " << SIGKILL  << " (强制终止 不可捕获)" << std::endl;
-    std::cout << "SIGSTOP  = " << SIGSTOP  << " (停止 不可捕获)"   << std::endl;
-    std::cout << "SIGSEGV  = " << SIGSEGV  << " (段错误 非法内存)" << std::endl;
-    std::cout << "SIGABRT  = " << SIGABRT  << " (abort()调用)"    << std::endl;
-    std::cout << "SIGFPE   = " << SIGFPE   << " (浮点异常)"       << std::endl;
-    std::cout << "SIGILL   = " << SIGILL   << " (非法指令)"       << std::endl;
-    std::cout << "SIGUSR1  = " << SIGUSR1  << " (用户自定义1)"    << std::endl;
-    std::cout << "SIGUSR2  = " << SIGUSR2  << " (用户自定义2)"    << std::endl;
-    std::cout << "SIGHUP   = " << SIGHUP   << " (挂断/终端关闭)"  << std::endl;
-    std::cout << "SIGPIPE  = " << SIGPIPE  << " (管道破裂)"       << std::endl;
-    std::cout << "SIGALRM  = " << SIGALRM  << " (定时器到期)"     << std::endl;
-    std::cout << "SIGCHLD  = " << SIGCHLD  << " (子进程状态改变)" << std::endl;
+    // Standard signals (defined by POSIX)
+    std::cout << "===== Common Signals =====" << std::endl;
+    std::cout << "SIGINT   = " << SIGINT   << " (interrupt, Ctrl+C)"     << std::endl;
+    std::cout << "SIGTERM  = " << SIGTERM  << " (terminate, kill)"       << std::endl;
+    std::cout << "SIGKILL  = " << SIGKILL  << " (force kill, uncatchable)" << std::endl;
+    std::cout << "SIGSTOP  = " << SIGSTOP  << " (stop, uncatchable)"     << std::endl;
+    std::cout << "SIGSEGV  = " << SIGSEGV  << " (segfault, bad memory)"  << std::endl;
+    std::cout << "SIGABRT  = " << SIGABRT  << " (abort() called)"        << std::endl;
+    std::cout << "SIGFPE   = " << SIGFPE   << " (floating-point error)"  << std::endl;
+    std::cout << "SIGILL   = " << SIGILL   << " (illegal instruction)"   << std::endl;
+    std::cout << "SIGUSR1  = " << SIGUSR1  << " (user-defined 1)"        << std::endl;
+    std::cout << "SIGUSR2  = " << SIGUSR2  << " (user-defined 2)"        << std::endl;
+    std::cout << "SIGHUP   = " << SIGHUP   << " (hangup/terminal closed)" << std::endl;
+    std::cout << "SIGPIPE  = " << SIGPIPE  << " (broken pipe)"           << std::endl;
+    std::cout << "SIGALRM  = " << SIGALRM  << " (timer expired)"         << std::endl;
+    std::cout << "SIGCHLD  = " << SIGCHLD  << " (child status changed)"  << std::endl;
 }
 
 int main() {
     printSignalInfo();
 
-    std::cout << "\n关键注意事项:" << std::endl;
-    std::cout << "  SIGKILL(9) 和 SIGSTOP(19) 不能被捕获、阻塞或忽略" << std::endl;
-    std::cout << "  SIGSEGV/ABRT/FPE/ILL 捕获后通常无法安全恢复" << std::endl;
-    std::cout << "  最佳实践：只捕获 SIGINT/SIGTERM/SIGUSR1/SIGUSR2/SIGHUP" << std::endl;
+    std::cout << "\nKey points:" << std::endl;
+    std::cout << "  SIGKILL(9) and SIGSTOP(19) cannot be caught, blocked, or ignored" << std::endl;
+    std::cout << "  After catching SIGSEGV/ABRT/FPE/ILL, safe recovery is usually impossible" << std::endl;
+    std::cout << "  Best practice: only catch SIGINT/SIGTERM/SIGUSR1/SIGUSR2/SIGHUP" << std::endl;
 
     return 0;
 }
 ---------------------------------------------------------------
 
-四、sig_atomic_t 类型和 volatile
+IV. The sig_atomic_t Type and volatile
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -477,23 +488,23 @@ int main() {
 #include <unistd.h>
 #include <cstring>
 
-// sig_atomic_t 的正确使用模式
+// Correct usage patterns for sig_atomic_t
 
-// 1. 简单的标志位（最安全的方式）
+// 1. A simple flag (the safest approach)
 volatile sig_atomic_t simpleFlag = 0;
 
 void simpleHandler(int signum) {
-    simpleFlag = 1;  // 原子操作，信号安全
+    simpleFlag = 1;  // Atomic operation, signal-safe
 }
 
-// 2. 计数信号（注意：仍可能因信号合并而丢失）
+// 2. Counting signals (note: signals may still be lost due to merging)
 volatile sig_atomic_t signalCount = 0;
 
 void countHandler(int signum) {
-    signalCount++;  // 在大多数平台上原子，但不能保证不丢失
+    signalCount++;  // Atomic on most platforms, but no guarantee nothing is lost
 }
 
-// 3. 多个标志位
+// 3. Multiple flags
 volatile sig_atomic_t flags[4] = {0};
 
 void multiHandler(int signum) {
@@ -509,106 +520,106 @@ int main() {
     signal(SIGUSR1, simpleHandler);
     signal(SIGUSR2, multiHandler);
 
-    // 正确的检查模式：主循环定期检查标志
+    // Correct checking pattern: the main loop checks the flag periodically
     std::cout << "PID: " << getpid() << std::endl;
-    std::cout << "向进程发送信号测试: kill -USR1 " << getpid() << std::endl;
-    std::cout << "主循环每100ms检查一次标志位" << std::endl;
+    std::cout << "Send a signal to test: kill -USR1 " << getpid() << std::endl;
+    std::cout << "The main loop checks the flag every 100ms" << std::endl;
 
     for (int i = 0; i < 20; ++i) {
-        // 检查标志（安全：sig_atomic_t的读取是原子的）
+        // Check the flag (safe: reading sig_atomic_t is atomic)
         if (simpleFlag) {
-            simpleFlag = 0;  // 重置标志
-            std::cout << "[主循环] 检测到SIGUSR1信号" << std::endl;
-            // 这里可以安全处理（在信号处理函数外部）
+            simpleFlag = 0;  // Reset the flag
+            std::cout << "[main loop] SIGUSR1 detected" << std::endl;
+            // Safe to do real handling here (outside the signal handler)
         }
 
         usleep(100000);  // 100ms
     }
 
-    std::cout << "演示结束" << std::endl;
+    std::cout << "Demo finished" << std::endl;
     return 0;
 }
 ---------------------------------------------------------------
 
-五、进程终止函数：abort(), exit(), atexit(), _Exit()
+V. Process Termination Functions: abort(), exit(), atexit(), _Exit()
 
 ---------------------------------------------------------------
 #include <iostream>
 #include <cstdlib>
 #include <csignal>
 
-// atexit 注册的清理函数
+// Cleanup functions registered with atexit
 void cleanup1() {
-    std::cout << "[清理1] 关闭日志文件" << std::endl;
+    std::cout << "[cleanup 1] Closing log file" << std::endl;
 }
 
 void cleanup2() {
-    std::cout << "[清理2] 释放数据库连接" << std::endl;
+    std::cout << "[cleanup 2] Releasing database connection" << std::endl;
 }
 
 void cleanup3() {
-    std::cout << "[清理3] 保存用户数据" << std::endl;
+    std::cout << "[cleanup 3] Saving user data" << std::endl;
 }
 
-// 信号处理函数（用于演示 abort 触发 SIGABRT）
+// Signal handler (to demonstrate abort raising SIGABRT)
 void sigabrtHandler(int signum) {
-    std::cout << "[信号处理] 收到 SIGABRT" << std::endl;
-    // 注意：abort() 引发的 SIGABRT 即使在信号处理函数处理完后
-    // 也会终止程序（C标准要求 abort() 必须成功终止进程）
+    std::cout << "[signal handler] Received SIGABRT" << std::endl;
+    // Note: the SIGABRT raised by abort() terminates the program even after
+    // the signal handler returns (the C standard requires abort() to terminate the process)
 }
 
 int main() {
-    // 注册 atexit 函数（退出时按注册的逆序调用）
+    // Register atexit functions (called in reverse order of registration on exit)
     atexit(cleanup1);
     atexit(cleanup2);
     atexit(cleanup3);
 
-    std::cout << "===== 进程终止函数演示 =====" << std::endl;
+    std::cout << "===== Process Termination Functions Demo =====" << std::endl;
 
-    // 1. exit() —— 正常终止
-    // exit(0);  // 会调用 atexit 注册的函数和全局对象的析构
+    // 1. exit() -- normal termination
+    // exit(0);  // Calls the atexit functions and global object destructors
 
-    // 2. abort() —— 异常终止
-    // abort();  // 不会调用 atexit 函数，发送 SIGABRT
+    // 2. abort() -- abnormal termination
+    // abort();  // Does not call atexit functions; sends SIGABRT
 
-    // 3. _Exit() —— 立即终止
-    // _Exit(0);  // 不会调用 atexit 函数，不刷新缓冲区
+    // 3. _Exit() -- immediate termination
+    // _Exit(0);  // Does not call atexit functions; does not flush buffers
 
-    // 4. signal() + raise() —— 信号终止
+    // 4. signal() + raise() -- termination via signal
     signal(SIGABRT, sigabrtHandler);
 
-    std::cout << "\n选择退出方式:" << std::endl;
-    std::cout << "1: exit(0) —— 正常退出(会调用atexit)" << std::endl;
-    std::cout << "2: abort() —— 异常退出(发送SIGABRT)" << std::endl;
-    std::cout << "3: _Exit(0) —— 直接退出(不调用atexit)" << std::endl;
-    std::cout << "4: raise(SIGTERM) —— 发送终止信号" << std::endl;
+    std::cout << "\nChoose an exit method:" << std::endl;
+    std::cout << "1: exit(0) -- normal exit (calls atexit)" << std::endl;
+    std::cout << "2: abort() -- abnormal exit (sends SIGABRT)" << std::endl;
+    std::cout << "3: _Exit(0) -- immediate exit (does not call atexit)" << std::endl;
+    std::cout << "4: raise(SIGTERM) -- send a termination signal" << std::endl;
 
-    int choice = 1;  // 演示时默认为 exit(0)
+    int choice = 1;  // The demo defaults to exit(0)
 
     switch (choice) {
         case 1:
-            std::cout << "\n--- 使用 exit(0) ---" << std::endl;
+            std::cout << "\n--- Using exit(0) ---" << std::endl;
             exit(0);
             break;
         case 2:
-            std::cout << "\n--- 使用 abort() ---" << std::endl;
+            std::cout << "\n--- Using abort() ---" << std::endl;
             abort();
             break;
         case 3:
-            std::cout << "\n--- 使用 _Exit(0) ---" << std::endl;
+            std::cout << "\n--- Using _Exit(0) ---" << std::endl;
             _Exit(0);
             break;
         case 4:
-            std::cout << "\n--- 使用 raise(SIGTERM) ---" << std::endl;
+            std::cout << "\n--- Using raise(SIGTERM) ---" << std::endl;
             raise(SIGTERM);
             break;
     }
 
-    return 0;  // 正常退出：也会调用 atexit
+    return 0;  // Normal return: also calls atexit functions
 }
 ---------------------------------------------------------------
 
-六、信号处理高级技巧
+VI. Advanced Signal Handling Techniques
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -616,87 +627,87 @@ int main() {
 #include <cstring>
 #include <unistd.h>
 
-// ===== 技巧1: 信号处理函数中使用 write() 输出调试信息 =====
+// ===== Technique 1: use write() for debug output in a signal handler =====
 volatile sig_atomic_t exitFlag = 0;
 
 void safeHandler(int signum) {
-    // 构建消息（不使用std::string — 不安全）
+    // Build the message (do not use std::string -- it is unsafe)
     char msg[64];
     int len = snprintf(msg, sizeof(msg),
-                       "信号 %d 已捕获 (PID=%d)\n",
+                       "Signal %d caught (PID=%d)\n",
                        signum, getpid());
     write(STDOUT_FILENO, msg, len);
 
-    exitFlag = signum;  // 存储信号编号
+    exitFlag = signum;  // Store the signal number
 }
 
-// ===== 技巧2: 优雅退出模式 (Graceful Shutdown) =====
+// ===== Technique 2: Graceful Shutdown pattern =====
 class Application {
 public:
     void run() {
         signal(SIGINT, safeHandler);
         signal(SIGTERM, safeHandler);
 
-        std::cout << "应用启动 (PID=" << getpid() << ")" << std::endl;
+        std::cout << "Application started (PID=" << getpid() << ")" << std::endl;
 
         int cycle = 0;
         while (!exitFlag) {
-            // 模拟工作
-            std::cout << "运行中... 周期 " << ++cycle << std::endl;
+            // Simulate work
+            std::cout << "Running... cycle " << ++cycle << std::endl;
             sleep(1);
         }
 
-        // 信号处理函数外部可以安全使用任何C++特性
-        std::cout << "\n收到信号 " << static_cast<int>(exitFlag)
-                  << ", 开始优雅退出..." << std::endl;
+        // Outside the signal handler, any C++ feature can be used safely
+        std::cout << "\nReceived signal " << static_cast<int>(exitFlag)
+                  << ", starting graceful shutdown..." << std::endl;
         cleanup();
     }
 
 private:
     void cleanup() {
-        // 在这里可以安全使用 std::cout, std::string 等
-        std::cout << "  [1/3] 保存状态..." << std::endl;
+        // std::cout, std::string, etc. can be used safely here
+        std::cout << "  [1/3] Saving state..." << std::endl;
         sleep(1);
-        std::cout << "  [2/3] 关闭连接..." << std::endl;
+        std::cout << "  [2/3] Closing connections..." << std::endl;
         sleep(1);
-        std::cout << "  [3/3] 释放资源..." << std::endl;
-        std::cout << "优雅退出完成" << std::endl;
+        std::cout << "  [3/3] Releasing resources..." << std::endl;
+        std::cout << "Graceful shutdown complete" << std::endl;
     }
 };
 
 int main() {
     Application app;
-    std::cout << "按 Ctrl+C 测试优雅退出..." << std::endl;
+    std::cout << "Press Ctrl+C to test graceful shutdown..." << std::endl;
     app.run();
     return 0;
 }
 ---------------------------------------------------------------
 
-七、信号处理用法速查表
+VII. Signal Handling Quick Reference
 
-┌────────────────────┬──────────────────────────────────────────────┐
-│ 用法               │ 语法 / 说明                                    │
-├────────────────────┼──────────────────────────────────────────────┤
-│ 注册处理函数       │ signal(SIGINT, handler);                      │
-│ 忽略信号           │ signal(SIGHUP, SIG_IGN);                      │
-│ 恢复默认           │ signal(SIGINT, SIG_DFL);                      │
-│ 向自身发信号       │ raise(SIGTERM);                               │
-│ 向其他进程发信号   │ kill(pid, SIGTERM);  (POSIX)                  │
-│ 信号安全标志       │ volatile sig_atomic_t flag;                    │
-│ 安全输出           │ write(STDOUT_FILENO, msg, len);               │
-│ 正常退出           │ exit(0);  (调用atexit+析构)                    │
-│ 异常退出           │ abort();  (发送SIGABRT)                       │
-│ 立即退出           │ _Exit(0); (不调用atexit)                      │
-│ 注册退出回调       │ atexit(cleanupFunc);                           │
-│ 定时信号           │ alarm(seconds); → 发送SIGALRM                  │
-│ 不可捕获的信号     │ SIGKILL, SIGSTOP                              │
-│ 用户自定义信号     │ SIGUSR1, SIGUSR2                               │
-└────────────────────┴──────────────────────────────────────────────┘
+┌──────────────────────────┬──────────────────────────────────────────────┐
+│ Usage                    │ Syntax / Notes                               │
+├──────────────────────────┼──────────────────────────────────────────────┤
+│ Register a handler       │ signal(SIGINT, handler);                     │
+│ Ignore a signal          │ signal(SIGHUP, SIG_IGN);                     │
+│ Restore default          │ signal(SIGINT, SIG_DFL);                     │
+│ Signal yourself          │ raise(SIGTERM);                              │
+│ Signal another process   │ kill(pid, SIGTERM);  (POSIX)                 │
+│ Signal-safe flag         │ volatile sig_atomic_t flag;                  │
+│ Safe output              │ write(STDOUT_FILENO, msg, len);              │
+│ Normal exit              │ exit(0);  (calls atexit + destructors)       │
+│ Abnormal exit            │ abort();  (sends SIGABRT)                    │
+│ Immediate exit           │ _Exit(0); (does not call atexit)             │
+│ Register exit callback   │ atexit(cleanupFunc);                         │
+│ Timer signal             │ alarm(seconds); → sends SIGALRM              │
+│ Uncatchable signals      │ SIGKILL, SIGSTOP                             │
+│ User-defined signals     │ SIGUSR1, SIGUSR2                             │
+└──────────────────────────┴──────────────────────────────────────────────┘
 
-七、信号与守护进程化 (Daemonization)
+VII. Signals and Daemonization
 
-   将进程转为守护进程时，信号处理是关键环节。守护进程必须
-   正确处理 SIGHUP、SIGTERM 和 SIGCHLD：
+   When turning a process into a daemon, signal handling is a key step. A daemon
+   must correctly handle SIGHUP, SIGTERM, and SIGCHLD:
 
    ---------------------------------------------------------------
    #include <iostream>
@@ -709,38 +720,38 @@ int main() {
    volatile sig_atomic_t daemonRunning = 1;
 
    void daemonSigHandler(int sig) {
-       write(STDOUT_FILENO, "[守护进程] 信号\n", 19);
+       write(STDOUT_FILENO, "[Daemon] Signal\n", 16);
        if (sig == SIGTERM || sig == SIGINT) daemonRunning = 0;
    }
 
-   // 转化为守护进程的标准步骤
+   // Standard steps to become a daemon
    bool daemonize() {
-       // 1. fork 子进程，退出父进程（子进程成为孤儿进程）
+       // 1. fork a child and exit the parent (the child becomes an orphan)
        pid_t pid = fork();
        if (pid < 0) return false;
-       if (pid > 0) _Exit(0);  // 父进程退出
+       if (pid > 0) _Exit(0);  // Parent exits
 
-       // 2. 子进程创建新会话（脱离终端）
+       // 2. The child creates a new session (detaches from the terminal)
        if (setsid() < 0) return false;
 
-       // 3. 忽略 SIGHUP 并再次 fork（确保不是会话组长）
+       // 3. Ignore SIGHUP and fork again (ensure we are not the session leader)
        signal(SIGHUP, SIG_IGN);
        pid = fork();
        if (pid < 0) return false;
        if (pid > 0) _Exit(0);
 
-       // 4. 切换工作目录到根目录
+       // 4. Change the working directory to root
        chdir("/");
 
-       // 5. 重置文件权限掩码
+       // 5. Reset the file mode creation mask
        umask(0);
 
-       // 6. 关闭标准文件描述符
+       // 6. Close the standard file descriptors
        close(STDIN_FILENO);
        close(STDOUT_FILENO);
        close(STDERR_FILENO);
 
-       // 7. 重定向到 /dev/null
+       // 7. Redirect them to /dev/null
        open("/dev/null", O_RDONLY);  // stdin
        open("/dev/null", O_WRONLY);  // stdout
        open("/dev/null", O_WRONLY);  // stderr
@@ -749,22 +760,22 @@ int main() {
    }
 
    int main() {
-       std::cout << "转为守护进程..." << std::endl;
+       std::cout << "Becoming a daemon..." << std::endl;
 
        if (!daemonize()) {
-           std::cerr << "守护进程化失败" << std::endl;
+           std::cerr << "Daemonization failed" << std::endl;
            return 1;
        }
 
-       // 此时已脱离终端，cout/cerr 不再输出到屏幕
-       // 必须使用 syslog 或写日志文件
+       // We are now detached from the terminal; cout/cerr no longer reach the screen
+       // You must use syslog or write to a log file
 
        signal(SIGTERM, daemonSigHandler);
        signal(SIGINT, daemonSigHandler);
 
-       // 守护进程主循环
+       // Daemon main loop
        while (daemonRunning) {
-           // 实际工作...
+           // Real work...
            sleep(5);
        }
 
@@ -772,27 +783,27 @@ int main() {
    }
    ---------------------------------------------------------------
 
-   守护进程信号处理要点：
-   - SIGHUP: 传统上用于通知守护进程重新加载配置文件
-   - SIGTERM: 优雅终止信号
-   - SIGUSR1/SIGUSR2: 用于自定义通知（如切换调试模式）
-   - 守护进程无终端，不能用 cout，需用 syslog 或日志文件
+   Key points of daemon signal handling:
+   - SIGHUP: traditionally used to tell a daemon to reload its configuration file
+   - SIGTERM: the graceful termination signal
+   - SIGUSR1/SIGUSR2: used for custom notifications (e.g. toggling debug mode)
+   - A daemon has no terminal, so cout cannot be used; use syslog or a log file
 
-八、跨平台信号处理注意事项
+VIII. Cross-Platform Signal Handling Considerations
 
-   C++信号处理在不同平台上存在差异：
+   C++ signal handling differs between platforms:
 
-   ┌──────────────┬─────────────────┬──────────────────────────────┐
-   │ 平台         │ <csignal>支持   │ 扩展                         │
-   ├──────────────┼─────────────────┼──────────────────────────────┤
-   │ Linux        │ 完整支持        │ sigaction, signalfd, timerfd │
-   │ macOS        │ 完整支持        │ 基于BSD, 部分差异             │
-   │ Windows      │ 有限支持        │ SIGINT/SIGTERM可用            │
-   │              │                 │ 无SIGUSR1/SIGUSR2/SIGHUP     │
+   ┌──────────────┬─────────────────┬───────────────────────────────┐
+   │ Platform     │ <csignal>       │ Extensions                    │
+   ├──────────────┼─────────────────┼───────────────────────────────┤
+   │ Linux        │ Full support    │ sigaction, signalfd, timerfd  │
+   │ macOS        │ Full support    │ BSD-based, some differences   │
+   │ Windows      │ Limited support │ SIGINT/SIGTERM available      │
+   │              │                 │ No SIGUSR1/SIGUSR2/SIGHUP     │
    │              │                 │ Windows: SetConsoleCtrlHandler│
-   └──────────────┴─────────────────┴──────────────────────────────┘
+   └──────────────┴─────────────────┴───────────────────────────────┘
 
-   Windows 上等价于 SIGINT 的处理：
+   The Windows equivalent of SIGINT handling:
 
    ---------------------------------------------------------------
    #ifdef _WIN32
@@ -800,12 +811,12 @@ int main() {
 
    BOOL WINAPI consoleHandler(DWORD signal) {
        if (signal == CTRL_C_EVENT) {
-           std::cout << "Ctrl+C 被按下" << std::endl;
+           std::cout << "Ctrl+C pressed" << std::endl;
            g_keepRunning = 0;
            return TRUE;
        }
        if (signal == CTRL_CLOSE_EVENT) {
-           std::cout << "控制台窗口关闭" << std::endl;
+           std::cout << "Console window closing" << std::endl;
            return TRUE;
        }
        return FALSE;
@@ -818,25 +829,26 @@ int main() {
    #endif
    ---------------------------------------------------------------
 
-   跨平台最佳实践：
-   - 优先使用 SIGINT/SIGTERM（跨平台兼容）
-   - 将平台相关代码放在 #ifdef 块中
-   - 考虑使用第三方库（如 boost::asio 的信号处理）
+   Cross-platform best practices:
+   - Prefer SIGINT/SIGTERM (cross-platform compatible)
+   - Put platform-specific code inside #ifdef blocks
+   - Consider third-party libraries (e.g. boost::asio signal handling)
 
 ================================================================================
-### 第三节: 实用代码案例（生活场景举例，融入前面已学章节知识点）
+### Section 3: Practical Code Examples (Real-Life Scenarios, Integrating Knowledge from Earlier Chapters)
 ================================================================================
 
-案例1: 优雅退出的服务器程序 —— Web服务器平滑关闭
+Example 1: A Server with Graceful Shutdown -- Smoothly Stopping a Web Server
 ---------------------------------------------------------------
-场景：Web服务器接收到终止信号时，不应立即退出，而应
-完成当前正在处理的请求、关闭文件、释放连接后优雅退出。
+Scenario: when a web server receives a termination signal, it should not exit
+immediately; it should finish the requests currently being processed, close
+files, and release connections before shutting down gracefully.
 
-知识点融入：
-- Ch3 动态内存/智能指针：unique_ptr 管理连接
-- Ch9 异常处理：信号处理后异常安全
-- Ch10 文件操作：日志记录
-- 本章：signal() + sig_atomic_t
+Knowledge integrated:
+- Ch3 Dynamic memory/smart pointers: unique_ptr manages connections
+- Ch9 Exception handling: exception safety after signal handling
+- Ch10 File operations: logging
+- This chapter: signal() + sig_atomic_t
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -849,14 +861,14 @@ int main() {
 #include <chrono>
 #include <iomanip>
 
-// 信号标志
+// Signal flags
 volatile sig_atomic_t g_shutdownRequested = 0;
 volatile sig_atomic_t g_reloadRequested = 0;
 
 void serverSignalHandler(int signum) {
     char msg[64];
     int len = snprintf(msg, sizeof(msg),
-                       "[信号] 收到信号 %d\n", signum);
+                       "[signal] Received signal %d\n", signum);
     write(STDOUT_FILENO, msg, len);
 
     switch (signum) {
@@ -870,26 +882,26 @@ void serverSignalHandler(int signum) {
     }
 }
 
-// 客户端连接模拟 (Ch3 智能指针)
+// Simulated client connection (Ch3 smart pointers)
 class ClientConnection {
 private:
     int clientId;
     bool connected;
 public:
     ClientConnection(int id) : clientId(id), connected(true) {
-        std::cout << "  [连接] 客户端 #" << clientId << " 已连接" << std::endl;
+        std::cout << "  [connect] Client #" << clientId << " connected" << std::endl;
     }
 
     ~ClientConnection() noexcept {
         if (connected) {
-            std::cout << "  [断开] 客户端 #" << clientId << " 已断开" << std::endl;
+            std::cout << "  [disconnect] Client #" << clientId << " disconnected" << std::endl;
         }
     }
 
     void process() {
         if (!connected) return;
-        std::cout << "  [处理] 客户端 #" << clientId << " 请求中..." << std::endl;
-        usleep(300000);  // 模拟处理时间
+        std::cout << "  [process] Client #" << clientId << " request in progress..." << std::endl;
+        usleep(300000);  // Simulate processing time
     }
 
     void disconnect() {
@@ -900,7 +912,7 @@ public:
     bool isConnected() const { return connected; }
 };
 
-// 日志记录器 (Ch10 文件操作)
+// Logger (Ch10 file operations)
 class ServerLogger {
 private:
     std::ofstream logFile;
@@ -922,12 +934,12 @@ public:
                 << "[" << level << "] " << msg << std::endl;
         logFile.flush();
 
-        // 同时输出到控制台
+        // Also print to the console
         std::cout << "[" << level << "] " << msg << std::endl;
     }
 };
 
-// 服务器主类
+// Main server class
 class WebServer {
 private:
     std::vector<std::unique_ptr<ClientConnection>> connections;
@@ -941,56 +953,56 @@ public:
 
     void start() {
         running = true;
-        logger->log("INFO", "服务器启动 (PID=" + std::to_string(getpid()) + ")");
+        logger->log("INFO", "Server started (PID=" + std::to_string(getpid()) + ")");
 
-        // 注册信号处理
+        // Register signal handlers
         signal(SIGINT, serverSignalHandler);
         signal(SIGTERM, serverSignalHandler);
         signal(SIGHUP, serverSignalHandler);
 
-        // 模拟接受连接
+        // Simulate accepting connections
         int connectionCounter = 0;
         int tick = 0;
 
         while (running) {
-            // 检查信号
+            // Check signals
             if (g_reloadRequested) {
                 g_reloadRequested = 0;
-                logger->log("INFO", "重新加载配置文件...");
+                logger->log("INFO", "Reloading configuration file...");
             }
 
             if (g_shutdownRequested) {
-                logger->log("WARN", "收到关闭信号，准备优雅退出...");
+                logger->log("WARN", "Shutdown signal received, preparing graceful exit...");
                 running = false;
-                break;  // 跳出主循环，执行清理
+                break;  // Leave the main loop and run cleanup
             }
 
-            // 模拟周期性工作
+            // Simulate periodic work
             tick++;
             if (tick % 3 == 0) {
-                // 接受新连接
+                // Accept a new connection
                 connectionCounter++;
                 auto conn = std::make_unique<ClientConnection>(connectionCounter);
                 connections.push_back(std::move(conn));
-                logger->log("INFO", "新连接: 客户端 #"
+                logger->log("INFO", "New connection: client #"
                             + std::to_string(connectionCounter));
             }
 
-            // 处理已有连接
+            // Process existing connections
             for (auto& conn : connections) {
                 if (conn->isConnected()) {
                     conn->process();
                 }
             }
 
-            // 清理已断开的连接
+            // Remove disconnected connections
             connections.erase(
                 std::remove_if(connections.begin(), connections.end(),
                     [](const auto& conn) { return !conn->isConnected(); }),
                 connections.end()
             );
 
-            usleep(500000);  // 500ms 主循环间隔
+            usleep(500000);  // 500ms main loop interval
         }
 
         shutdown();
@@ -998,65 +1010,66 @@ public:
 
 private:
     void shutdown() {
-        logger->log("INFO", "开始执行优雅退出...");
+        logger->log("INFO", "Starting graceful shutdown...");
 
-        // 1. 完成所有进行中的请求
-        logger->log("INFO", "等待 " + std::to_string(connections.size())
-                    + " 个连接完成...");
+        // 1. Finish all in-flight requests
+        logger->log("INFO", "Waiting for " + std::to_string(connections.size())
+                    + " connections to finish...");
         for (auto& conn : connections) {
             if (conn->isConnected()) {
-                logger->log("INFO", "关闭客户端 #"
+                logger->log("INFO", "Closing client #"
                             + std::to_string(conn->getId()));
                 conn->disconnect();
             }
         }
         connections.clear();
 
-        // 2. 刷新日志
-        logger->log("INFO", "服务器已安全关闭");
+        // 2. Flush the log
+        logger->log("INFO", "Server shut down safely");
 
-        // 3. RAII 自动释放 logger 和 connections
-        std::cout << "\n服务器退出完成" << std::endl;
+        // 3. RAII automatically releases logger and connections
+        std::cout << "\nServer exit complete" << std::endl;
     }
 };
 
 int main() {
-    std::cout << "===== Web服务器优雅退出演示 =====" << std::endl;
-    std::cout << "服务器将运行约10秒后自动收到关闭信号" << std::endl;
-    std::cout << "你也可按 Ctrl+C 手动触发关闭" << std::endl << std::endl;
+    std::cout << "===== Web Server Graceful Shutdown Demo =====" << std::endl;
+    std::cout << "The server will run for about 10 seconds, then automatically receive a shutdown signal" << std::endl;
+    std::cout << "You can also press Ctrl+C to trigger shutdown manually" << std::endl << std::endl;
 
-    // 主程序在另一个线程模拟定时发送关闭信号
-    // (仅用于演示，实际由外部 kill/ctrl+c 触发)
+    // Simulate sending a shutdown signal on a timer from another process
+    // (demo only; in practice it is triggered externally by kill/Ctrl+C)
     WebServer server;
 
-    // 模拟5秒后发送关闭信号
-    // fork一个子进程发送信号
+    // Simulate sending the shutdown signal after 5 seconds
+    // fork a child process to send the signal
     pid_t parentPid = getpid();
     pid_t child = fork();
 
     if (child == 0) {
-        // 子进程：等待后发送信号
+        // Child process: wait, then send the signal
         sleep(5);
         kill(parentPid, SIGTERM);
         _Exit(0);
     } else {
-        // 父进程：运行服务器
+        // Parent process: run the server
         server.start();
     }
 
-    // 清理日志文件
+    // Remove the log file
     std::remove("server.log");
 
     return 0;
 }
 ---------------------------------------------------------------
 
-案例1 补充: 信号与 RAII 结合的高级模式
+Example 1 Supplement: Advanced Patterns Combining Signals with RAII
 
-在实际C++项目中，信号处理不仅仅是设置标志位，还需要与RAII模式结合，
-保证在信号触发后依然能正确释放资源。以下是几种常见模式：
+In real C++ projects, signal handling is not just about setting flags; it must
+also be combined with the RAII pattern to guarantee that resources are still
+released correctly after a signal fires. Here are several common patterns:
 
-模式A: 信号安全的资源句柄 (FileDescriptor RAII)
+Pattern A: Signal-Safe Resource Handle (FileDescriptor RAII)
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -1065,23 +1078,23 @@ int main() {
 #include <unistd.h>
 #include <fcntl.h>
 
-// RAII 封装的信号安全文件描述符
+// RAII wrapper for a signal-safe file descriptor
 class SafeFileDescriptor {
 private:
     int fd;
 public:
     SafeFileDescriptor(const char* path, int flags) : fd(-1) {
-        fd = open(path, flags, 0644);  // open() 是信号安全的
+        fd = open(path, flags, 0644);  // open() is async-signal-safe
     }
 
     ~SafeFileDescriptor() {
-        if (fd >= 0) close(fd);  // close() 是信号安全的
+        if (fd >= 0) close(fd);  // close() is async-signal-safe
     }
 
     int get() const { return fd; }
     bool valid() const { return fd >= 0; }
 
-    // 禁止拷贝，允许移动
+    // Non-copyable, movable
     SafeFileDescriptor(const SafeFileDescriptor&) = delete;
     SafeFileDescriptor& operator=(const SafeFileDescriptor&) = delete;
     SafeFileDescriptor(SafeFileDescriptor&& other) noexcept
@@ -1095,12 +1108,12 @@ void emergencyHandler(int sig) {
 }
 
 void emergencyWriteLog() {
-    // 信号安全的日志写入
+    // Signal-safe log writing
     static SafeFileDescriptor logFd("/tmp/emergency.log",
         O_WRONLY | O_CREAT | O_APPEND);
 
     if (logFd.valid()) {
-        const char* msg = "紧急保存触发\n";
+        const char* msg = "Emergency save triggered\n";
         write(logFd.get(), msg, strlen(msg));
     }
 }
@@ -1109,13 +1122,13 @@ int main() {
     signal(SIGTERM, emergencyHandler);
     signal(SIGINT, emergencyHandler);
 
-    std::cout << "主循环运行中 (PID=" << getpid() << ")..." << std::endl;
+    std::cout << "Main loop running (PID=" << getpid() << ")..." << std::endl;
 
     for (int i = 0; i < 20; i++) {
         if (emergencySave) {
             emergencySave = 0;
             emergencyWriteLog();
-            std::cout << "[主线程] 紧急日志已写入" << std::endl;
+            std::cout << "[main thread] Emergency log written" << std::endl;
         }
         sleep(1);
     }
@@ -1125,9 +1138,10 @@ int main() {
 }
 ---------------------------------------------------------------
 
-模式B: 信号驱动的优雅退出队列
+Pattern B: A Signal-Driven Graceful Shutdown Queue
 
-将信号转化为任务队列中的"退出任务"，在主线程中按序执行清理：
+Turn the signal into "shutdown tasks" in a task queue and run the cleanup in
+order on the main thread:
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -1142,7 +1156,7 @@ void shutdownHandler(int sig) {
     shutdownSignal = 1;
 }
 
-// 退出时的清理任务
+// A cleanup task run at shutdown
 class CleanupTask {
 public:
     using TaskFunc = std::function<void()>;
@@ -1154,7 +1168,7 @@ public:
         : name(n), func(std::move(f)) {}
 
     void execute() {
-        std::cout << "[清理] " << name << "..." << std::endl;
+        std::cout << "[cleanup] " << name << "..." << std::endl;
         func();
     }
 };
@@ -1163,57 +1177,59 @@ int main() {
     signal(SIGTERM, shutdownHandler);
     signal(SIGINT, shutdownHandler);
 
-    // 注册清理任务队列
+    // Register the cleanup task queue
     std::vector<CleanupTask> cleanupTasks;
-    cleanupTasks.emplace_back("保存用户数据", []() {
-        std::cout << "  模拟保存数据到磁盘..." << std::endl;
+    cleanupTasks.emplace_back("Save user data", []() {
+        std::cout << "  Simulating saving data to disk..." << std::endl;
         sleep(1);
     });
-    cleanupTasks.emplace_back("关闭网络连接", []() {
-        std::cout << "  模拟发送断开报文..." << std::endl;
+    cleanupTasks.emplace_back("Close network connections", []() {
+        std::cout << "  Simulating sending disconnect packets..." << std::endl;
         sleep(1);
     });
-    cleanupTasks.emplace_back("刷新日志缓冲区", []() {
-        std::cout << "  模拟强制刷新日志..." << std::endl;
+    cleanupTasks.emplace_back("Flush log buffers", []() {
+        std::cout << "  Simulating a forced log flush..." << std::endl;
     });
-    cleanupTasks.emplace_back("删除PID文件", []() {
-        std::cout << "  删除 /tmp/app.pid..." << std::endl;
+    cleanupTasks.emplace_back("Delete PID file", []() {
+        std::cout << "  Deleting /tmp/app.pid..." << std::endl;
     });
 
-    std::cout << "应用运行中 (PID=" << getpid()
-              << "), 发送 SIGTERM 触发优雅退出" << std::endl;
+    std::cout << "Application running (PID=" << getpid()
+              << "), send SIGTERM to trigger graceful shutdown" << std::endl;
 
     int tick = 0;
     while (!shutdownSignal && tick < 30) {
-        std::cout << "  [运行] tick=" << ++tick << std::endl;
+        std::cout << "  [running] tick=" << ++tick << std::endl;
         sleep(1);
     }
 
-    // 执行清理队列（逆序执行，类似栈展开）
-    std::cout << "\n开始优雅退出..." << std::endl;
+    // Run the cleanup queue (in reverse order, like stack unwinding)
+    std::cout << "\nStarting graceful shutdown..." << std::endl;
     for (auto it = cleanupTasks.rbegin();
          it != cleanupTasks.rend(); ++it) {
         it->execute();
     }
 
-    std::cout << "优雅退出完成" << std::endl;
+    std::cout << "Graceful shutdown complete" << std::endl;
     return 0;
 }
 --------------------------------------------------------------
 
-这些模式展示了如何在C++中将底层信号机制与高级RAII模式结合，
-既保持了信号处理的安全性，又获得了C++ RAII的便利性。
+These patterns show how to combine the low-level signal mechanism with the
+high-level RAII pattern in C++, keeping signal handling safe while gaining the
+convenience of C++ RAII.
 
-案例2: 带自动保存的文本编辑器 —— 崩溃恢复
+Example 2: A Text Editor with Auto-Save -- Crash Recovery
 ---------------------------------------------------------------
-场景：文本编辑器在编辑过程中，如果进程被 kill 或异常终止
-（收到SIGTERM），应自动保存当前编辑内容到临时文件。
+Scenario: if a text editor process is killed or terminated abnormally while
+editing (receives SIGTERM), it should automatically save the current content
+to a temporary file.
 
-知识点融入：
-- Ch4 类与对象：EditorBuffer 类
-- Ch9 异常处理：安全退出
-- Ch10 文件操作：保存到文件
-- 本章：信号处理
+Knowledge integrated:
+- Ch4 Classes and objects: the EditorBuffer class
+- Ch9 Exception handling: safe exit
+- Ch10 File operations: saving to a file
+- This chapter: signal handling
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -1227,29 +1243,29 @@ int main() {
 #include <memory>
 #include <ctime>
 
-// 信号安全标志（只设置标志，不做复杂操作）
+// Signal-safe flags (only set flags; do nothing complex)
 volatile sig_atomic_t g_saveRequested = 0;
 volatile sig_atomic_t g_terminateRequested = 0;
 
 void editorSignalHandler(int signum) {
     char msg[64];
     int len = snprintf(msg, sizeof(msg),
-                       "\n[编辑器] 收到信号 %d\n", signum);
+                       "\n[editor] Received signal %d\n", signum);
     write(STDOUT_FILENO, msg, len);
 
     switch (signum) {
         case SIGTERM:
         case SIGINT:
-            g_saveRequested = 1;      // 请求保存
-            g_terminateRequested = 1;  // 请求退出
+            g_saveRequested = 1;      // Request a save
+            g_terminateRequested = 1;  // Request exit
             break;
         case SIGUSR1:
-            g_saveRequested = 1;      // 仅请求保存（不退出）
+            g_saveRequested = 1;      // Request a save only (do not exit)
             break;
     }
 }
 
-// 文本缓冲区
+// Text buffer
 class TextBuffer {
 private:
     std::vector<std::string> lines;
@@ -1278,8 +1294,8 @@ public:
 
     void display() const {
         std::cout << "===== " << filename << " ("
-                  << lines.size() << " 行";
-        if (modified) std::cout << " *已修改*";
+                  << lines.size() << " lines";
+        if (modified) std::cout << " *modified*";
         std::cout << ") =====" << std::endl;
 
         for (size_t i = 0; i < lines.size(); ++i) {
@@ -1287,7 +1303,7 @@ public:
         }
     }
 
-    // 保存到文件
+    // Save to a file
     bool save(const std::string& savePath = "") {
         std::string path = savePath.empty() ? filename : savePath;
         std::ofstream file(path);
@@ -1301,12 +1317,12 @@ public:
         file.close();
 
         modified = false;
-        std::cout << "[保存] " << lines.size() << " 行已保存到 "
+        std::cout << "[save] " << lines.size() << " lines saved to "
                   << path << std::endl;
         return true;
     }
 
-    // 保存自动恢复文件（在信号处理触发后由主循环调用）
+    // Save an auto-recovery file (called by the main loop after a signal fires)
     void autoSave() {
         if (!modified) return;
 
@@ -1315,17 +1331,17 @@ public:
                      << time(nullptr);
 
         if (save(autosaveName.str())) {
-            std::cout << "[自动保存] 紧急保存完成: "
+            std::cout << "[auto-save] Emergency save complete: "
                       << autosaveName.str() << std::endl;
 
-            // 清理旧的自动保存文件（只保留最新的）
-            // 实际应用中应清理
+            // Clean up old auto-save files (keep only the newest)
+            // A real application should do this cleanup
         }
     }
 
-    // 检查是否有自动保存的恢复文件
+    // Check whether an auto-save recovery file exists
     static bool hasAutoSave(const std::string& baseFilename) {
-        // 简化实现：实际应扫描目录
+        // Simplified implementation: should really scan the directory
         std::ifstream test(baseFilename + ".autosave");
         return test.good();
     }
@@ -1334,29 +1350,29 @@ public:
     const std::string& getFilename() const { return filename; }
 };
 
-// 编辑器主类
+// Main editor class
 class TextEditor {
 private:
     std::unique_ptr<TextBuffer> buffer;
     bool running;
 
-    // 模拟用户编辑
+    // Simulate user editing
     void simulateEditing() {
         buffer->insertLine(-1, "#include <iostream>");
         buffer->insertLine(-1, "");
         buffer->insertLine(-1, "int main() {");
-        buffer->insertLine(-1, "    std::cout << \"信号处理演示\" << std::endl;");
+        buffer->insertLine(-1, "    std::cout << \"Signal handling demo\" << std::endl;");
         buffer->insertLine(-1, "    return 0;");
         buffer->insertLine(-1, "}");
     }
 
-    // 模拟持续编辑
+    // Simulate continuous editing
     void continuousEditing() {
         static int counter = 0;
         counter++;
         if (counter % 3 == 0) {
             std::ostringstream oss;
-            oss << "    // 编辑修改 #" << counter;
+            oss << "    // Edit #" << counter;
             buffer->insertLine(-1, oss.str());
         }
     }
@@ -1370,45 +1386,45 @@ public:
     void run() {
         running = true;
 
-        // 注册信号处理
+        // Register signal handlers
         signal(SIGTERM, editorSignalHandler);
         signal(SIGINT, editorSignalHandler);
         signal(SIGUSR1, editorSignalHandler);
 
-        // 检查是否有自动保存的恢复文件
+        // Check whether an auto-save recovery file exists
         if (TextBuffer::hasAutoSave(buffer->getFilename())) {
-            std::cout << "[启动] 发现自动保存文件，是否恢复? (演示: 自动跳过)"
+            std::cout << "[startup] Auto-save file found, restore? (demo: skipped automatically)"
                       << std::endl;
         }
 
-        // 初始编辑
+        // Initial editing
         simulateEditing();
         buffer->display();
 
-        std::cout << "\n--- 编辑器运行中 ---" << std::endl;
-        std::cout << "  * 用 kill -TERM <PID> 或 kill -USR1 <PID> 触发" << std::endl;
-        std::cout << "  自动保存" << std::endl;
+        std::cout << "\n--- Editor running ---" << std::endl;
+        std::cout << "  * Use kill -TERM <PID> or kill -USR1 <PID> to trigger" << std::endl;
+        std::cout << "  auto-save" << std::endl;
         std::cout << "  * PID: " << getpid() << std::endl;
-        std::cout << "  * 主循环每1秒检查信号标志" << std::endl << std::endl;
+        std::cout << "  * The main loop checks signal flags every second" << std::endl << std::endl;
 
         int tick = 0;
         while (running) {
-            // 检查信号标志（在主循环中安全处理）
+            // Check signal flags (handled safely in the main loop)
             if (g_saveRequested) {
                 g_saveRequested = 0;
-                buffer->autoSave();  // 在主循环中执行保存——安全
+                buffer->autoSave();  // Saving in the main loop -- safe
             }
 
             if (g_terminateRequested) {
                 g_terminateRequested = 0;
-                std::cout << "\n[编辑器] 收到终止信号，执行自动保存后退出..."
+                std::cout << "\n[editor] Termination signal received, auto-saving before exit..."
                           << std::endl;
                 buffer->autoSave();
                 running = false;
                 break;
             }
 
-            // 模拟持续编辑
+            // Simulate continuous editing
             continuousEditing();
 
             tick++;
@@ -1419,26 +1435,26 @@ public:
             sleep(1);
         }
 
-        std::cout << "\n编辑器已退出。下次启动时可检测 .autosave 文件恢复。"
+        std::cout << "\nEditor exited. On next startup, the .autosave file can be detected for recovery."
                   << std::endl;
     }
 };
 
 int main() {
-    std::cout << "===== 文本编辑器自动保存演示 =====" << std::endl;
+    std::cout << "===== Text Editor Auto-Save Demo =====" << std::endl;
 
-    // 另一线程（子进程）定时发送信号模拟外部事件
+    // Another "thread" (a child process) sends signals on a timer to simulate external events
     pid_t ppid = getpid();
     pid_t child = fork();
 
     if (child == 0) {
-        // 子进程：模拟发送信号
+        // Child process: simulate sending signals
         sleep(3);
-        std::cout << "\n[模拟] 发送 SIGUSR1 (手动保存)" << std::endl;
+        std::cout << "\n[simulate] Sending SIGUSR1 (manual save)" << std::endl;
         kill(ppid, SIGUSR1);
 
         sleep(4);
-        std::cout << "\n[模拟] 发送 SIGTERM (终止进程，触发自动保存)" << std::endl;
+        std::cout << "\n[simulate] Sending SIGTERM (terminate process, triggers auto-save)" << std::endl;
         kill(ppid, SIGTERM);
 
         _Exit(0);
@@ -1447,24 +1463,24 @@ int main() {
         editor.run();
     }
 
-    // 清理自动保存文件
+    // Clean up auto-save files
     std::system("rm -f my_program.cpp.autosave.* 2>/dev/null");
 
     return 0;
 }
 ---------------------------------------------------------------
 
-案例3: 守护进程(Daemon)信号管理 —— Linux后台服务程序
+Example 3: Daemon Signal Management -- A Linux Background Service
 ---------------------------------------------------------------
-场景：Linux守护进程需要处理多种信号：
-SIGHUP（重载配置）、SIGTERM（优雅退出）、SIGUSR1（打印状态）。
+Scenario: a Linux daemon must handle several signals:
+SIGHUP (reload config), SIGTERM (graceful exit), SIGUSR1 (print status).
 
-知识点融入：
-- Ch1 命名空间：namespace DaemonLib {}
-- Ch3 智能指针：unique_ptr
-- Ch8 模板：模板函数注册信号
-- Ch9 异常处理：安全退出
-- Ch10 文件操作：PID文件、日志
+Knowledge integrated:
+- Ch1 Namespaces: namespace DaemonLib {}
+- Ch3 Smart pointers: unique_ptr
+- Ch8 Templates: template functions to register signals
+- Ch9 Exception handling: safe exit
+- Ch10 File operations: PID file, logging
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -1485,13 +1501,13 @@ namespace fs = std::filesystem;
 
 namespace DaemonLib {
 
-    // 信号安全标志（仅赋值，不做复杂操作）
+    // Signal-safe flags (assignment only; nothing complex)
     volatile sig_atomic_t g_reloadConfig = 0;
     volatile sig_atomic_t g_printStatus = 0;
     volatile sig_atomic_t g_shutdown = 0;
     volatile sig_atomic_t g_lastSignal = 0;
 
-    // 信号安全处理函数
+    // Signal-safe handler
     void daemonSignalHandler(int signum) {
         g_lastSignal = signum;
 
@@ -1507,12 +1523,12 @@ namespace DaemonLib {
                 g_shutdown = 1;
                 break;
             case SIGUSR2:
-                // 备用信号
+                // Reserved signal
                 break;
         }
     }
 
-    // 信号注册器（模板版本）
+    // Signal registrar (template version)
     template<int Signal>
     struct SignalRegistrar {
         static void registerSignal() {
@@ -1520,13 +1536,13 @@ namespace DaemonLib {
         }
     };
 
-    // ===== 守护进程配置 =====
+    // ===== Daemon configuration =====
     struct DaemonConfig {
         std::string name;
         std::string pidFile;
         std::string logFile;
         std::string dataDir;
-        int checkInterval;  // 秒
+        int checkInterval;  // seconds
         bool verbose;
 
         DaemonConfig()
@@ -1538,12 +1554,12 @@ namespace DaemonLib {
               verbose(false) {}
 
         void reload() {
-            std::cout << "[配置] 重新加载配置" << std::endl;
-            // 实际从配置文件读取
+            std::cout << "[config] Reloading configuration" << std::endl;
+            // In practice, read from the config file
         }
     };
 
-    // ===== 日志管理器 (Ch10 文件操作) =====
+    // ===== Log manager (Ch10 file operations) =====
     class DaemonLogger {
     private:
         std::ofstream logStream;
@@ -1588,7 +1604,7 @@ namespace DaemonLib {
         }
     };
 
-    // ===== PID文件管理 (Ch10 filesystem) =====
+    // ===== PID file management (Ch10 filesystem) =====
     class PIDFile {
     private:
         std::string path;
@@ -1597,7 +1613,7 @@ namespace DaemonLib {
         PIDFile(const std::string& p) : path(p) {}
 
         bool create() {
-            // 确保父目录存在
+            // Make sure the parent directory exists
             fs::path parent = fs::path(path).parent_path();
             if (!parent.empty() && !fs::exists(parent)) {
                 fs::create_directories(parent);
@@ -1609,7 +1625,7 @@ namespace DaemonLib {
             file << getpid() << std::endl;
             file.close();
 
-            // 设置权限
+            // Set permissions
             chmod(path.c_str(), 0644);
 
             return true;
@@ -1629,7 +1645,7 @@ namespace DaemonLib {
         }
     };
 
-    // ===== 守护进程核心类 =====
+    // ===== Core daemon class =====
     class Daemon {
     private:
         DaemonConfig config;
@@ -1638,43 +1654,43 @@ namespace DaemonLib {
         int tickCount;
         bool running;
 
-        // 执行工作任务（子类可重写）
+        // Do the work task (subclasses may override)
         virtual void doWork() {
             tickCount++;
             if (tickCount % 10 == 0) {
-                logger->info("执行定期任务 (tick " +
+                logger->info("Running periodic task (tick " +
                              std::to_string(tickCount) + ")");
             }
 
-            // 模拟：检查数据目录
+            // Simulation: check the data directory
             if (!fs::exists(config.dataDir)) {
                 fs::create_directory(config.dataDir);
-                logger->info("创建数据目录: " + config.dataDir);
+                logger->info("Created data directory: " + config.dataDir);
             }
         }
 
-        // 打印运行状态
+        // Print the running status
         virtual void printStatus() {
-            std::cout << "\n===== 守护进程状态 =====" << std::endl;
-            std::cout << "  进程名: " << config.name << std::endl;
-            std::cout << "  PID:    " << getpid() << std::endl;
-            std::cout << "  运行:   " << tickCount << " 个周期" << std::endl;
-            std::cout << "  配置:   检查间隔=" << config.checkInterval
-                      << "秒" << std::endl;
-            std::cout << "  数据目录: " << config.dataDir << std::endl;
+            std::cout << "\n===== Daemon Status =====" << std::endl;
+            std::cout << "  Name:    " << config.name << std::endl;
+            std::cout << "  PID:     " << getpid() << std::endl;
+            std::cout << "  Running: " << tickCount << " cycles" << std::endl;
+            std::cout << "  Config:  check interval=" << config.checkInterval
+                      << "s" << std::endl;
+            std::cout << "  Data dir: " << config.dataDir << std::endl;
             std::cout << "==========================" << std::endl;
 
-            logger->info("状态报告: " + std::to_string(tickCount)
-                         + " 个周期已执行");
+            logger->info("Status report: " + std::to_string(tickCount)
+                         + " cycles executed");
         }
 
-        // 重载配置
+        // Reload configuration
         virtual void reloadConfig() {
             config.reload();
-            logger->info("配置重载完成");
+            logger->info("Configuration reload complete");
         }
 
-        // 注册所有信号
+        // Register all signals
         void registerSignals() {
             SignalRegistrar<SIGHUP>::registerSignal();
             SignalRegistrar<SIGINT>::registerSignal();
@@ -1682,7 +1698,7 @@ namespace DaemonLib {
             SignalRegistrar<SIGUSR1>::registerSignal();
             SignalRegistrar<SIGUSR2>::registerSignal();
 
-            // 忽略一些不需要处理的信号
+            // Ignore some signals we don't need to handle
             signal(SIGPIPE, SIG_IGN);
             signal(SIGCHLD, SIG_IGN);
         }
@@ -1698,32 +1714,32 @@ namespace DaemonLib {
         }
 
         int start() {
-            // 1. 初始化日志
+            // 1. Initialize logging
             logger = std::make_unique<DaemonLogger>(config.logFile);
-            logger->info("守护进程启动: " + config.name);
+            logger->info("Daemon starting: " + config.name);
 
-            // 2. 创建PID文件
+            // 2. Create the PID file
             pidFile = std::make_unique<PIDFile>(config.pidFile);
             if (!pidFile->create()) {
-                logger->error("无法创建PID文件: " + config.pidFile);
+                logger->error("Cannot create PID file: " + config.pidFile);
                 return 1;
             }
-            logger->info("PID文件: " + config.pidFile + " (PID="
+            logger->info("PID file: " + config.pidFile + " (PID="
                          + std::to_string(getpid()) + ")");
 
-            // 3. 注册信号
+            // 3. Register signals
             registerSignals();
-            logger->info("信号处理已注册");
+            logger->info("Signal handlers registered");
 
-            // 4. 确保数据目录存在
+            // 4. Make sure the data directory exists
             if (!fs::exists(config.dataDir)) {
                 fs::create_directories(config.dataDir);
             }
 
-            // 5. 主循环
+            // 5. Main loop
             running = true;
             while (running) {
-                // === 信号处理（在主循环中，安全使用C++特性）===
+                // === Signal handling (in the main loop, C++ features are safe) ===
 
                 if (g_reloadConfig) {
                     g_reloadConfig = 0;
@@ -1737,38 +1753,38 @@ namespace DaemonLib {
 
                 if (g_shutdown) {
                     g_shutdown = 0;
-                    logger->info("收到关闭信号，准备退出...");
+                    logger->info("Shutdown signal received, preparing to exit...");
                     running = false;
                     break;
                 }
 
-                // 执行工作任务
+                // Do the work task
                 doWork();
 
-                // 休眠（用sleep模拟，实际可用select/epoll）
+                // Sleep (simulated with sleep; in practice use select/epoll)
                 sleep(config.checkInterval);
             }
 
-            // 6. 清理退出
+            // 6. Clean up and exit
             shutdown();
             return 0;
         }
 
         virtual void shutdown() {
-            logger->info("执行退出清理...");
+            logger->info("Running exit cleanup...");
 
-            // 子类可以在这里覆盖，进行额外清理
-            // 例如：关闭数据库连接、通知其他服务等
+            // Subclasses can override this for additional cleanup
+            // e.g. closing database connections, notifying other services, etc.
 
-            logger->info("守护进程已安全退出");
+            logger->info("Daemon exited safely");
 
-            // PID文件在析构时自动删除
+            // The PID file is removed automatically in the destructor
         }
     };
 
 } // namespace DaemonLib
 
-// ===== 自定义守护进程（融入Ch5继承） =====
+// ===== Custom daemon (integrating Ch5 inheritance) =====
 
 class DataCollectorDaemon : public DaemonLib::Daemon {
 private:
@@ -1776,14 +1792,14 @@ private:
 
 protected:
     void doWork() override {
-        // 模拟数据采集
+        // Simulate data collection
         double sample = static_cast<double>(rand()) / RAND_MAX * 100.0;
         dataPoints.push_back(sample);
         if (dataPoints.size() > 100) {
             dataPoints.erase(dataPoints.begin());
         }
 
-        // 定期报告
+        // Periodic report
         static int subTick = 0;
         subTick++;
         if (subTick % 3 == 0) {
@@ -1791,23 +1807,23 @@ protected:
             for (double d : dataPoints) avg += d;
             avg /= dataPoints.size();
 
-            std::cout << "[采集] 样本数=" << dataPoints.size()
-                      << " 平均值=" << avg << std::endl;
+            std::cout << "[collect] samples=" << dataPoints.size()
+                      << " average=" << avg << std::endl;
         }
     }
 
     void printStatus() override {
-        DaemonLib::Daemon::printStatus();  // 调用基类
-        std::cout << "  采集点数: " << dataPoints.size() << std::endl;
+        DaemonLib::Daemon::printStatus();  // Call the base class
+        std::cout << "  Data points: " << dataPoints.size() << std::endl;
     }
 };
 
 int main() {
     using namespace DaemonLib;
 
-    std::cout << "===== 守护进程信号管理演示 =====" << std::endl;
+    std::cout << "===== Daemon Signal Management Demo =====" << std::endl;
 
-    // 配置
+    // Configuration
     DaemonConfig config;
     config.name = "datacollector";
     config.pidFile = "/tmp/datacollector.pid";
@@ -1815,25 +1831,25 @@ int main() {
     config.dataDir = "/tmp/datacollector_data";
     config.checkInterval = 2;
 
-    // 创建自定义守护进程
+    // Create the custom daemon
     DataCollectorDaemon daemon(config);
 
-    // 另一个进程模拟发送信号
+    // Another process simulates sending signals
     pid_t ppid = getpid();
     pid_t child = fork();
 
     if (child == 0) {
-        // 子进程：调度发送信号
+        // Child process: send signals on a schedule
         sleep(4);
-        std::cout << "\n[模拟] 发送 SIGUSR1 (打印状态)" << std::endl;
+        std::cout << "\n[simulate] Sending SIGUSR1 (print status)" << std::endl;
         kill(ppid, SIGUSR1);
 
         sleep(4);
-        std::cout << "\n[模拟] 发送 SIGHUP (重载配置)" << std::endl;
+        std::cout << "\n[simulate] Sending SIGHUP (reload config)" << std::endl;
         kill(ppid, SIGHUP);
 
         sleep(4);
-        std::cout << "\n[模拟] 发送 SIGTERM (优雅退出)" << std::endl;
+        std::cout << "\n[simulate] Sending SIGTERM (graceful exit)" << std::endl;
         kill(ppid, SIGTERM);
 
         _Exit(0);
@@ -1841,7 +1857,7 @@ int main() {
         daemon.start();
     }
 
-    // 清理
+    // Cleanup
     std::remove("/tmp/datacollector.pid");
     std::remove("/tmp/datacollector.log");
     fs::remove_all("/tmp/datacollector_data");
@@ -1851,72 +1867,76 @@ int main() {
 ---------------------------------------------------------------
 
 ================================================================================
-### 第四节: 课后习题
+### Section 4: Exercises
 ================================================================================
 
-【信号处理编程黄金法则——本章总结】
+[Golden Rules of Signal Handling Programming -- Chapter Summary]
 
-  法则1: 信号处理函数中只做最少的事 —— 设置 volatile sig_atomic_t 标志
+  Rule 1: Do as little as possible in a signal handler -- set a volatile sig_atomic_t flag
 
-  法则2: 所有复杂逻辑放在主循环/主线程中，通过检查标志来触发
+  Rule 2: Put all complex logic in the main loop/main thread, triggered by checking flags
 
-  法则3: 信号处理函数中只调用"异步信号安全"的函数
-         (write, close, open, _exit, signal, kill 等)
+  Rule 3: Only call "async-signal-safe" functions in a signal handler
+          (write, close, open, _exit, signal, kill, etc.)
 
-  法则4: 用 RAII 管理资源，确保即使收到信号也能正确释放
+  Rule 4: Manage resources with RAII so they are released correctly even when a signal arrives
 
-  法则5: SIGKILL 和 SIGSTOP 不可捕获、不可忽略、不可阻塞
+  Rule 5: SIGKILL and SIGSTOP cannot be caught, ignored, or blocked
 
-  法则6: 捕获 SIGSEGV/SIGABRT/SIGFPE 后不要尝试恢复，只做紧急日志后退出
+  Rule 6: After catching SIGSEGV/SIGABRT/SIGFPE, do not try to recover; just write an emergency log and exit
 
-  法则7: 对于需要可靠信号处理的场景，使用POSIX的 sigaction 替代 signal
+  Rule 7: When reliable signal handling is needed, use POSIX sigaction instead of signal
 
-  法则8: 跨平台开发时，将平台相关的信号代码放在 #ifdef 块中
+  Rule 8: In cross-platform development, put platform-specific signal code in #ifdef blocks
 
-  法则9: 守护进程必须正确处理 SIGHUP(重载配置) 和 SIGTERM(优雅退出)
+  Rule 9: A daemon must correctly handle SIGHUP (reload config) and SIGTERM (graceful exit)
 
-  法则10: 永远不要在信号处理函数中抛出 C++ 异常
+  Rule 10: Never throw a C++ exception from a signal handler
 
 ================================================================================
 
-习题：实现一个"带断点续传的文件下载模拟器"
+Exercise: Implement a "file download simulator with resumable downloads"
 
-要求如下：
+Requirements:
 
-1. 主线程模拟下载过程：
-   - 创建一个 DownloadManager 类模拟文件下载
-   - 下载过程以循环写入文件的方式模拟（每次写入一个块）
-   - 维护下载进度信息：已下载字节数、总字节数、当前偏移量
+1. The main thread simulates the download process:
+   - Create a DownloadManager class that simulates a file download
+   - Simulate the download by writing to a file in a loop (one block per write)
+   - Maintain progress information: bytes downloaded, total bytes, current offset
 
-2. 注册 SIGINT 信号处理函数：
-   - 按下 Ctrl+C 时触发
-   - 信号处理函数中仅设置 volatile sig_atomic_t 标志位
-   - 主循环检测到标志后暂停下载，保存进度信息到断点文件(.resume)
+2. Register a SIGINT signal handler:
+   - Triggered when Ctrl+C is pressed
+   - The signal handler only sets a volatile sig_atomic_t flag
+   - When the main loop detects the flag, it pauses the download and saves
+     progress to a checkpoint file (.resume)
 
-3. 断点续传机制：
-   - 进度文件保存格式：total_bytes/current_offset/filename
-   - 程序再次启动时检测断点文件是否存在
-   - 存在则从断点位置继续下载
+3. Resume mechanism:
+   - Progress file format: total_bytes/current_offset/filename
+   - When the program starts again, check whether the checkpoint file exists
+   - If it exists, continue downloading from the checkpoint position
 
-4. 注册 SIGTERM 信号处理函数：
-   - 在强制终止前尝试保存进度
-   - 如果保存失败至少保证文件句柄正确关闭
+4. Register a SIGTERM signal handler:
+   - Try to save progress before being forcibly terminated
+   - If saving fails, at least make sure the file handle is closed correctly
 
-5. 使用 RAII 确保文件句柄正确关闭：
-   - 封装 FileGuard 类，构造打开文件，析构关闭文件
-   - 即使发生信号中断，也能保证文件正确关闭
+5. Use RAII to make sure file handles are closed correctly:
+   - Wrap a FileGuard class that opens the file in its constructor and closes
+     it in its destructor
+   - Guarantee the file is closed correctly even if a signal interrupts
 
-6. 使用 sig_atomic_t 做线程安全的标志位：
-   - 用 volatile sig_atomic_t 类型声明信号标志
-   - 注释说明为什么 volatile 对信号处理是必需的
-   - （虽然单线程程序中信号可能不会并发执行，但用 volatile 是良好的编程习惯）
+6. Use sig_atomic_t for thread-safe flags:
+   - Declare signal flags with the volatile sig_atomic_t type
+   - Add comments explaining why volatile is required for signal handling
+   - (Although signals may not run concurrently in a single-threaded program,
+     using volatile is a good programming habit)
 
-7. 附加要求（加分项）：
-   - 模拟网络中断和重试机制
-   - 将下载过程用模板函数封装，支持不同块大小的下载策略
-   - 保留下载历史日志
+7. Extra requirements (bonus points):
+   - Simulate network interruptions and a retry mechanism
+   - Wrap the download process in a template function that supports download
+     strategies with different block sizes
+   - Keep a download history log
 
-答题模板框架：
+Answer template skeleton:
 
 ---------------------------------------------------------------
 #include <iostream>
@@ -1928,35 +1948,35 @@ int main() {
 #include <memory>
 #include <cstdlib>
 
-// 信号标志
+// Signal flags
 volatile sig_atomic_t g_pauseRequested = 0;
 volatile sig_atomic_t g_terminateRequested = 0;
 
-// 信号处理函数
+// Signal handler
 void downloadSignalHandler(int signum) {
-    // TODO: 仅设置标志位
+    // TODO: only set flags
 }
 
-// 文件RAII守卫
+// RAII file guard
 class FileGuard {
 private:
     std::ofstream file;
     std::string filename;
 public:
-    // TODO: 构造打开，析构关闭
+    // TODO: open in constructor, close in destructor
 };
 
-// 进度信息
+// Progress information
 struct DownloadProgress {
     long long totalBytes;
     long long currentOffset;
     std::string filename;
 };
 
-// 下载管理器
+// Download manager
 class DownloadManager {
 private:
-    // TODO: 实现下载、保存进度、恢复进度
+    // TODO: implement download, save progress, restore progress
 public:
     bool download();
     void saveProgress();
@@ -1964,25 +1984,25 @@ public:
 };
 
 int main() {
-    // TODO: 演示断点续传流程
+    // TODO: demonstrate the resumable download flow
 
     return 0;
 }
 ---------------------------------------------------------------
 
-期望运行结果示例：
+Expected output example:
 
-===== 断点续传下载模拟器 =====
-总大小: 10000 字节
-下载中... [#####               ] 25% (2500/10000)
+===== Resumable Download Simulator =====
+Total size: 10000 bytes
+Downloading... [#####               ] 25% (2500/10000)
 ^C
-[信号] 检测到 Ctrl+C，暂停下载
-[进度] 保存进度: 2500/10000 -> download.progress
+[signal] Ctrl+C detected, pausing download
+[progress] Saving progress: 2500/10000 -> download.progress
 
-===== 再次启动 =====
-[检查] 发现断点文件 download.progress
-[恢复] 从 2500 字节继续...
-下载中... [##############      ] 75% (7500/10000)
-下载完成! 文件已保存到 downloaded_file.bin
+===== Starting Again =====
+[check] Found checkpoint file download.progress
+[resume] Continuing from byte 2500...
+Downloading... [##############      ] 75% (7500/10000)
+Download complete! File saved to downloaded_file.bin
 
 ================================================================================

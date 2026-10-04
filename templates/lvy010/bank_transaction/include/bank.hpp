@@ -32,7 +32,7 @@ public:
     bool transfer(std::size_t fromIndex, std::size_t toIndex, long long amount) {
         if (amount <= 0) return false;
         if (!isValidAccount(fromIndex) || !isValidAccount(toIndex)) return false;
-        if (fromIndex == toIndex) return true; // 自转账视为无操作
+        if (fromIndex == toIndex) return true; // a transfer to oneself is a no-op
 
         std::size_t a = std::min(fromIndex, toIndex);
         std::size_t b = std::max(fromIndex, toIndex);
@@ -58,7 +58,7 @@ public:
     }
 
     long long sumBalances() const {
-        // 顺序加锁，避免死锁
+        // lock in a fixed order to avoid deadlock
         for (std::size_t i = 0; i < accountMutexes.size(); ++i) {
             accountMutexes[i].lock();
         }

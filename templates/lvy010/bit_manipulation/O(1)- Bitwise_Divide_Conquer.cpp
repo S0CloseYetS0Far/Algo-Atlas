@@ -5,11 +5,11 @@ class Solution {
     static constexpr uint32_t m3 = 0x00ff00ff; // 00000000111111110000000011111111
 
     uint32_t reverseBits32(uint32_t n) {
-        n = n>>1&m0 | (n&m0)<<1; // 交换相邻位
-        n = n>>2&m1 | (n&m1)<<2; // 两个两个交换
-        n = n>>4&m2 | (n&m2)<<4; // 四个四个交换
-        n = n>>8&m3 | (n&m3)<<8; // 八个八个交换
-        return n>>16 | n<<16;    // 交换高低 16 位
+        n = n>>1&m0 | (n&m0)<<1; // swap adjacent bits
+        n = n>>2&m1 | (n&m1)<<2; // swap in pairs of 2
+        n = n>>4&m2 | (n&m2)<<4; // swap in groups of 4
+        n = n>>8&m3 | (n&m3)<<8; // swap in groups of 8
+        return n>>16 | n<<16;    // swap the high and low 16 bits
     }
 
 public:

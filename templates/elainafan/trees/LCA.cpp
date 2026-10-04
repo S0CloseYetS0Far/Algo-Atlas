@@ -1,12 +1,12 @@
 class TreeAncestor {
-    vector<int> depth;       // 深度
-    vector<vector<int>> pa;  // 2^i祖先
+    vector<int> depth;       // depth
+    vector<vector<int>> pa;  // 2^i-th ancestor
 
 public:
-    TreeAncestor(vector<vector<int>>& edges) {  // 直接传边数组
+    TreeAncestor(vector<vector<int>>& edges) {  // pass the edge list directly
         int n = edges.size() + 1;
         int m = bit_width(unsigned(n));
-        vector<vector<int>> ma(n);  // 这里还是0-based
+        vector<vector<int>> ma(n);  // still 0-based here
         for (auto& p : edges) {
             int x = p[0], y = p[1];
             ma[x].push_back(y);
@@ -22,35 +22,35 @@ public:
                 dfs(y, x);
             }
             return;
-        };  // 预处理深度
+        };  // precompute depths
         dfs(0, -1);
         for (int i = 0; i < m - 1; i++) {
             for (int x = 0; x < n; x++) {
                 if (pa[x][i] == -1) continue;
                 pa[x][i + 1] = pa[pa[x][i]][i];
             }
-        }  // 预处理2^i祖先
+        }  // precompute 2^i-th ancestors
     }
 
-    int get_depth(int x) { return depth[x]; }  // 获取某个点的深度
+    int get_depth(int x) { return depth[x]; }  // get the depth of a node
 
     int get_kth_ancestor(int node, int k) {
         for (int x = k; node != -1 && x > 0; x -= lowbit(x)) {
             node = pa[node][countr_zero((unsigned)x)];
         }
         return node;
-    }  // 得到第k个祖先，类似树状数组的倍增
+    }  // get the k-th ancestor, binary lifting similar to a Fenwick tree
 
     int get_lca(int x, int y) {
         if (depth[x] > depth[y]) swap(x, y);
-        y = get_kth_ancestor(y, depth[y] - depth[x]);  // 先跳到深度相同
+        y = get_kth_ancestor(y, depth[y] - depth[x]);  // first jump to the same depth
         if (x == y) return x;
         for (int i = pa[x].size() - 1; i >= 0; i--) {
             int px = pa[x][i], py = pa[y][i];
             if (px != py) {
                 x = px, y = py;
-            }  // 倍增跳
+            }  // binary lifting jump
         }
         return pa[x][0];
-    }  // 得到最近公共祖先
+    }  // get the lowest common ancestor
 };

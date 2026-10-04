@@ -10,7 +10,7 @@ public:
 
         fill(f[0].begin(), f[0].begin() + nums[0] + 1, 1);
         for (int i = 1; i < n; i++) {
-            partial_sum(f[i - 1].begin(), f[i - 1].end(), s.begin()); // f[i-1] 的前缀和
+            partial_sum(f[i - 1].begin(), f[i - 1].end(), s.begin()); // prefix sums of f[i-1]
             for (int j = 0; j <= nums[i]; j++) {
                 int max_k = j + min(nums[i - 1] - nums[i], 0);
                 f[i][j] = max_k >= 0 ? s[max_k] % MOD : 0;
@@ -34,45 +34,45 @@ public:
 
         for (int i = 0; i < grid.size(); i++) {
             auto& row = grid[i];
-            // 从 i-1 行移动到 i 行的方案数
+            // number of ways to move from row i-1 to row i
             vector<long long> f(m);
             for (int j = 0; j < m; j++) {
                 if (row[j] == '#') {
                     continue;
                 }
-                if (i == 0) { // 第一行（起点）
-                    f[j] = 1; // DP 初始值
+                if (i == 0) { // first row (starting point)
+                    f[j] = 1; // DP initial value
                 } else {
                     f[j] = sum[min(j + d, m)] - sum[max(j - d + 1, 0)];
                 }
             }
 
-            // f 的前缀和
+            // prefix sums of f
             for (int j = 0; j < m; j++) {
                 sum_f[j + 1] = (sum_f[j] + f[j]) % MOD;
             }
 
-            // 从 i 行移动到 i 行的方案数
+            // number of ways to move from row i to row i
             vector<long long> g(m);
             for (int j = 0; j < m; j++) {
                 if (row[j] == '#') {
                     continue;
                 }
-                // 不能原地不动，减去 f[j]
+                // can't stay in place, subtract f[j]
                 g[j] = sum_f[min(j + d + 1, m)] - sum_f[max(j - d, 0)] - f[j];
             }
 
-            // f[j] + g[j] 的前缀和
+            // prefix sums of f[j] + g[j]
             for (int j = 0; j < m; j++) {
                 sum[j + 1] = (sum[j] + f[j] + g[j]) % MOD;
             }
         }
 
-        return (sum[m] + MOD) % MOD; // +MOD 保证结果非负
+        return (sum[m] + MOD) % MOD; // +MOD keeps the result non-negative
     }
 };
 
-//擦车
+//car wash
 class Solution {
 public:
     int numberOfRoutes(vector<string>& g, int d) {

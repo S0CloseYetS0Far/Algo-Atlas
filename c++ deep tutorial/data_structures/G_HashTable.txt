@@ -1,30 +1,30 @@
 ================================================================================
-C++ 算法结构教程 — 哈希表 (Hash Table)
+C++ Algorithms and Data Structures Tutorial — Hash Table
 ================================================================================
 
-## 章节概述
+## Chapter Overview
 
-哈希表（Hash Table），也称为散列表，是一种通过键（Key）直接访问存储位置的数据
-结构。它利用哈希函数将键映射到数组的某个位置，从而实现O(1)平均时间复杂度的
-插入、删除和查找操作。
+A Hash Table (also called a hash map) is a data structure that accesses storage
+locations directly by key. It uses a hash function to map a key to a position in an
+array, giving insertion, deletion and lookup an average time complexity of O(1).
 
-哈希表是 C++11 中 unordered_map、unordered_set、unordered_multimap、
-unordered_multiset 的底层实现。它在缓存系统、数据库索引、密码学、编译器设计
-等领域有着广泛的应用。
+The hash table is the underlying implementation of the C++11 containers unordered_map,
+unordered_set, unordered_multimap and unordered_multiset. It is widely used in caching
+systems, database indexes, cryptography, compiler design and many other fields.
 
 ================================================================================
-### 第一节: 基础语法 + 计算机底层原理
+### Section 1: Basic Syntax + Low-Level Computer Principles
 ================================================================================
 
-1.1 哈希表的基本概念
+1.1 Basic Concepts of Hash Tables
 -----------------------
 
-哈希表的核心组件：
-- 哈希函数：将任意大小的键映射到固定范围的整数（数组索引）
-- 数组（桶）：存储键值对的连续内存
-- 冲突解决：处理不同键映射到同一位置的策略
+Core components of a hash table:
+- Hash function: maps keys of any size to integers in a fixed range (array indices)
+- Array (buckets): contiguous memory that stores the key-value pairs
+- Collision resolution: the strategy for handling different keys that map to the same position
 
-最简单的哈希表示例（使用标准库）：
+The simplest hash table example (using the standard library):
 
 ```cpp
 #include <iostream>
@@ -33,52 +33,52 @@ unordered_multiset 的底层实现。它在缓存系统、数据库索引、密�
 #include <string>
 
 int main() {
-    // unordered_map (哈希表)
+    // unordered_map (hash table)
     std::unordered_map<std::string, int> phone_book;
 
     phone_book["Alice"] = 123456;
     phone_book["Bob"] = 789012;
     phone_book["Charlie"] = 345678;
 
-    std::cout << "Alice的电话: " << phone_book["Alice"] << std::endl;
+    std::cout << "Alice's phone number: " << phone_book["Alice"] << std::endl;
 
-    // 查找
+    // Lookup
     auto it = phone_book.find("David");
     if (it == phone_book.end()) {
-        std::cout << "David不在电话簿中" << std::endl;
+        std::cout << "David is not in the phone book" << std::endl;
     }
 
-    // unordered_set (哈希集合)
+    // unordered_set (hash set)
     std::unordered_set<int> numbers = {3, 1, 4, 1, 5, 9};
 
     numbers.insert(2);
     numbers.erase(1);
 
     if (numbers.find(4) != numbers.end()) {
-        std::cout << "4在集合中" << std::endl;
+        std::cout << "4 is in the set" << std::endl;
     }
 
     return 0;
 }
 ```
 
-1.2 哈希表的底层原理
+1.2 How Hash Tables Work Internally
 -----------------------
 
-哈希表的设计关键：
+Key design points of a hash table:
 
-(1) 哈希函数的选择
-一个好的哈希函数应该：
-- 计算快速
-- 分布均匀（将键均匀映射到整个表范围）
-- 确定性（相同键总产生相同哈希值）
+(1) Choosing the hash function
+A good hash function should be:
+- Fast to compute
+- Uniformly distributed (spreads keys evenly over the whole table)
+- Deterministic (the same key always produces the same hash value)
 
 ```cpp
 #include <iostream>
 #include <functional>
 
 int main() {
-    // C++标准哈希函数
+    // C++ standard hash functions
     std::hash<int> int_hash;
     std::hash<std::string> str_hash;
     std::hash<double> double_hash;
@@ -87,24 +87,25 @@ int main() {
     std::cout << "hash(\"hello\") = " << str_hash("hello") << std::endl;
     std::cout << "hash(3.14) = " << double_hash(3.14) << std::endl;
 
-    // 模运算得到数组索引
+    // Take the modulus to get an array index
     size_t table_size = 100;
     size_t index = int_hash(42) % table_size;
-    std::cout << "42的桶索引: " << index << std::endl;
+    std::cout << "Bucket index of 42: " << index << std::endl;
 
     return 0;
 }
 ```
 
-(2) 冲突解决：链地址法（Separate Chaining）
-每个桶维护一个链表（或其他数据结构），冲突的键值对放入同一桶的链表中。
+(2) Collision resolution: Separate Chaining
+Each bucket maintains a linked list (or another data structure); colliding key-value
+pairs are placed in the same bucket's list.
 
 ```
-桶数组:
+Bucket array:
 +------+
 | idx0 | --> nullptr
 +------+
-| idx1 | --> [key1, val1] --> [key4, val4] --> nullptr (冲突链)
+| idx1 | --> [key1, val1] --> [key4, val4] --> nullptr (collision chain)
 +------+
 | idx2 | --> [key2, val2] --> nullptr
 +------+
@@ -114,13 +115,13 @@ int main() {
 +------+
 ```
 
-(3) 冲突解决：开放地址法（Open Addressing）
-当发生冲突时，寻找下一个空桶。常见探测方法：
-- 线性探测：index = (hash(key) + i) % table_size
-- 二次探测：index = (hash(key) + i^2) % table_size
-- 双重哈希：index = (hash1(key) + i * hash2(key)) % table_size
+(3) Collision resolution: Open Addressing
+When a collision occurs, look for the next empty bucket. Common probing methods:
+- Linear probing: index = (hash(key) + i) % table_size
+- Quadratic probing: index = (hash(key) + i^2) % table_size
+- Double hashing: index = (hash1(key) + i * hash2(key)) % table_size
 
-1.3 手动实现哈希表（链地址法）
+1.3 Implementing a Hash Table by Hand (Separate Chaining)
 -----------------------------------
 
 ```cpp
@@ -165,7 +166,7 @@ public:
         : buckets(initial_size), num_elements(0), max_load_factor(0.75) {}
 
     void insert(const Key& key, const Value& value) {
-        // 检查负载因子，需要时扩容
+        // Check the load factor and grow if needed
         if ((float)(num_elements + 1) / buckets.size() > max_load_factor) {
             rehash(buckets.size() * 2);
         }
@@ -173,10 +174,10 @@ public:
         size_t index = getBucketIndex(key);
         auto& bucket = buckets[index];
 
-        // 检查key是否已存在
+        // Check whether the key already exists
         for (auto& entry : bucket) {
             if (entry.key == key) {
-                entry.value = value;  // 更新
+                entry.value = value;  // update
                 return;
             }
         }
@@ -208,7 +209,7 @@ public:
             }
         }
 
-        // key不存在，插入默认值
+        // The key does not exist: insert a default value
         if ((float)(num_elements + 1) / buckets.size() > max_load_factor) {
             rehash(buckets.size() * 2);
             index = getBucketIndex(key);
@@ -237,7 +238,7 @@ public:
     bool empty() const { return num_elements == 0; }
 
     void print() const {
-        std::cout << "哈希表 (size=" << num_elements
+        std::cout << "Hash table (size=" << num_elements
                   << ", buckets=" << buckets.size() << "):" << std::endl;
         for (size_t i = 0; i < buckets.size(); ++i) {
             if (!buckets[i].empty()) {
@@ -264,33 +265,33 @@ int main() {
 
     int score;
     if (scores.find("Bob", score)) {
-        std::cout << "Bob的成绩: " << score << std::endl;
+        std::cout << "Bob's score: " << score << std::endl;
     }
 
     scores.erase("David");
-    std::cout << "删除David后: ";
+    std::cout << "After removing David: ";
     scores.print();
 
     return 0;
 }
 ```
 
-1.4 哈希表的时间复杂度与空间复杂度
+1.4 Time and Space Complexity of Hash Tables
 ---------------------------------------
 
-| 操作    | 平均      | 最坏      |
-|--------|-----------|-----------|
-| 插入    | O(1)      | O(n)      |
-| 删除    | O(1)      | O(n)      |
-| 查找    | O(1)      | O(n)      |
-| 遍历    | O(n)      | O(n)      |
+| Operation | Average   | Worst     |
+|-----------|-----------|-----------|
+| Insert    | O(1)      | O(n)      |
+| Delete    | O(1)      | O(n)      |
+| Lookup    | O(1)      | O(n)      |
+| Traverse  | O(n)      | O(n)      |
 
-空间复杂度：O(n + bucket_count)
+Space complexity: O(n + bucket_count)
 
-最坏情况发生在所有键映射到同一个桶中（哈希碰撞攻击）。
-标准库通过良好的哈希函数和动态扩容来避免这种情况。
+The worst case happens when every key maps to the same bucket (a hash collision attack).
+The standard library avoids this with good hash functions and dynamic resizing.
 
-1.5 哈希函数的设计
+1.5 Designing Hash Functions
 ---------------------
 
 ```cpp
@@ -298,7 +299,7 @@ int main() {
 #include <string>
 #include <functional>
 
-// 自定义哈希函数示例
+// Custom hash function example
 struct Student {
     std::string name;
     int id;
@@ -309,17 +310,17 @@ struct Student {
     }
 };
 
-// 方式1：自定义哈希函数对象
+// Approach 1: a custom hash function object
 struct StudentHash {
     size_t operator()(const Student& s) const {
-        // 使用std::hash的组合哈希
+        // Combine several std::hash values
         return std::hash<std::string>()(s.name) ^
                (std::hash<int>()(s.id) << 1) ^
                (std::hash<int>()(s.grade) << 2);
     }
 };
 
-// 方式2：特化std::hash
+// Approach 2: specialize std::hash
 namespace std {
     template<>
     struct hash<Student> {
@@ -329,7 +330,7 @@ namespace std {
     };
 }
 
-// 常用字符串哈希函数示例：BKDR Hash
+// A common string hash function: BKDR Hash
 size_t bkdrHash(const std::string& str) {
     size_t hash = 0;
     size_t seed = 131;  // 31, 131, 1313, 13131, 131313
@@ -340,15 +341,15 @@ size_t bkdrHash(const std::string& str) {
 }
 
 int main() {
-    std::cout << "BKDR哈希 \"hello\": " << bkdrHash("hello") << std::endl;
-    std::cout << "BKDR哈希 \"world\": " << bkdrHash("world") << std::endl;
+    std::cout << "BKDR hash \"hello\": " << bkdrHash("hello") << std::endl;
+    std::cout << "BKDR hash \"world\": " << bkdrHash("world") << std::endl;
 
-    // 使用自定义哈希函数
+    // Use the custom hash function
     std::unordered_set<Student, StudentHash> students;
     students.insert({"Alice", 1001, 3});
     students.insert({"Bob", 1002, 2});
 
-    std::cout << "学生人数: " << students.size() << std::endl;
+    std::cout << "Number of students: " << students.size() << std::endl;
 
     return 0;
 }
@@ -356,7 +357,7 @@ int main() {
 
 
 ================================================================================
-### 第二节: 所有用法大全
+### Section 2: Complete Guide to All Usages
 ================================================================================
 
 2.1 std::unordered_map
@@ -368,51 +369,51 @@ int main() {
 #include <string>
 
 int main() {
-    // 构造
+    // Construction
     std::unordered_map<std::string, int> m1;
     std::unordered_map<std::string, int> m2 = {
         {"apple", 5}, {"banana", 3}, {"cherry", 8}
     };
 
-    // 插入
+    // Insertion
     m1["date"] = 2;                          // operator[]
-    m1.insert({"elderberry", 4});            // pair插入
-    m1.emplace("fig", 6);                    // 就地构造
-    m1.insert({{"grape", 7}, {"honeydew", 1}});  // 批量插入
+    m1.insert({"elderberry", 4});            // insert a pair
+    m1.emplace("fig", 6);                    // in-place construction
+    m1.insert({{"grape", 7}, {"honeydew", 1}});  // bulk insert
 
-    // 访问
+    // Access
     std::cout << "apple: " << m2["apple"] << std::endl;
     std::cout << "banana: " << m2.at("banana") << std::endl;
-    // m2.at("unknown");  // 抛出out_of_range
+    // m2.at("unknown");  // throws out_of_range
 
-    // 查找
+    // Lookup
     auto it = m2.find("cherry");
     if (it != m2.end()) {
-        std::cout << "找到: " << it->first << " -> " << it->second << std::endl;
+        std::cout << "Found: " << it->first << " -> " << it->second << std::endl;
     }
 
-    // 计数
-    std::cout << "apple出现次数: " << m2.count("apple") << std::endl;
+    // Counting
+    std::cout << "Occurrences of apple: " << m2.count("apple") << std::endl;
 
-    // 删除
+    // Deletion
     m2.erase("banana");
 
-    // 桶接口
-    std::cout << "桶数: " << m2.bucket_count() << std::endl;
-    std::cout << "负载因子: " << m2.load_factor() << std::endl;
-    std::cout << "最大负载因子: " << m2.max_load_factor() << std::endl;
+    // Bucket interface
+    std::cout << "Bucket count: " << m2.bucket_count() << std::endl;
+    std::cout << "Load factor: " << m2.load_factor() << std::endl;
+    std::cout << "Max load factor: " << m2.max_load_factor() << std::endl;
 
-    // 查看每个桶的元素数
+    // Number of elements in each bucket
     for (size_t i = 0; i < m2.bucket_count(); ++i) {
-        std::cout << "桶 " << i << ": " << m2.bucket_size(i) << "个元素"
+        std::cout << "Bucket " << i << ": " << m2.bucket_size(i) << " element(s)"
                   << std::endl;
     }
 
-    // 重新哈希
-    m2.rehash(100);      // 设置桶数量
-    m2.reserve(200);     // 预留空间（等价于设置桶数量使得负载因子合理）
+    // Rehashing
+    m2.rehash(100);      // set the bucket count
+    m2.reserve(200);     // reserve space (sets the bucket count so the load factor stays reasonable)
 
-    // 遍历
+    // Traversal
     for (const auto& [key, value] : m2) {
         std::cout << key << " -> " << value << std::endl;
     }
@@ -432,34 +433,34 @@ int main() {
 int main() {
     std::unordered_set<int> s = {5, 3, 1, 3, 2, 5};
 
-    // 插入
+    // Insertion
     auto [it, inserted] = s.insert(4);
-    std::cout << "插入4: " << (inserted ? "成功" : "已存在") << std::endl;
+    std::cout << "Insert 4: " << (inserted ? "succeeded" : "already exists") << std::endl;
 
     std::tie(it, inserted) = s.insert(3);
-    std::cout << "插入3: " << (inserted ? "成功" : "已存在") << std::endl;
+    std::cout << "Insert 3: " << (inserted ? "succeeded" : "already exists") << std::endl;
 
-    // 批量插入
+    // Bulk insertion
     s.insert({7, 8, 9});
 
-    // 删除
+    // Deletion
     s.erase(1);
 
-    // 查找
+    // Lookup
     if (s.find(5) != s.end()) {
-        std::cout << "5在集合中" << std::endl;
+        std::cout << "5 is in the set" << std::endl;
     }
 
-    // 桶接口
-    std::cout << "桶数: " << s.bucket_count() << std::endl;
-    std::cout << "负载因子: " << s.load_factor() << std::endl;
+    // Bucket interface
+    std::cout << "Bucket count: " << s.bucket_count() << std::endl;
+    std::cout << "Load factor: " << s.load_factor() << std::endl;
 
-    // 查看元素在哪个桶
+    // See which bucket an element is in
     for (int x : {4, 5, 7}) {
-        std::cout << x << " 在桶 " << s.bucket(x) << std::endl;
+        std::cout << x << " is in bucket " << s.bucket(x) << std::endl;
     }
 
-    // 遍历（无序）
+    // Traversal (unordered)
     for (int x : s) std::cout << x << " ";
     std::cout << std::endl;
 
@@ -467,7 +468,7 @@ int main() {
 }
 ```
 
-2.3 自定义哈希与比较
+2.3 Custom Hashing and Equality
 --------------------------
 
 ```cpp
@@ -488,14 +489,14 @@ struct Person {
     }
 };
 
-// 组合哈希函数
+// Combined hash function
 struct PersonHash {
     size_t operator()(const Person& p) const {
         size_t h1 = std::hash<std::string>()(p.first_name);
         size_t h2 = std::hash<std::string>()(p.last_name);
         size_t h3 = std::hash<int>()(p.age);
 
-        // 使用boost的hash_combine思路
+        // Follows the idea behind boost's hash_combine
         return h1 ^ (h2 << 7) ^ (h3 << 15) ^ (h2 >> 3) ^ (h3 >> 5);
     }
 };
@@ -505,16 +506,16 @@ int main() {
 
     people.insert({"Alice", "Smith", 25});
     people.insert({"Bob", "Jones", 30});
-    people.insert({"Alice", "Smith", 25});  // 重复，不会插入
+    people.insert({"Alice", "Smith", 25});  // duplicate, will not be inserted
 
-    std::cout << "人数: " << people.size() << std::endl;
+    std::cout << "Number of people: " << people.size() << std::endl;
 
-    // 自定义默认值（用于operator[]）
+    // Default values (used by operator[])
     std::unordered_map<std::string, int> word_count;
-    word_count["hello"]++;  // hello不存在时，插入{hello, 0}然后++
+    word_count["hello"]++;  // if hello doesn't exist, insert {hello, 0} and then ++
     word_count["world"]++;
     word_count["hello"]++;
-    // 利用operator[]的默认构造特性实现计数
+    // Counting relies on operator[] default-constructing missing values
 
     for (const auto& [word, count] : word_count) {
         std::cout << word << ": " << count << std::endl;
@@ -524,7 +525,7 @@ int main() {
 }
 ```
 
-2.4 哈希表与其他容器的对比
+2.4 Hash Tables Compared with Other Containers
 ------------------------------
 
 ```cpp
@@ -535,14 +536,14 @@ int main() {
 #include <string>
 #include <chrono>
 
-// 性能对比：unordered_map vs map
+// Performance comparison: unordered_map vs map
 int main() {
     const int N = 100000;
 
     std::unordered_map<int, int> umap;
     std::map<int, int> rbtree;
 
-    // 插入性能对比
+    // Compare insertion performance
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < N; ++i) {
         umap[i] = i * 2;
@@ -555,10 +556,10 @@ int main() {
     }
     auto rbtree_time = std::chrono::high_resolution_clock::now() - start;
 
-    std::cout << "unordered_map 插入" << N << "个: "
+    std::cout << "unordered_map inserting " << N << " elements: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(
                      umap_time).count() << "ms" << std::endl;
-    std::cout << "map 插入" << N << "个: "
+    std::cout << "map inserting " << N << " elements: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(
                      rbtree_time).count() << "ms" << std::endl;
 
@@ -568,10 +569,10 @@ int main() {
 
 
 ================================================================================
-### 第三节: 实用案例
+### Section 3: Practical Examples
 ================================================================================
 
-案例一：缓存系统（LRU Cache 的哈希表实现）
+Example 1: Caching System (Hash Table Implementation of an LRU Cache)
 ---------------------------------------------------
 
 ```cpp
@@ -595,7 +596,7 @@ public:
         auto it = cache.find(key);
         if (it == cache.end()) return "";
 
-        // 移到头部（最近使用）
+        // Move to the front (most recently used)
         items.splice(items.begin(), items, it->second);
         return it->second->second;
     }
@@ -609,7 +610,7 @@ public:
         }
 
         if (items.size() >= capacity) {
-            // 淘汰最久未使用
+            // Evict the least recently used entry
             std::string old_key = items.back().first;
             cache.erase(old_key);
             items.pop_back();
@@ -620,7 +621,7 @@ public:
     }
 
     void print() const {
-        std::cout << "缓存 (最近->最久): ";
+        std::cout << "Cache (most recent -> least recent): ";
         for (const auto& [k, v] : items) {
             std::cout << "[" << k << ":" << v << "] ";
         }
@@ -639,10 +640,10 @@ int main() {
     std::cout << "get(B): " << cache.get("B") << std::endl;
     cache.print();
 
-    cache.put("D", "Date");  // 淘汰最久未使用的A
+    cache.put("D", "Date");  // evicts A, the least recently used
     cache.print();
 
-    cache.put("E", "Elderberry");  // 淘汰最久未使用的C
+    cache.put("E", "Elderberry");  // evicts C, the least recently used
     cache.print();
 
     return 0;
@@ -650,7 +651,7 @@ int main() {
 ```
 
 
-案例二：词频统计器
+Example 2: Word Frequency Counter
 -------------------------
 
 ```cpp
@@ -671,17 +672,17 @@ public:
         std::string word;
 
         while (iss >> word) {
-            // 清理标点符号
+            // Strip punctuation
             word.erase(std::remove_if(word.begin(), word.end(),
                          [](char c) { return std::ispunct(c); }),
                        word.end());
 
-            // 转小写
+            // Convert to lowercase
             std::transform(word.begin(), word.end(), word.begin(),
                            [](char c) { return std::tolower(c); });
 
             if (!word.empty()) {
-                ++frequency[word];  // 自动初始化为0然后++
+                ++frequency[word];  // automatically initialized to 0, then ++
             }
         }
     }
@@ -730,7 +731,7 @@ int main() {
 
     wc.processText(text);
 
-    std::cout << "=== 词频统计 ===" << std::endl;
+    std::cout << "=== Word Frequencies ===" << std::endl;
     wc.printAll();
 
     std::cout << "\n=== Top 5 ===" << std::endl;
@@ -743,7 +744,7 @@ int main() {
 ```
 
 
-案例三：URL去重爬虫
+Example 3: Web Crawler with URL Deduplication
 -------------------------
 
 ```cpp
@@ -758,9 +759,9 @@ private:
     std::unordered_set<std::string> visited_urls;
     std::queue<std::string> url_queue;
 
-    // 模拟从页面提取链接
+    // Simulate extracting links from a page
     std::vector<std::string> extractLinks(const std::string& url) {
-        // 实际场景中会解析HTML
+        // A real crawler would parse the HTML
         return {
             url + "/page1",
             url + "/page2",
@@ -776,17 +777,17 @@ public:
             std::string url = url_queue.front();
             url_queue.pop();
 
-            // 检查是否已访问（O(1)）
+            // Check whether it has already been visited (O(1))
             if (visited_urls.find(url) != visited_urls.end()) {
                 continue;
             }
 
             visited_urls.insert(url);
-            std::cout << "爬取: " << url
-                      << " (已访问: " << visited_urls.size() << ")"
+            std::cout << "Crawling: " << url
+                      << " (visited: " << visited_urls.size() << ")"
                       << std::endl;
 
-            // 提取链接
+            // Extract links
             for (const auto& link : extractLinks(url)) {
                 if (visited_urls.find(link) == visited_urls.end()) {
                     url_queue.push(link);
@@ -794,7 +795,7 @@ public:
             }
         }
 
-        std::cout << "\n爬取完成! 共访问 " << visited_urls.size() << " 个页面"
+        std::cout << "\nCrawl complete! Visited " << visited_urls.size() << " pages in total"
                   << std::endl;
     }
 
@@ -807,8 +808,8 @@ int main() {
     WebCrawler crawler;
     crawler.crawl("https://example.com", 8);
 
-    std::cout << "\n是否访问过example.com/page1? "
-              << (crawler.hasVisited("https://example.com/page1") ? "是" : "否")
+    std::cout << "\nHas example.com/page1 been visited? "
+              << (crawler.hasVisited("https://example.com/page1") ? "Yes" : "No")
               << std::endl;
 
     return 0;
@@ -817,35 +818,35 @@ int main() {
 
 
 ================================================================================
-### 第四节: 课后习题
+### Section 4: Exercises
 ================================================================================
 
-1. 基础题：手动实现一个哈希表（开放地址法-线性探测）。
-   - 使用数组实现
-   - 支持 insert、find、erase
-   - 处理冲突使用线性探测
-   - 支持动态扩容
+1. Basic: Implement a hash table by hand (open addressing with linear probing).
+   - Implement it with an array
+   - Support insert, find, erase
+   - Resolve collisions with linear probing
+   - Support dynamic resizing
 
-2. 应用题：使用哈希表实现一个"两数之和"求解器。
-   - 给定一个数组和一个目标值target
-   - 找出数组中两个数之和等于target的下标
-   - 要求时间复杂度O(n)
+2. Application: Use a hash table to implement a "Two Sum" solver.
+   - Given an array and a target value target
+   - Find the indices of two numbers in the array whose sum equals target
+   - Required time complexity: O(n)
 
-3. 进阶题：实现一个可持久化哈希表（Persistent Hash Table）。
-   - 支持对历史版本的查询
-   - 每次修改创建新版本
-   - 分析时间和空间复杂度
+3. Advanced: Implement a Persistent Hash Table.
+   - Support queries against historical versions
+   - Every modification creates a new version
+   - Analyze the time and space complexity
 
-4. 综合题：实现一个布谷鸟哈希（Cuckoo Hashing）。
-   - 使用两个哈希函数和两个表
-   - 插入时如果冲突，将已有元素"踢"到另一个表
-   - 处理插入循环问题
-   - 与链地址法进行性能对比
+4. Comprehensive: Implement Cuckoo Hashing.
+   - Use two hash functions and two tables
+   - On a collision during insertion, "kick" the existing element into the other table
+   - Handle insertion cycles
+   - Compare its performance with separate chaining
 
-5. 挑战题：实现一个一致性哈希（Consistent Hashing）。
-   - 用于分布式缓存系统中的数据分布
-   - 添加/删除节点时最小化数据迁移
-   - 实现虚拟节点以提高负载均衡
-   - 模拟节点增删过程
+5. Challenge: Implement Consistent Hashing.
+   - Used for distributing data in distributed caching systems
+   - Minimize data migration when nodes are added or removed
+   - Implement virtual nodes to improve load balancing
+   - Simulate adding and removing nodes
 
 ================================================================================

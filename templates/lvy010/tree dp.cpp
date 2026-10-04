@@ -11,12 +11,12 @@ public:
 
         vector memo(n, vector<array<long long, 2>>(k, {LLONG_MIN, LLONG_MIN}));
         auto dfs = [&](this auto&& dfs, int x, int fa, int cd, bool parity) -> long long {
-            auto& res = memo[x][cd][parity]; // 注意这里是引用
+            auto& res = memo[x][cd][parity]; // note: this is a reference
             if (res != LLONG_MIN) {
                 return res;
             }
 
-            // 不反转
+            // don't flip
             res = parity ? -nums[x] : nums[x];
             for (int y : g[x]) {
                 if (y != fa) {
@@ -24,12 +24,12 @@ public:
                 }
             }
 
-            // 反转
+            // flip
             if (cd == 0) {
                 long long s = parity ? nums[x] : -nums[x];
                 for (int y : g[x]) {
                     if (y != fa) {
-                        s += dfs(y, x, k - 1, !parity); // 重置 CD
+                        s += dfs(y, x, k - 1, !parity); // reset CD
                     }
                 }
                 res = max(res, s);

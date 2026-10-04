@@ -5,7 +5,7 @@ class LcaBinaryLifting {
 public:
     LcaBinaryLifting(vector<vector<int>>& edges) {
         int n = edges.size() + 1;
-        int m = bit_width((unsigned) n); // n 的二进制长度
+        int m = bit_width((unsigned) n); // bit length of n
         vector<vector<int>> g(n);
         for (auto& e : edges) {
             int x = e[0] - 1, y = e[1] - 1;
@@ -42,12 +42,12 @@ public:
         return node;
     }
 
-    // 返回 x 和 y 的最近公共祖先（节点编号从 0 开始）
+    // return the lowest common ancestor of x and y (nodes numbered from 0)
     int get_lca(int x, int y) {
         if (depth[x] > depth[y]) {
             swap(x, y);
         }
-        y = get_kth_ancestor(y, depth[y] - depth[x]); // 使 y 和 x 在同一深度
+        y = get_kth_ancestor(y, depth[y] - depth[x]); // bring y to the same depth as x
         if (y == x) {
             return x;
         }
@@ -55,13 +55,13 @@ public:
             int px = pa[x][i], py = pa[y][i];
             if (px != py) {
                 x = px;
-                y = py; // 同时往上跳 2^i 步
+                y = py; // jump up 2^i steps together
             }
         }
         return pa[x][0];
     }
 
-    // 返回 x 到 y 的距离（最短路长度）
+    // return the distance from x to y (shortest path length)
     int get_dis(int x, int y) {
         return depth[x] + depth[y] - depth[get_lca(x, y)] * 2;
     }
@@ -73,7 +73,7 @@ const int MX = 100'000;
 int pow2[MX];
 
 auto init = [] {
-    // 预处理 2 的幂
+    // precompute powers of 2
     pow2[0] = 1;
     for (int i = 1; i < MX; i++) {
         pow2[i] = pow2[i - 1] * 2 % MOD;

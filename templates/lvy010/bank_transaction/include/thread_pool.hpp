@@ -1,4 +1,4 @@
-// 线程池：固定线程数，支持 submit(lambda) 返回 std::future
+// Thread pool: fixed number of threads, supports submit(lambda) returning a std::future
 #pragma once
 
 #include <condition_variable>
@@ -82,7 +82,7 @@ private:
             try {
                 task();
             } catch (...) {
-                // 任务异常在 future 中可见，这里不吞异常
+                // task exceptions are visible via the future; we don't swallow them here
             }
         }
     }

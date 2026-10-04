@@ -1,8 +1,8 @@
 /*
-换根DP
-先DFS算出以0为根需反转边总数
-再reroot快速推导所有节点作根的反转次数
-正负标记边正反方向
+Rerooting DP
+First, DFS to compute the total number of edges to reverse with 0 as the root
+Then reroot to quickly derive the reversal count with every node as the root
+Signs (+/-) mark the forward/reverse direction of edges
 */
 class Solution {
     vector<vector<pair<int, int>>> g;
@@ -20,7 +20,7 @@ class Solution {
     void reroot(int x, int fa) {
         for (auto &[y, dir] : g[x]) {
             if (y != fa) {
-                ans[y] = ans[x] + dir; // dir 就是从 x 换到 y 的「变化量」
+                ans[y] = ans[x] + dir; // dir is the "delta" when moving the root from x to y
                 reroot(y, x);
             }
         }
@@ -32,7 +32,7 @@ public:
         for (auto &e : edges) {
             int x = e[0], y = e[1];
             g[x].emplace_back(y, 1);
-            g[y].emplace_back(x, -1); // 从 y 到 x 需要反向
+            g[y].emplace_back(x, -1); // going from y to x requires reversing
         }
 
         ans.resize(n);

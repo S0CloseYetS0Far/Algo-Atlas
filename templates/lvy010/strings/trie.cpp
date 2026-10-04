@@ -13,7 +13,7 @@ public:
                 c -= 'a';
                 if (cur->son[c] == nullptr) cur->son[c] = new Node();
                 cur = cur->son[c];
-                ++cur->score; // 更新所有前缀的分数
+                ++cur->score; // update the score of every prefix
             }
         }
 
@@ -23,7 +23,7 @@ public:
             auto cur = root;
             for (char c : words[i]) {
                 cur = cur->son[c - 'a'];
-                ans[i] += cur->score; // 累加分数，即可得到答案
+                ans[i] += cur->score; // accumulate the scores to get the answer
             }
         }
         return ans;

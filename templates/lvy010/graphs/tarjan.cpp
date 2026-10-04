@@ -1,15 +1,15 @@
 #include <vector>
 #include <algorithm>
 using namespace std;
-//强连通分量+缩点
-//Tarjan 找强连通分量 → 每个分量缩成一个点 → 建出有向无环新图（DAG）
-//可直接做拓扑、统计入度出度等
-const int MAXN = 2e5 + 10; // 按题目改
+//Strongly connected components + condensation
+//Tarjan finds SCCs → each SCC is contracted into a single node → build a new directed acyclic graph (DAG)
+//You can then directly do topological sort, count in/out degrees, etc.
+const int MAXN = 2e5 + 10; // adjust per problem
 
 vector<int> g[MAXN];
 int dfn[MAXN], low[MAXN], idx;
 int stk[MAXN], in_stk[MAXN], top;
-int scc[MAXN], scc_cnt; // scc[i] = 节点 i 所属的强连通分量编号
+int scc[MAXN], scc_cnt; // scc[i] = id of the SCC that node i belongs to
 
 void tarjan(int u) {
     dfn[u] = low[u] = ++idx;
@@ -36,8 +36,8 @@ void tarjan(int u) {
     }
 }
 
-// 缩点：建出新图
-vector<int> ng[MAXN]; // 缩点后的新图
+// condensation: build the new graph
+vector<int> ng[MAXN]; // new graph after condensation
 int in_deg[MAXN], out_deg[MAXN];
 
 void build_new_graph(int n) {
@@ -49,7 +49,7 @@ void build_new_graph(int n) {
         }
     }
 
-    // 去重（可选，避免重复边）
+    // deduplicate (optional, avoids duplicate edges)
     for (int i = 1; i <= scc_cnt; i++) {
         sort(ng[i].begin(), ng[i].end());
         ng[i].erase(unique(ng[i].begin(), ng[i].end()), ng[i].end());
@@ -58,7 +58,7 @@ void build_new_graph(int n) {
     }
 }
 
-// 使用方式
+// usage
 void init(int n) {
     idx = top = scc_cnt = 0;
     for (int i = 1; i <= n; i++) {
@@ -70,7 +70,7 @@ void init(int n) {
 
 int main() {
     int n, m;
-    // 读入建图...
+    // read input and build the graph...
     init(n);
     for (int i = 1; i <= n; i++) {
         if (!dfn[i]) tarjan(i);

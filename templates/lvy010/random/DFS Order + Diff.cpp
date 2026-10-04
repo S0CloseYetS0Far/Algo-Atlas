@@ -1,7 +1,7 @@
 /* 2445
-dfs遍历给二叉树的每个节点标记连续的编号
-再用差分数组统计每个节点被翻转的次数
-最后统计被翻转奇数次（即最终为1）的节点数量
+DFS traversal assigns consecutive ids to every node of the binary tree
+Then a difference array counts how many times each node is flipped
+Finally, count the nodes flipped an odd number of times (i.e. ending up as 1)
 */
 
 #include <vector>

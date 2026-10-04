@@ -1,26 +1,26 @@
 ================================================================================
-  C++ 深化教程：第七章 面向对象(四) —— 运算符重载与友元
+  C++ In-Depth Tutorial: Chapter 7 Object-Oriented Programming (4) -- Operator Overloading and Friends
 ================================================================================
 
-【本章目标】
-  1. 掌握运算符重载的基本语法和底层原理
-  2. 区分成员函数重载和友元函数重载的选择原则
-  3. 深入理解编译器匹配运算符重载的过程
-  4. 掌握类型转换运算符和C++20太空船运算符
-  5. 通过5个生活场景案例综合运用前7章所有知识
+[Chapter Goals]
+  1. Master the basic syntax and underlying principles of operator overloading
+  2. Learn the principles for choosing between member-function and friend-function overloads
+  3. Understand in depth how the compiler matches operator overloads
+  4. Master type conversion operators and the C++20 spaceship operator
+  5. Apply everything from the first 7 chapters through 5 real-life case studies
 
 ================================================================================
 
-                            === 第一节：基础示例代码 + 计算机底层原理 ===
+                            === Section 1: Basic Example Code + Low-Level Computer Principles ===
 ================================================================================
 
-一、运算符重载基础：函数调用本质
+1. Operator Overloading Basics: It Is Really a Function Call
 ------------------------------------
 
-运算符重载是C++提供的语法糖，它允许程序员为自定义类型定义运算符的行为。
-本质上，运算符重载就是函数调用的另一种写法。
+Operator overloading is syntactic sugar provided by C++ that lets programmers define the behavior of operators for user-defined types.
+In essence, operator overloading is just another way of writing a function call.
 
-【示例1-1】复数类的基本运算符重载：
+[Example 1-1] Basic operator overloading for a complex number class:
 
 ```cpp
 #include <iostream>
@@ -33,19 +33,19 @@ private:
 public:
     Complex(double r = 0.0, double i = 0.0) : real(r), imag(i) { }
 
-    // ====== 成员函数重载运算符 ======
+    // ====== Operators overloaded as member functions ======
 
-    // operator+ 实际上是 Complex::operator+(const Complex&) 函数
+    // operator+ is actually the function Complex::operator+(const Complex&)
     Complex operator+(const Complex& other) const {
         return Complex(real + other.real, imag + other.imag);
     }
 
-    // operator- : 减法
+    // operator- : subtraction
     Complex operator-(const Complex& other) const {
         return Complex(real - other.real, imag - other.imag);
     }
 
-    // operator* : 乘法 (a+bi)(c+di) = (ac-bd) + (ad+bc)i
+    // operator* : multiplication (a+bi)(c+di) = (ac-bd) + (ad+bc)i
     Complex operator*(const Complex& other) const {
         return Complex(
             real * other.real - imag * other.imag,
@@ -53,17 +53,17 @@ public:
         );
     }
 
-    // operator== : 相等比较
+    // operator== : equality comparison
     bool operator==(const Complex& other) const {
         return real == other.real && imag == other.imag;
     }
 
-    // operator!= : 不等比较
+    // operator!= : inequality comparison
     bool operator!=(const Complex& other) const {
-        return !(*this == other);  // 重用 operator==
+        return !(*this == other);  // reuse operator==
     }
 
-    // 获取值
+    // Getters
     double getReal() const { return real; }
     double getImag() const { return imag; }
 
@@ -79,9 +79,9 @@ int main() {
     Complex c1(3.0, 4.0);
     Complex c2(1.0, -2.0);
 
-    // 以下两行等价！
-    Complex c3 = c1 + c2;          // 语法糖
-    Complex c4 = c1.operator+(c2); // 实际调用
+    // The following two lines are equivalent!
+    Complex c3 = c1 + c2;          // syntactic sugar
+    Complex c4 = c1.operator+(c2); // the actual call
 
     c1.print();  // 3 + 4i
     c2.print();  // 1 - 2i
@@ -99,23 +99,23 @@ int main() {
 
 ================================================================================
 
-二、计算机底层原理：运算符重载的本质
+2. Low-Level Principles: The Nature of Operator Overloading
 ------------------------------------
 
-【原理2-1】编译器如何匹配运算符重载
+[Principle 2-1] How the compiler matches operator overloads
 
-当编译器遇到表达式 `a + b` 时，查找候选函数的过程：
+When the compiler encounters the expression `a + b`, it looks up candidate functions as follows:
 
-1. 候选函数集包括：
-   - 成员函数：a.operator+(b)  （如果a是类类型）
-   - 非成员函数：operator+(a, b)（在a或b所在命名空间中查找）
-   - 内置运算符（如果操作数是基本类型）
+1. The candidate set includes:
+   - Member functions: a.operator+(b)  (if a is of class type)
+   - Non-member functions: operator+(a, b) (looked up in the namespaces of a and b)
+   - Built-in operators (if the operands are fundamental types)
 
-2. 重载决议（Overload Resolution）过程：
-   (a) 名称查找：找到所有名为 operator+ 的函数
-   (b) 模板推导（如果是模板函数）
-   (c) 可行性检查：参数数量和类型是否匹配
-   (d) 最佳匹配：根据隐式转换的开销选择最佳重载
+2. The overload resolution process:
+   (a) Name lookup: find all functions named operator+
+   (b) Template deduction (if they are function templates)
+   (c) Viability check: do the number and types of arguments match?
+   (d) Best match: choose the best overload based on the cost of implicit conversions
 
 ```cpp
 class MyInt {
@@ -123,12 +123,12 @@ class MyInt {
 public:
     MyInt(int v) : value(v) {}
 
-    // 成员函数重载
+    // Member function overload
     MyInt operator+(const MyInt& other) const {
         return MyInt(value + other.value);
     }
 
-    // 非成员函数重载（友元）
+    // Non-member function overload (friend)
     friend MyInt operator-(const MyInt& a, const MyInt& b) {
         return MyInt(a.value - b.value);
     }
@@ -137,48 +137,48 @@ public:
 int main() {
     MyInt a(5), b(3);
 
-    // 以下调用匹配过程：
+    // Matching process for the following calls:
     MyInt c = a + b;
-    // 编译器查找：a.operator+(b) → 找到成员函数版本
+    // Compiler looks up: a.operator+(b) -> finds the member function version
 
     MyInt d = a - b;
-    // 编译器查找：a.operator-(b) → 没找到成员函数
-    // 继续查找：operator-(a, b) → 找到友元函数版本
+    // Compiler looks up: a.operator-(b) -> no member function found
+    // Continues looking: operator-(a, b) -> finds the friend function version
 
-    // 混合类型运算
+    // Mixed-type arithmetic
     MyInt e = a + 10;
-    // 编译器：a.operator+(10) → 10可通过隐式转换变为MyInt(10) → 可行！
+    // Compiler: a.operator+(10) -> 10 can be implicitly converted to MyInt(10) -> viable!
 
     // MyInt f = 10 + a;
-    // 编译器：10.operator+(a) → int没有成员operator+
-    //         operator+(10, a) → 没找到非成员函数接受int+MyInt
-    //         错误！
-    // 解决方案：定义非成员函数 operator+(int, const MyInt&)
+    // Compiler: 10.operator+(a) -> int has no member operator+
+    //           operator+(10, a) -> no non-member function accepting int+MyInt found
+    //           Error!
+    // Solution: define a non-member function operator+(int, const MyInt&)
 
     return 0;
 }
 ```
 
-【原理2-2】成员函数 vs 友元函数的决策树
+[Principle 2-2] Decision tree: member function vs friend function
 
-选择成员函数重载还是友元/全局函数重载，取决于以下原则：
+Whether to overload as a member function or as a friend/global function depends on the following principles:
 
-成员函数重载的场景：
-  - 运算符的语义与类紧密相关，且左操作数必须是类对象
-  - 赋值运算符(=, +=, -=, ...)
-  - 下标运算符([])
-  - 函数调用运算符(())
-  - 成员访问运算符(->)
-  - 自增自减运算符(++, --)
-  - new/delete运算符
+When to use member function overloads:
+  - The operator's semantics are closely tied to the class, and the left operand must be a class object
+  - Assignment operators (=, +=, -=, ...)
+  - Subscript operator ([])
+  - Function call operator (())
+  - Member access operator (->)
+  - Increment/decrement operators (++, --)
+  - new/delete operators
 
-友元/全局函数重载的场景：
-  - 需要对称性（如 operator+ 要支持 5 + obj 和 obj + 5）
-  - 输出运算符(<<)需要返回ostream&
-  - 需要访问私有成员但不是该类的成员（友元）
-  - 左操作数不是类类型（如上面 10 + a 的例子）
+When to use friend/global function overloads:
+  - Symmetry is needed (e.g. operator+ should support both 5 + obj and obj + 5)
+  - The output operator (<<) needs to return ostream&
+  - Access to private members is needed but the function is not a member of the class (friend)
+  - The left operand is not a class type (as in the 10 + a example above)
 
-必须用成员函数重载的运算符（C++标准规定）：
+Operators that must be overloaded as member functions (required by the C++ standard):
   =   []   ()   ->
 
 ```cpp
@@ -187,27 +187,27 @@ class Number {
 public:
     Number(int v) : value(v) { }
 
-    // ====== 必须用成员函数的运算符 ======
+    // ====== Operators that must be member functions ======
     Number& operator=(const Number& other) {
         value = other.value;
         return *this;
     }
 
-    // ====== 成员函数重载（左操作数是类对象）======
+    // ====== Member function overload (left operand is a class object) ======
     Number operator+(const Number& other) const {
         return Number(value + other.value);
     }
 
-    // ====== 全局函数（友元）重载（支持对称性）======
+    // ====== Global (friend) function overloads (support symmetry) ======
     friend Number operator*(int scalar, const Number& n) {
         return Number(scalar * n.value);
     }
 
     friend Number operator*(const Number& n, int scalar) {
-        return scalar * n;  // 委托给上面的重载
+        return scalar * n;  // delegate to the overload above
     }
 
-    // ====== 流运算符必须是全局函数 ======
+    // ====== Stream operators must be global functions ======
     friend std::ostream& operator<<(std::ostream& os, const Number& n) {
         os << n.value;
         return os;
@@ -216,15 +216,15 @@ public:
     int getValue() const { return value; }
 };
 
-// 使用演示：
+// Usage demo:
 // Number n(5);
-// Number m = n + 3;     // OK，成员函数重载
-// Number p = 3 * n;     // OK，友元函数重载
-// Number q = n * 3;     // OK，友元函数重载
-// std::cout << n;       // OK，友元函数重载
+// Number m = n + 3;     // OK, member function overload
+// Number p = 3 * n;     // OK, friend function overload
+// Number q = n * 3;     // OK, friend function overload
+// std::cout << n;       // OK, friend function overload
 ```
 
-【原理2-3】运算符重载不会改变优先级和结合性
+[Principle 2-3] Operator overloading does not change precedence or associativity
 
 ```cpp
 class Vec {
@@ -242,21 +242,21 @@ public:
 int main() {
     Vec a(1, 2), b(3, 4);
 
-    // 以下表达式等价于 a + (b * 5)，而不是 (a + b) * 5
-    // 因为 * 的优先级高于 +，这是语言规定的，无法改变
-    Vec c = a + b * 5;  // * 先计算，然后 +
+    // The following expression is equivalent to a + (b * 5), not (a + b) * 5
+    // because * has higher precedence than +; this is fixed by the language and cannot be changed
+    Vec c = a + b * 5;  // * is evaluated first, then +
 
-    // 你也不能改变运算符的结合性
-    // a + b + c 总是从左到右结合：(a + b) + c
+    // Nor can you change the associativity of an operator
+    // a + b + c always associates left to right: (a + b) + c
 
     return 0;
 }
 ```
 
-【原理2-4】友元的访问控制绕过原理
+[Principle 2-4] How friends bypass access control
 
-友元函数/类在编译器层面被授予了特殊权限。编译器在符号表中
-将友元函数标记为有权访问声明它的类的私有/protected成员。
+Friend functions/classes are granted special permission at the compiler level. In its symbol table the compiler
+marks a friend function as having access to the private/protected members of the class that declares it.
 
 ```cpp
 class BankAccount {
@@ -264,7 +264,7 @@ private:
     double balance;
     std::string secretCode;
 
-    // 友元函数声明
+    // Friend declarations
     friend void auditorAccess(const BankAccount& account);
     friend class GovernmentAuditor;
 
@@ -273,14 +273,14 @@ public:
         : balance(bal), secretCode(code) { }
 };
 
-// 友元函数可以访问私有成员
+// A friend function can access private members
 void auditorAccess(const BankAccount& account) {
-    // 可以直接访问私有成员
+    // Can access private members directly
     std::cout << "Audit: balance=" << account.balance
               << " code=" << account.secretCode << std::endl;
 }
 
-// 友元类——其所有成员函数都可以访问私有成员
+// Friend class -- all of its member functions can access private members
 class GovernmentAuditor {
 public:
     void examine(const BankAccount& account) {
@@ -289,7 +289,7 @@ public:
     }
 
     void freeze(BankAccount& account) {
-        // account.balance = 0;  // 可以修改！
+        // account.balance = 0;  // can modify it!
         std::cout << "Account frozen" << std::endl;
     }
 };
@@ -305,22 +305,22 @@ int main() {
 }
 ```
 
-底层实现：
-  编译器在类定义的符号条目中维护一个友元列表。当友元函数
-  尝试访问类的私有成员时，编译器检查调用者是否在该友元列表中。
-  这纯粹是编译期检查，运行时不产生额外开销。
+Underlying implementation:
+  The compiler maintains a friend list in the symbol entry for the class definition. When a friend function
+  tries to access a private member of the class, the compiler checks whether the caller is in that friend list.
+  This is purely a compile-time check and incurs no runtime overhead.
 
 ================================================================================
 
-                            === 第二节：所有用法大全（标准库/关键字/函数） ===
+                            === Section 2: Complete Usage Reference (Standard Library / Keywords / Functions) ===
 ================================================================================
 
-2.1 可重载的运算符完整列表
+2.1 Complete List of Overloadable Operators
 ------------------------------------
 
-C++允许重载以下运算符（按类别分类）：
+C++ allows the following operators to be overloaded (grouped by category):
 
-【算术运算符】 +  -  *  /  %
+[Arithmetic operators] +  -  *  /  %
 
 ```cpp
 class Vector2D {
@@ -343,14 +343,14 @@ public:
     Vector2D operator%(double scalar) const {
         return Vector2D(std::fmod(x, scalar), std::fmod(y, scalar));
     }
-    // 友元对称版本
+    // Symmetric friend version
     friend Vector2D operator*(double scalar, const Vector2D& v) {
         return v * scalar;
     }
 };
 ```
 
-【关系运算符】 ==  !=  <  >  <=  >=
+[Relational operators] ==  !=  <  >  <=  >=
 
 ```cpp
 class Date {
@@ -371,7 +371,7 @@ public:
         return day < other.day;
     }
     bool operator>(const Date& other) const {
-        return other < *this;  // 重用 <
+        return other < *this;  // reuse <
     }
     bool operator<=(const Date& other) const {
         return !(other < *this);
@@ -382,7 +382,7 @@ public:
 };
 ```
 
-【逻辑运算符】 !  &&  ||
+[Logical operators] !  &&  ||
 
 ```cpp
 class Flag {
@@ -390,21 +390,21 @@ class Flag {
 public:
     Flag(bool s = false) : state(s) {}
 
-    bool operator!() const {           // 逻辑非
+    bool operator!() const {           // logical NOT
         return !state;
     }
-    bool operator&&(const Flag& other) const {  // 逻辑与（不推荐重载！）
+    bool operator&&(const Flag& other) const {  // logical AND (overloading not recommended!)
         return state && other.state;
     }
-    bool operator||(const Flag& other) const {  // 逻辑或（不推荐重载！）
+    bool operator||(const Flag& other) const {  // logical OR (overloading not recommended!)
         return state || other.state;
     }
-    // 注意：重载&&和||会失去短路求值特性！这是常见的陷阱。
-    // 例如：if (f1 && f2) — 如果f1是false，f2仍然会被求值。
+    // Note: overloading && and || loses short-circuit evaluation! This is a common pitfall.
+    // For example: if (f1 && f2) -- even if f1 is false, f2 is still evaluated.
 };
 ```
 
-【位运算符】 &  |  ^  ~  <<  >>
+[Bitwise operators] &  |  ^  ~  <<  >>
 
 ```cpp
 class BitSet {
@@ -421,7 +421,7 @@ public:
 };
 ```
 
-【赋值运算符】 =  +=  -=  *=  /=  %=  &=  |=  ^=  <<=  >>=
+[Assignment operators] =  +=  -=  *=  /=  %=  &=  |=  ^=  <<=  >>=
 
 ```cpp
 class Counter {
@@ -455,7 +455,7 @@ public:
     int getValue() const { return value; }
 };
 
-// 通常使用 += 来实现 +（代码复用）
+// + is usually implemented in terms of += (code reuse)
 Counter operator+(const Counter& a, const Counter& b) {
     Counter result(a);
     result += b;
@@ -463,7 +463,7 @@ Counter operator+(const Counter& a, const Counter& b) {
 }
 ```
 
-【自增自减运算符】 ++ (前置/后置)  -- (前置/后置)
+[Increment/decrement operators] ++ (prefix/postfix)  -- (prefix/postfix)
 
 ```cpp
 class Iterator {
@@ -471,27 +471,27 @@ class Iterator {
 public:
     Iterator(int i = 0) : index(i) {}
 
-    // 前置++: ++it
+    // Prefix ++: ++it
     Iterator& operator++() {
         ++index;
-        return *this;  // 返回修改后的自身
+        return *this;  // return the modified object itself
     }
 
-    // 后置++: it++
-    // int参数是假的（仅用于区分前置和后置）！
+    // Postfix ++: it++
+    // The int parameter is a dummy (used only to distinguish prefix from postfix)!
     Iterator operator++(int) {
-        Iterator temp(*this);  // 保存旧值
+        Iterator temp(*this);  // save the old value
         ++index;
-        return temp;   // 返回旧值（注意：返回值不是引用！）
+        return temp;   // return the old value (note: returned by value, not by reference!)
     }
 
-    // 前置--: --it
+    // Prefix --: --it
     Iterator& operator--() {
         --index;
         return *this;
     }
 
-    // 后置--: it--
+    // Postfix --: it--
     Iterator operator--(int) {
         Iterator temp(*this);
         --index;
@@ -503,22 +503,22 @@ public:
 
 int main() {
     Iterator it(5);
-    Iterator a = ++it;  // a=6, it=6 (前置：先加后赋值)
-    Iterator b = it++;  // b=6, it=7 (后置：先赋值后加)
+    Iterator a = ++it;  // a=6, it=6 (prefix: increment first, then assign)
+    Iterator b = it++;  // b=6, it=7 (postfix: assign first, then increment)
 
-    // 注意：后置自增返回的是值（副本），不是引用
-    // it++++;  // 这其实是 (it.operator++(0)).operator++(0)
-    // 但第二个++操作的是第一个++返回的临时对象，不是it本身！
-    // 因此通常it++++不是预期行为
+    // Note: postfix increment returns a value (a copy), not a reference
+    // it++++;  // this is actually (it.operator++(0)).operator++(0)
+    // but the second ++ operates on the temporary returned by the first ++, not on it itself!
+    // so it++++ is usually not the intended behavior
 
-    // ++++it;  // 这是 (it.operator++()).operator++()
-    // 两个++都对it本身操作，正确！
+    // ++++it;  // this is (it.operator++()).operator++()
+    // both ++ operate on it itself -- correct!
 
     return 0;
 }
 ```
 
-【下标运算符】 []
+[Subscript operator] []
 
 ```cpp
 class Array {
@@ -528,13 +528,13 @@ public:
     Array(size_t s) : size(s), data(new int[s]()) { }
     ~Array() { delete[] data; }
 
-    // 非const版本——可读写
+    // Non-const version -- read/write
     int& operator[](size_t index) {
         if (index >= size) throw std::out_of_range("Index out of bounds");
         return data[index];
     }
 
-    // const版本——只读
+    // Const version -- read-only
     const int& operator[](size_t index) const {
         if (index >= size) throw std::out_of_range("Index out of bounds");
         return data[index];
@@ -544,10 +544,10 @@ public:
 };
 ```
 
-【函数调用运算符】 ()
+[Function call operator] ()
 
 ```cpp
-// 函数对象（Functor/Function Object）
+// Function object (Functor)
 class Multiplier {
     int factor;
 public:
@@ -564,15 +564,15 @@ public:
 
 int main() {
     Multiplier times3(3);
-    std::cout << times3(5) << std::endl;     // 输出15
-    std::cout << times3(2, 4) << std::endl;  // 输出24
+    std::cout << times3(5) << std::endl;     // prints 15
+    std::cout << times3(2, 4) << std::endl;  // prints 24
 
-    // 可以像函数一样使用对象！
+    // The object can be used just like a function!
     return 0;
 }
 ```
 
-【箭头运算符】 ->
+[Arrow operator] ->
 
 ```cpp
 class SmartPointer {
@@ -581,34 +581,34 @@ public:
     SmartPointer(int* p) : ptr(p) { }
     ~SmartPointer() { delete ptr; }
 
-    int& operator*()  { return *ptr; }      // 解引用
-    int* operator->() { return ptr; }       // 箭头运算符
+    int& operator*()  { return *ptr; }      // dereference
+    int* operator->() { return ptr; }       // arrow operator
 
-    // const版本
+    // const versions
     const int& operator*() const { return *ptr; }
     const int* operator->() const { return ptr; }
 };
 ```
 
-【new/delete运算符（可作为成员重载）】
+[new/delete operators (can be overloaded as members)]
 
 ```cpp
 class Pooled {
 public:
-    // 重载类的 operator new
+    // Overload the class's operator new
     static void* operator new(size_t size) {
         std::cout << "Custom new: allocating " << size << " bytes"
                   << std::endl;
-        return ::operator new(size);  // 调用全局new
+        return ::operator new(size);  // call the global new
     }
 
-    // 重载类的 operator delete
+    // Overload the class's operator delete
     static void operator delete(void* ptr) {
         std::cout << "Custom delete: freeing memory" << std::endl;
         ::operator delete(ptr);
     }
 
-    // 还可以重载数组版本
+    // The array versions can be overloaded too
     static void* operator new[](size_t size) {
         std::cout << "Custom new[]: " << size << " bytes" << std::endl;
         return ::operator new[](size);
@@ -621,7 +621,7 @@ public:
 };
 ```
 
-2.2 类型转换运算符
+2.2 Type Conversion Operators
 ------------------------------------
 
 ```cpp
@@ -630,17 +630,17 @@ class Meter {
 public:
     Meter(double l) : length(l) { }
 
-    // 隐式转换运算符（不推荐除非必要）
+    // Implicit conversion operator (not recommended unless necessary)
     operator double() const {
-        return length;  // 允许 Meter → double 隐式转换
+        return length;  // allows implicit Meter -> double conversion
     }
 
-    // 显式转换运算符 (C++11) —— 推荐！
+    // Explicit conversion operator (C++11) -- recommended!
     explicit operator int() const {
         return static_cast<int>(length);
     }
 
-    // bool转换运算符（常用于条件判断）
+    // bool conversion operator (commonly used in conditions)
     explicit operator bool() const {
         return length > 0.0;
     }
@@ -649,15 +649,15 @@ public:
 int main() {
     Meter m(5.5);
 
-    // 隐式转换
-    double d = m;  // OK，operator double() 是隐式的
+    // Implicit conversion
+    double d = m;  // OK, operator double() is implicit
 
-    // 显式转换
-    int i = static_cast<int>(m);  // OK，operator int() 是显式的
-    // int j = m;  // 错误！operator int() 是explicit的
+    // Explicit conversion
+    int i = static_cast<int>(m);  // OK, operator int() is explicit
+    // int j = m;  // Error! operator int() is explicit
 
-    // bool转换
-    if (m) {  // 在条件上下文中，explicit operator bool() 允许
+    // bool conversion
+    if (m) {  // in a boolean context, explicit operator bool() is allowed
         std::cout << "Length is positive" << std::endl;
     }
 
@@ -665,13 +665,13 @@ int main() {
 }
 ```
 
-2.3 字面量运算符 (C++11)
+2.3 Literal Operators (C++11)
 ------------------------------------
 
 ```cpp
 #include <string>
 
-// 自定义字面量后缀
+// User-defined literal suffixes
 class Distance {
     double meters;
 public:
@@ -679,9 +679,9 @@ public:
     double getMeters() const { return meters; }
 };
 
-// 字面量运算符——必须定义在全局命名空间
+// Literal operators -- must be defined at namespace scope
 Distance operator"" _km(long double val) {
-    return Distance(val * 1000.0);  // km → m
+    return Distance(val * 1000.0);  // km -> m
 }
 
 Distance operator"" _m(long double val) {
@@ -689,19 +689,19 @@ Distance operator"" _m(long double val) {
 }
 
 Distance operator"" _cm(long double val) {
-    return Distance(val / 100.0);  // cm → m
+    return Distance(val / 100.0);  // cm -> m
 }
 
 Distance operator"" _mi(long double val) {
-    return Distance(val * 1609.344);  // mile → m
+    return Distance(val * 1609.344);  // mile -> m
 }
 
-// 整数版本
+// Integer version
 Distance operator"" _km(unsigned long long val) {
     return Distance(val * 1000.0);
 }
 
-// 字符串版本
+// String version
 std::string operator"" _upper(const char* str, size_t len) {
     std::string result(str, len);
     for (auto& c : result) c = std::toupper(c);
@@ -723,14 +723,14 @@ int main() {
 }
 ```
 
-2.4 C++20 太空船运算符 (<=>) 简介
+2.4 Introduction to the C++20 Spaceship Operator (<=>)
 ------------------------------------
 
 ```cpp
 #include <compare>
 #include <iostream>
 
-#if __cplusplus >= 202002L  // 需要C++20
+#if __cplusplus >= 202002L  // requires C++20
 
 class Version {
     int major, minor, patch;
@@ -738,11 +738,11 @@ public:
     Version(int maj, int min, int pat)
         : major(maj), minor(min), patch(pat) { }
 
-    // C++20：定义 <=> 后，编译器自动生成 ==, !=, <, >, <=, >=！
+    // C++20: once <=> is defined, the compiler generates ==, !=, <, >, <=, >= automatically!
     auto operator<=>(const Version& other) const = default;
-    // 编译器自动比较所有成员变量（按声明顺序）
+    // The compiler compares all member variables automatically (in declaration order)
 
-    // 或者手动实现：
+    // Or implement it manually:
     // std::strong_ordering operator<=>(const Version& other) const {
     //     if (auto cmp = major <=> other.major; cmp != 0) return cmp;
     //     if (auto cmp = minor <=> other.minor; cmp != 0) return cmp;
@@ -756,19 +756,19 @@ public:
 
 #endif
 
-// 返回类型说明：
-// std::strong_ordering  —— 强序（可替代性，如整数）
-// std::weak_ordering    —— 弱序（不可替代，如大小写不敏感字符串）
-// std::partial_ordering —— 偏序（允许不可比较，如浮点数的NaN）
+// Return type notes:
+// std::strong_ordering  -- strong ordering (substitutable, e.g. integers)
+// std::weak_ordering    -- weak ordering (not substitutable, e.g. case-insensitive strings)
+// std::partial_ordering -- partial ordering (allows incomparable values, e.g. floating-point NaN)
 ```
 
-2.5 友元函数和友元类
+2.5 Friend Functions and Friend Classes
 ------------------------------------
 
 ```cpp
 #include <iostream>
 
-// ====== 友元函数 ======
+// ====== Friend functions ======
 class Point {
 private:
     int x, y;
@@ -776,7 +776,7 @@ private:
 public:
     Point(int xv, int yv) : x(xv), y(yv) { }
 
-    // 友元函数——可以访问私有成员
+    // Friend functions -- can access private members
     friend double distance(const Point& p1, const Point& p2);
     friend std::ostream& operator<<(std::ostream& os, const Point& p);
     friend std::istream& operator>>(std::istream& is, Point& p);
@@ -784,7 +784,7 @@ public:
 };
 
 double distance(const Point& p1, const Point& p2) {
-    int dx = p1.x - p2.x;   // 直接访问私有成员
+    int dx = p1.x - p2.x;   // direct access to private members
     int dy = p1.y - p2.y;
     return std::sqrt(dx * dx + dy * dy);
 }
@@ -800,15 +800,15 @@ std::istream& operator>>(std::istream& is, Point& p) {
 }
 
 void swap(Point& a, Point& b) noexcept {
-    std::swap(a.x, b.x);  // 直接访问私有成员
+    std::swap(a.x, b.x);  // direct access to private members
     std::swap(a.y, b.y);
 }
 
-// ====== 友元类 ======
+// ====== Friend class ======
 class Rectangle {
 private:
     int width, height;
-    friend class RectanglePainter;  // RectanglePainter可以访问私有成员
+    friend class RectanglePainter;  // RectanglePainter can access private members
 
 public:
     Rectangle(int w, int h) : width(w), height(h) { }
@@ -822,39 +822,39 @@ public:
     }
 };
 
-// ====== 友元成员函数 ======
-class Engine;  // 前向声明
+// ====== Friend member function ======
+class Engine;  // forward declaration
 
 class Car {
 public:
-    void startEngine(Engine& engine);  // 声明但暂不定义
+    void startEngine(Engine& engine);  // declared but not yet defined
 };
 
 class Engine {
 private:
     int rpm;
     friend void Car::startEngine(Engine& engine);
-    // 只把Car::startEngine设为友元，而非整个Car类
+    // Only Car::startEngine is made a friend, not the whole Car class
 
 public:
     Engine() : rpm(0) { }
 };
 
 void Car::startEngine(Engine& engine) {
-    engine.rpm = 1000;  // 访问Engine的私有成员
+    engine.rpm = 1000;  // access Engine's private member
     std::cout << "Engine started at " << engine.rpm << " RPM" << std::endl;
 }
 ```
 
 ================================================================================
 
-                            === 第三节：实用代码案例（生活场景举例） ===
+                            === Section 3: Practical Code Examples (Real-Life Scenarios) ===
 ================================================================================
 
-案例1：复数计算器（Complex类）
+Case 1: Complex Number Calculator (Complex class)
 ------------------------------------
 
-【生活场景】电路设计中的阻抗计算。电阻、电感和电容的复数表示。
+[Real-life scenario] Impedance calculations in circuit design: complex representations of resistors, inductors and capacitors.
 
 ```cpp
 #include <iostream>
@@ -862,7 +862,7 @@ void Car::startEngine(Engine& engine) {
 #include <iomanip>
 #include <string>
 
-// ====== 调试宏 ======
+// ====== Debug macro ======
 #ifdef COMPLEX_DEBUG
     #define CPX_LOG(msg) std::cout << "[Complex] " << msg << std::endl
 #else
@@ -882,7 +882,7 @@ public:
                 std::to_string(i) + ")");
     }
 
-    // ====== 算术运算符（成员函数）======
+    // ====== Arithmetic operators (member functions) ======
     Complex operator+(const Complex& other) const {
         return Complex(real + other.real, imag + other.imag);
     }
@@ -912,7 +912,7 @@ public:
         );
     }
 
-    // ====== 赋值运算符 ======
+    // ====== Assignment operators ======
     Complex& operator+=(const Complex& other) {
         real += other.real;
         imag += other.imag;
@@ -926,25 +926,25 @@ public:
     }
 
     Complex& operator*=(const Complex& other) {
-        *this = *this * other;  // 重用 operator*
+        *this = *this * other;  // reuse operator*
         return *this;
     }
 
     Complex& operator/=(const Complex& other) {
-        *this = *this / other;  // 重用 operator/
+        *this = *this / other;  // reuse operator/
         return *this;
     }
 
-    // ====== 一元运算符 ======
-    Complex operator-() const {        // 取负
+    // ====== Unary operators ======
+    Complex operator-() const {        // negation
         return Complex(-real, -imag);
     }
 
-    Complex operator+() const {        // 正号（通常不需要）
+    Complex operator+() const {        // unary plus (usually not needed)
         return *this;
     }
 
-    // ====== 比较运算符 ======
+    // ====== Comparison operators ======
     bool operator==(const Complex& other) const {
         return real == other.real && imag == other.imag;
     }
@@ -953,7 +953,7 @@ public:
         return !(*this == other);
     }
 
-    // ====== 数学运算 ======
+    // ====== Math operations ======
     double magnitude() const {
         return std::sqrt(real * real + imag * imag);
     }
@@ -966,16 +966,16 @@ public:
         return Complex(real, -imag);
     }
 
-    // ====== 类型转换 ======
+    // ====== Type conversion ======
     explicit operator double() const {
         return magnitude();
     }
 
-    // ====== 访问器 ======
+    // ====== Accessors ======
     double getReal() const { return real; }
     double getImag() const { return imag; }
 
-    // ====== 友元——流输出/输入 ======
+    // ====== Friends -- stream output/input ======
     friend std::ostream& operator<<(std::ostream& os,
                                      const Complex& c) {
         os << c.real;
@@ -994,48 +994,48 @@ public:
         return is;
     }
 
-    // ====== 静态工厂方法 ======
+    // ====== Static factory method ======
     static Complex fromPolar(double magnitude, double phase) {
         return Complex(magnitude * std::cos(phase),
                        magnitude * std::sin(phase));
     }
 };
 
-// ====== 阻抗计算 ======
-// 电阻 R → Z = R (纯实数)
-// 电感 L → Z = jωL (纯虚数)
-// 电容 C → Z = 1/(jωC) = -j/(ωC) (纯虚数)
+// ====== Impedance calculation ======
+// Resistor R  -> Z = R (purely real)
+// Inductor L  -> Z = j*omega*L (purely imaginary)
+// Capacitor C -> Z = 1/(j*omega*C) = -j/(omega*C) (purely imaginary)
 Complex resistorImpedance(double r) {
-    return Complex(r, 0);  // 电阻阻抗是纯实数
+    return Complex(r, 0);  // resistor impedance is purely real
 }
 
 Complex inductorImpedance(double L, double freq) {
-    double omega = 2 * M_PI * freq;  // 角频率
-    return Complex(0, omega * L);    // 电感阻抗是纯虚数 ωL
+    double omega = 2 * M_PI * freq;  // angular frequency
+    return Complex(0, omega * L);    // inductor impedance is purely imaginary: omega*L
 }
 
 Complex capacitorImpedance(double C, double freq) {
     double omega = 2 * M_PI * freq;
-    return Complex(0, -1.0 / (omega * C));  // 电容阻抗 = -j/(ωC)
+    return Complex(0, -1.0 / (omega * C));  // capacitor impedance = -j/(omega*C)
 }
 
 }  // namespace math
 
-// ========== 演示代码 ==========
+// ========== Demo code ==========
 int main() {
     using namespace math;
 
-    std::cout << "===== 复数计算器——电路阻抗计算 =====\n" << std::endl;
+    std::cout << "===== Complex Calculator -- Circuit Impedance =====\n" << std::endl;
 
-    // 基本复数运算
+    // Basic complex arithmetic
     Complex z1(3, 4);
     Complex z2(1, -2);
 
-    std::cout << "z1 = " << z1 << " (模=" << z1.magnitude()
-              << " 相角=" << z1.phase() << " rad)" << std::endl;
+    std::cout << "z1 = " << z1 << " (magnitude=" << z1.magnitude()
+              << " phase=" << z1.phase() << " rad)" << std::endl;
     std::cout << "z2 = " << z2 << std::endl;
 
-    std::cout << "\n基本运算:" << std::endl;
+    std::cout << "\nBasic operations:" << std::endl;
     std::cout << "z1 + z2 = " << (z1 + z2) << std::endl;
     std::cout << "z1 - z2 = " << (z1 - z2) << std::endl;
     std::cout << "z1 * z2 = " << (z1 * z2) << std::endl;
@@ -1043,66 +1043,66 @@ int main() {
     std::cout << "-z1 = " << (-z1) << std::endl;
     std::cout << "conj(z1) = " << z1.conjugate() << std::endl;
 
-    // 电路阻抗计算
-    std::cout << "\n===== 电路阻抗计算 =====" << std::endl;
+    // Circuit impedance calculation
+    std::cout << "\n===== Circuit Impedance Calculation =====" << std::endl;
 
-    double frequency = 50.0;  // 50Hz 工频
+    double frequency = 50.0;  // 50Hz mains frequency
 
-    // 一个电阻R=100Ω 串联 电感L=0.5H 串联 电容C=100μF
+    // A resistor R=100 Ohm in series with an inductor L=0.5H in series with a capacitor C=100uF
     Complex Z_R = resistorImpedance(100);
     Complex Z_L = inductorImpedance(0.5, frequency);
     Complex Z_C = capacitorImpedance(100e-6, frequency);
 
-    std::cout << "电阻 R=100Ω: Z_R = " << Z_R << " Ω" << std::endl;
-    std::cout << "电感 L=0.5H: Z_L = " << Z_L << " Ω" << std::endl;
-    std::cout << "电容 C=100μF: Z_C = " << Z_C << " Ω" << std::endl;
+    std::cout << "Resistor R=100 Ohm: Z_R = " << Z_R << " Ohm" << std::endl;
+    std::cout << "Inductor L=0.5H: Z_L = " << Z_L << " Ohm" << std::endl;
+    std::cout << "Capacitor C=100uF: Z_C = " << Z_C << " Ohm" << std::endl;
 
-    // 串联总阻抗
+    // Total series impedance
     Complex Z_total = Z_R + Z_L + Z_C;
-    std::cout << "\nRLC串联总阻抗: " << Z_total << " Ω" << std::endl;
-    std::cout << "阻抗大小: " << Z_total.magnitude() << " Ω" << std::endl;
-    std::cout << "阻抗角: " << Z_total.phase() * 180.0 / M_PI << "°" << std::endl;
+    std::cout << "\nRLC series total impedance: " << Z_total << " Ohm" << std::endl;
+    std::cout << "Impedance magnitude: " << Z_total.magnitude() << " Ohm" << std::endl;
+    std::cout << "Impedance angle: " << Z_total.phase() * 180.0 / M_PI << " deg" << std::endl;
 
-    // 并联计算 Z_parallel = 1 / (1/Z_R + 1/Z_L + 1/Z_C)
-    std::cout << "\nRLC并联总阻抗: " << std::endl;
+    // Parallel calculation Z_parallel = 1 / (1/Z_R + 1/Z_L + 1/Z_C)
+    std::cout << "\nRLC parallel total impedance: " << std::endl;
     Complex Z_parallel = Complex(1) / (
         Complex(1) / Z_R + Complex(1) / Z_L + Complex(1) / Z_C);
-    std::cout << "Z_parallel = " << Z_parallel << " Ω" << std::endl;
+    std::cout << "Z_parallel = " << Z_parallel << " Ohm" << std::endl;
 
-    // 赋值运算符
+    // Assignment operators
     Complex z3(5, 5);
     z3 += Complex(2, -3);
-    std::cout << "\nz3 += 2-3i → z3 = " << z3 << std::endl;
+    std::cout << "\nz3 += 2-3i -> z3 = " << z3 << std::endl;
 
     return 0;
 }
 ```
 
-知识点融入：
-  - 成员函数重载运算符（+, -, *, /）
-  - 赋值运算符（+=, -=, *=, /=）
-  - 一元运算符（-, +）
-  - 比较运算符（==, !=）
-  - 类型转换运算符（explicit operator double）
-  - 友元函数（operator<<, operator>>）
-  - 命名空间 math（第3章）
-  - 调试宏（第2章）
+Concepts covered:
+  - Overloading operators as member functions (+, -, *, /)
+  - Assignment operators (+=, -=, *=, /=)
+  - Unary operators (-, +)
+  - Comparison operators (==, !=)
+  - Type conversion operator (explicit operator double)
+  - Friend functions (operator<<, operator>>)
+  - Namespace math (Chapter 3)
+  - Debug macros (Chapter 2)
 
 ================================================================================
 
-案例2：分数计算器（Fraction类）
+Case 2: Fraction Calculator (Fraction class)
 ------------------------------------
 
-【生活场景】烹饪食谱的比例换算。如菜谱需要3/4杯面粉，但要做两倍的量。
+[Real-life scenario] Scaling a cooking recipe. For example, a recipe calls for 3/4 cup of flour, but you want to make a double batch.
 
 ```cpp
 #include <iostream>
-#include <numeric>   // std::gcd (C++17) 或自定义
+#include <numeric>   // std::gcd (C++17) or a custom version
 #include <cmath>
 #include <stdexcept>
 #include <iomanip>
 
-// ====== 调试宏 ======
+// ====== Debug macro ======
 #define FRAC_DEBUG 0
 #if FRAC_DEBUG
     #define FRAC_LOG(msg) std::cout << "[Fraction] " << msg << std::endl
@@ -1110,7 +1110,7 @@ int main() {
     #define FRAC_LOG(msg)
 #endif
 
-// 简单的gcd实现（兼容C++11/14）
+// Simple gcd implementation (compatible with C++11/14)
 namespace {
     int gcd_custom(int a, int b) {
         a = std::abs(a);
@@ -1128,10 +1128,10 @@ namespace math {
 
 class Fraction {
 private:
-    int numerator;   // 分子
-    int denominator; // 分母（始终为正数）
+    int numerator;   // numerator
+    int denominator; // denominator (always positive)
 
-    // 约分到最简形式
+    // Reduce to lowest terms
     void simplify() {
         int g = gcd_custom(std::abs(numerator), denominator);
         numerator /= g;
@@ -1139,12 +1139,12 @@ private:
     }
 
 public:
-    // ====== 构造函数 ======
+    // ====== Constructors ======
     Fraction(int num = 0, int den = 1) : numerator(num), denominator(den) {
         if (den == 0) {
             throw std::invalid_argument("Denominator cannot be zero");
         }
-        if (den < 0) {  // 保证分母为正，符号在分子上
+        if (den < 0) {  // keep the denominator positive; the sign goes on the numerator
             numerator = -numerator;
             denominator = -denominator;
         }
@@ -1153,10 +1153,10 @@ public:
                  std::to_string(den) + ")");
     }
 
-    // 拷贝构造函数（编译器自动生成即可）
+    // Copy constructor (the compiler-generated one is fine)
     Fraction(const Fraction&) = default;
 
-    // ====== 算术运算符（成员函数）======
+    // ====== Arithmetic operators (member functions) ======
     Fraction operator+(const Fraction& other) const {
         // a/b + c/d = (ad + bc) / bd
         return Fraction(
@@ -1189,7 +1189,7 @@ public:
         );
     }
 
-    // ====== 赋值运算符 ======
+    // ====== Assignment operators ======
     Fraction& operator+=(const Fraction& other) {
         *this = *this + other;
         return *this;
@@ -1210,30 +1210,30 @@ public:
         return *this;
     }
 
-    // ====== 自增自减 ======
-    Fraction& operator++() {         // 前置++
+    // ====== Increment/decrement ======
+    Fraction& operator++() {         // prefix ++
         numerator += denominator;
         return *this;
     }
 
-    Fraction operator++(int) {       // 后置++
+    Fraction operator++(int) {       // postfix ++
         Fraction temp(*this);
         numerator += denominator;
         return temp;
     }
 
-    Fraction& operator--() {         // 前置--
+    Fraction& operator--() {         // prefix --
         numerator -= denominator;
         return *this;
     }
 
-    Fraction operator--(int) {       // 后置--
+    Fraction operator--(int) {       // postfix --
         Fraction temp(*this);
         numerator -= denominator;
         return temp;
     }
 
-    // ====== 比较运算符 ======
+    // ====== Comparison operators ======
     bool operator==(const Fraction& other) const {
         return numerator == other.numerator &&
                denominator == other.denominator;
@@ -1244,7 +1244,7 @@ public:
     }
 
     bool operator<(const Fraction& other) const {
-        // a/b < c/d 等价于 ad < bc（分母都为正时）
+        // a/b < c/d is equivalent to ad < bc (when both denominators are positive)
         return numerator * other.denominator <
                other.numerator * denominator;
     }
@@ -1261,28 +1261,28 @@ public:
         return !(*this < other);
     }
 
-    // ====== 一元运算符 ======
+    // ====== Unary operator ======
     Fraction operator-() const {
         return Fraction(-numerator, denominator);
     }
 
-    // ====== 类型转换运算符 ======
+    // ====== Type conversion operator ======
     explicit operator double() const {
         return static_cast<double>(numerator) / denominator;
     }
 
-    // 隐式转换为double（方便混合运算）
-    // 注意：可能带来出乎意料的行为，使用时需谨慎
+    // Implicit conversion to double (convenient for mixed arithmetic)
+    // Note: it can cause surprising behavior, so use it with care
 
-    // ====== 访问器 ======
+    // ====== Accessors ======
     int getNumerator()   const { return numerator; }
     int getDenominator() const { return denominator; }
 
-    // ====== 友元函数——流输出/输入 ======
+    // ====== Friend functions -- stream output/input ======
     friend std::ostream& operator<<(std::ostream& os,
                                      const Fraction& f) {
         if (f.denominator == 1) {
-            os << f.numerator;         // 整数
+            os << f.numerator;         // integer
         } else {
             os << f.numerator << "/" << f.denominator;
         }
@@ -1300,7 +1300,7 @@ public:
         return is;
     }
 
-    // ====== 实用方法 ======
+    // ====== Utility methods ======
     double toDouble() const {
         return static_cast<double>(numerator) / denominator;
     }
@@ -1314,26 +1314,26 @@ public:
     }
 };
 
-// ====== 全局运算符支持混合类型 ======
-// 整数 * 分数
+// ====== Global operators supporting mixed types ======
+// integer * fraction
 Fraction operator*(int n, const Fraction& f) {
     return Fraction(n) * f;
 }
 
-// 分数 * 整数（如果是友元或成员，确保对称性）
+// fraction * integer (whether friend or member, make sure it is symmetric)
 Fraction operator*(const Fraction& f, int n) {
     return f * Fraction(n);
 }
 
 }  // namespace math
 
-// ========== 演示代码：烹饪食谱比例换算 ==========
+// ========== Demo code: scaling a cooking recipe ==========
 int main() {
     using namespace math;
 
-    std::cout << "===== \xF0\x9F\x8D\xB3 烹饪食谱分数计算器 =====\n" << std::endl;
+    std::cout << "===== \xF0\x9F\x8D\xB3 Recipe Fraction Calculator =====\n" << std::endl;
 
-    // 创建一些常用分数
+    // Create some common fractions
     Fraction whole(1);              // 1
     Fraction half(1, 2);            // 1/2
     Fraction quarter(1, 4);         // 1/4
@@ -1341,83 +1341,83 @@ int main() {
     Fraction third(1, 3);           // 1/3
     Fraction twoThirds(2, 3);       // 2/3
 
-    // 打印分数
-    std::cout << "常用分数:" << std::endl;
+    // Print the fractions
+    std::cout << "Common fractions:" << std::endl;
     std::cout << "  1 = " << whole << std::endl;
     std::cout << "  1/2 = " << half << " = " << half.toDouble() << std::endl;
     std::cout << "  1/4 = " << quarter << " = " << quarter.toDouble() << std::endl;
     std::cout << "  3/4 = " << threeQuarters << " = "
               << threeQuarters.toDouble() << std::endl;
-    std::cout << "  1/3 = " << third << " ≈ " << third.toDouble() << std::endl;
+    std::cout << "  1/3 = " << third << " ~= " << third.toDouble() << std::endl;
 
-    // 食谱换算
-    std::cout << "\n===== 食谱比例换算 =====" << std::endl;
+    // Recipe scaling
+    std::cout << "\n===== Recipe Scaling =====" << std::endl;
 
-    // 原食谱：3/4杯面粉
+    // Original recipe: 3/4 cup of flour
     Fraction flour(3, 4);
-    std::cout << "原食谱需要面粉: " << flour << " 杯" << std::endl;
+    std::cout << "Original recipe needs flour: " << flour << " cup" << std::endl;
 
-    // 做两倍的量
+    // Make a double batch
     Fraction doubleFlour = flour * 2;
-    std::cout << "两倍量需要面粉: " << doubleFlour << " 杯 ("
-              << doubleFlour.toDouble() << " 杯)" << std::endl;
+    std::cout << "Double batch needs flour: " << doubleFlour << " cups ("
+              << doubleFlour.toDouble() << " cups)" << std::endl;
 
-    // 做一半的量
+    // Make a half batch
     Fraction halfFlour = flour * half;
-    std::cout << "一半量需要面粉: " << halfFlour << " 杯 ("
-              << halfFlour.toDouble() << " 杯)" << std::endl;
+    std::cout << "Half batch needs flour: " << halfFlour << " cup ("
+              << halfFlour.toDouble() << " cup)" << std::endl;
 
-    // 多种配料换算
-    std::cout << "\n--- 苹果派完整配方换算 ---" << std::endl;
+    // Scaling several ingredients
+    std::cout << "\n--- Scaling a Full Apple Pie Recipe ---" << std::endl;
 
-    Fraction sugar(1, 2);      // 1/2杯糖
-    Fraction butter(1, 3);     // 1/3杯黄油
-    Fraction apples(5);        // 5个苹果
+    Fraction sugar(1, 2);      // 1/2 cup of sugar
+    Fraction butter(1, 3);     // 1/3 cup of butter
+    Fraction apples(5);        // 5 apples
 
-    std::cout << "原配方:" << std::endl;
-    std::cout << "  糖: " << sugar << " 杯" << std::endl;
-    std::cout << "  黄油: " << butter << " 杯" << std::endl;
-    std::cout << "  苹果: " << apples << " 个" << std::endl;
+    std::cout << "Original recipe:" << std::endl;
+    std::cout << "  Sugar: " << sugar << " cup" << std::endl;
+    std::cout << "  Butter: " << butter << " cup" << std::endl;
+    std::cout << "  Apples: " << apples << " pcs" << std::endl;
 
-    // 乘以1.5倍（转换为分数：3/2）
+    // Multiply by 1.5 (as a fraction: 3/2)
     Fraction scale(3, 2);
-    std::cout << "\n乘以 " << scale << " 倍:" << std::endl;
-    std::cout << "  糖: " << (sugar * scale) << " 杯" << std::endl;
-    std::cout << "  黄油: " << (butter * scale) << " 杯" << std::endl;
-    std::cout << "  苹果: " << (apples * scale) << " 个" << std::endl;
+    std::cout << "\nMultiplied by " << scale << ":" << std::endl;
+    std::cout << "  Sugar: " << (sugar * scale) << " cup" << std::endl;
+    std::cout << "  Butter: " << (butter * scale) << " cup" << std::endl;
+    std::cout << "  Apples: " << (apples * scale) << " pcs" << std::endl;
 
-    // 比较分数大小（选择较大的配方）
-    std::cout << "\n===== 分数比较 =====" << std::endl;
-    Fraction recipe1_sugar(3, 4);   // 配方1: 3/4杯
-    Fraction recipe2_sugar(2, 3);   // 配方2: 2/3杯
+    // Compare fractions (pick the recipe with more)
+    std::cout << "\n===== Fraction Comparison =====" << std::endl;
+    Fraction recipe1_sugar(3, 4);   // recipe 1: 3/4 cup
+    Fraction recipe2_sugar(2, 3);   // recipe 2: 2/3 cup
 
-    std::cout << "配方1的糖: " << recipe1_sugar << " 杯" << std::endl;
-    std::cout << "配方2的糖: " << recipe2_sugar << " 杯" << std::endl;
+    std::cout << "Recipe 1 sugar: " << recipe1_sugar << " cup" << std::endl;
+    std::cout << "Recipe 2 sugar: " << recipe2_sugar << " cup" << std::endl;
 
     if (recipe1_sugar > recipe2_sugar) {
-        std::cout << "配方1的糖更多" << std::endl;
+        std::cout << "Recipe 1 has more sugar" << std::endl;
     } else {
-        std::cout << "配方2的糖更多" << std::endl;
+        std::cout << "Recipe 2 has more sugar" << std::endl;
     }
 
-    // 自增运算演示（每次增加1/n的量）
-    std::cout << "\n===== 自增演示 =====" << std::endl;
+    // Increment demo (add one whole unit each time)
+    std::cout << "\n===== Increment Demo =====" << std::endl;
     Fraction progress(0);
-    std::cout << "开始: " << progress << std::endl;
+    std::cout << "Start: " << progress << std::endl;
     for (int i = 0; i < 5; i++) {
         ++progress;
         std::cout << "++progress = " << progress << std::endl;
     }
 
-    // 使用>>输入
-    std::cout << "\n===== 交互输入 =====" << std::endl;
+    // Input using >>
+    std::cout << "\n===== Interactive Input =====" << std::endl;
     Fraction userFraction;
-    std::cout << "请输入一个分数(格式: 分子/分母): ";
+    std::cout << "Enter a fraction (format: numerator/denominator): ";
     // std::cin >> userFraction;
-    // std::cout << "你输入了: " << userFraction << std::endl;
+    // std::cout << "You entered: " << userFraction << std::endl;
 
-    // 综合：多个分数的累加
-    std::cout << "\n===== 分数累加 =====" << std::endl;
+    // Putting it together: summing several fractions
+    std::cout << "\n===== Fraction Accumulation =====" << std::endl;
     Fraction total;
     Fraction ingredients[] = {
         Fraction(1, 2),    // 1/2
@@ -1427,39 +1427,39 @@ int main() {
         Fraction(3, 4)     // 3/4
     };
 
-    std::cout << "配料总和:" << std::endl;
+    std::cout << "Ingredient total:" << std::endl;
     for (const auto& ing : ingredients) {
         std::cout << "  + " << ing;
         total += ing;
         std::cout << " = " << total << " (" << total.toDouble() << ")"
                   << std::endl;
     }
-    std::cout << "总计: " << total << " (" << total.toDouble() << " 杯)"
+    std::cout << "Total: " << total << " (" << total.toDouble() << " cups)"
               << std::endl;
 
     return 0;
 }
 ```
 
-知识点融入：
-  - 算术运算符重载（+, -, *, /）
-  - 赋值运算符（+=, -=, *=, /=）
-  - 自增自减（前置/后置 ++, --）
-  - 比较运算符（==, !=, <, >, <=, >=）
-  - 一元运算符（-）
-  - 类型转换（explicit operator double）
-  - 友元函数（operator<<, operator>>）
-  - 全局运算符（整数 * 分数）
-  - 命名空间 math
-  - 类设计（封装、简化算法自动化）
+Concepts covered:
+  - Arithmetic operator overloading (+, -, *, /)
+  - Assignment operators (+=, -=, *=, /=)
+  - Increment/decrement (prefix/postfix ++, --)
+  - Comparison operators (==, !=, <, >, <=, >=)
+  - Unary operator (-)
+  - Type conversion (explicit operator double)
+  - Friend functions (operator<<, operator>>)
+  - Global operators (integer * fraction)
+  - Namespace math
+  - Class design (encapsulation, automatic simplification)
 
 ================================================================================
 
-案例3：集合类（IntSet类）
+Case 3: Set Class (IntSet class)
 ------------------------------------
 
-【生活场景】选课系统——学生已选课程和必修课程的交集计算。
-重载集合运算符实现交、并、差等操作。
+[Real-life scenario] A course registration system -- computing the intersection of a student's selected courses and the required courses.
+Overload set operators to implement intersection, union, difference and other operations.
 
 ```cpp
 #include <iostream>
@@ -1469,7 +1469,7 @@ int main() {
 #include <vector>
 #include <iomanip>
 
-// ====== 前章知识融入 ======
+// ====== Knowledge from earlier chapters ======
 #define SET_DEBUG 0
 #if SET_DEBUG
     #define SET_LOG(msg) std::cout << "[Set] " << msg << std::endl
@@ -1481,12 +1481,12 @@ namespace ds {
 
 class IntSet {
 private:
-    int* elements;          // 动态数组
-    size_t count;           // 当前元素数
-    size_t capacity;        // 当前容量
-    static int setCount;    // 集合总数
+    int* elements;          // dynamic array
+    size_t count;           // current number of elements
+    size_t capacity;        // current capacity
+    static int setCount;    // total number of sets
 
-    // 扩展容量
+    // Grow the capacity
     void expandCapacity() {
         size_t newCap = (capacity == 0) ? 8 : capacity * 2;
         int* newData = new int[newCap];
@@ -1499,7 +1499,7 @@ private:
         SET_LOG("Capacity expanded to " + std::to_string(newCap));
     }
 
-    // 查找元素是否在集合中
+    // Check whether an element is in the set
     bool contains(int val) const {
         for (size_t i = 0; i < count; ++i) {
             if (elements[i] == val) return true;
@@ -1507,7 +1507,7 @@ private:
         return false;
     }
 
-    // 查找元素索引
+    // Find the index of an element
     int findIndex(int val) const {
         for (size_t i = 0; i < count; ++i) {
             if (elements[i] == val) return static_cast<int>(i);
@@ -1515,13 +1515,13 @@ private:
         return -1;
     }
 
-    // 保持数组有序
+    // Keep the array sorted
     void sortElements() {
         std::sort(elements, elements + count);
     }
 
 public:
-    // ====== 构造函数 ======
+    // ====== Constructors ======
     IntSet() : elements(nullptr), count(0), capacity(0) {
         setCount++;
         SET_LOG("Empty set created");
@@ -1530,13 +1530,13 @@ public:
     IntSet(std::initializer_list<int> init)
         : elements(nullptr), count(0), capacity(0) {
         for (int val : init) {
-            this->add(val);  // 使用add方法去重
+            this->add(val);  // use add() to remove duplicates
         }
         setCount++;
         SET_LOG("Set created with " + std::to_string(count) + " elements");
     }
 
-    // 拷贝构造（深拷贝）
+    // Copy constructor (deep copy)
     IntSet(const IntSet& other)
         : count(other.count), capacity(other.capacity) {
         elements = new int[capacity];
@@ -1547,7 +1547,7 @@ public:
         SET_LOG("Set copy constructed");
     }
 
-    // 移动构造
+    // Move constructor
     IntSet(IntSet&& other) noexcept
         : elements(other.elements), count(other.count),
           capacity(other.capacity) {
@@ -1558,16 +1558,16 @@ public:
         SET_LOG("Set move constructed");
     }
 
-    // 析构函数
+    // Destructor
     ~IntSet() {
         delete[] elements;
         setCount--;
         SET_LOG("Set destroyed");
     }
 
-    // ====== 基本操作 ======
+    // ====== Basic operations ======
     bool add(int val) {
-        if (contains(val)) return false;  // 已存在，不重复添加
+        if (contains(val)) return false;  // already present, don't add a duplicate
         if (count >= capacity) {
             expandCapacity();
         }
@@ -1578,13 +1578,13 @@ public:
     bool remove(int val) {
         int idx = findIndex(val);
         if (idx == -1) return false;
-        // 将最后一个元素移到删除位置
+        // Move the last element into the removed slot
         elements[idx] = elements[count - 1];
         count--;
         return true;
     }
 
-    bool contains_check(int val) const {  // 避免与重载的contains混淆
+    bool contains_check(int val) const {  // avoids confusion with the private contains
         return contains(val);
     }
 
@@ -1593,18 +1593,18 @@ public:
 
     void clear() { count = 0; }
 
-    // ====== 运算符重载：集合操作 ======
+    // ====== Operator overloading: set operations ======
 
-    // | 并集
+    // | union
     IntSet operator|(const IntSet& other) const {
-        IntSet result(*this);  // 拷贝this
+        IntSet result(*this);  // copy this
         for (size_t i = 0; i < other.count; ++i) {
-            result.add(other.elements[i]);  // add自动去重
+            result.add(other.elements[i]);  // add removes duplicates automatically
         }
         return result;
     }
 
-    // & 交集
+    // & intersection
     IntSet operator&(const IntSet& other) const {
         IntSet result;
         for (size_t i = 0; i < count; ++i) {
@@ -1615,7 +1615,7 @@ public:
         return result;
     }
 
-    // - 差集 (this - other: 在this中但不在other中的元素)
+    // - difference (this - other: elements in this but not in other)
     IntSet operator-(const IntSet& other) const {
         IntSet result;
         for (size_t i = 0; i < count; ++i) {
@@ -1626,14 +1626,14 @@ public:
         return result;
     }
 
-    // ====== 赋值运算符 ======
+    // ====== Assignment operators ======
     IntSet& operator+=(int val) {
         add(val);
         return *this;
     }
 
     IntSet& operator+=(const IntSet& other) {
-        *this = *this | other;  // 并集赋值
+        *this = *this | other;  // union assignment
         return *this;
     }
 
@@ -1642,7 +1642,7 @@ public:
         return *this;
     }
 
-    // ====== 比较运算符 ======
+    // ====== Comparison operators ======
     bool operator==(const IntSet& other) const {
         if (count != other.count) return false;
         for (size_t i = 0; i < count; ++i) {
@@ -1655,7 +1655,7 @@ public:
         return !(*this == other);
     }
 
-    // 子集判断
+    // Subset test
     bool operator<=(const IntSet& other) const {
         for (size_t i = 0; i < count; ++i) {
             if (!other.contains(elements[i])) return false;
@@ -1663,8 +1663,8 @@ public:
         return true;
     }
 
-    // ====== 下标运算符 ======
-    // 访问第index个元素（仅用于遍历，不保证顺序）
+    // ====== Subscript operator ======
+    // Access the element at position index (for iteration only; order is not guaranteed)
     int& operator[](size_t index) {
         if (index >= count) throw std::out_of_range("Index out of range");
         return elements[index];
@@ -1675,17 +1675,17 @@ public:
         return elements[index];
     }
 
-    // ====== 函数调用运算符 ======
+    // ====== Function call operator ======
     size_t operator()() const {
-        return count;  // 返回元素个数：如 int n = mySet();
+        return count;  // returns the number of elements, e.g. int n = mySet();
     }
 
-    // ====== 类型转换 ======
+    // ====== Type conversion ======
     explicit operator bool() const {
-        return !empty();  // 非空为true
+        return !empty();  // non-empty means true
     }
 
-    // ====== 流输出 ======
+    // ====== Stream output ======
     friend std::ostream& operator<<(std::ostream& os, const IntSet& s) {
         os << "{";
         for (size_t i = 0; i < s.count; ++i) {
@@ -1696,10 +1696,10 @@ public:
         return os;
     }
 
-    // ====== 静态成员 ======
+    // ====== Static member ======
     static int getSetCount() { return setCount; }
 
-    // ====== 获取元素列表（用于外部遍历）======
+    // ====== Get the element list (for external iteration) ======
     std::vector<int> toVector() const {
         std::vector<int> v(elements, elements + count);
         return v;
@@ -1708,7 +1708,7 @@ public:
 
 int IntSet::setCount = 0;
 
-// 全局运算符：元素 + 集合（添加元素）
+// Global operator: element + set (adds the element)
 IntSet operator+(int val, const IntSet& s) {
     IntSet result(s);
     result += val;
@@ -1717,119 +1717,119 @@ IntSet operator+(int val, const IntSet& s) {
 
 }  // namespace ds
 
-// ========== 演示代码：选课系统 ==========
+// ========== Demo code: course registration system ==========
 int main() {
     using namespace ds;
 
-    std::cout << "===== \xF0\x9F\x93\x9A 选课系统——集合运算 =====\n" << std::endl;
+    std::cout << "===== \xF0\x9F\x93\x9A Course Registration -- Set Operations =====\n" << std::endl;
 
-    // 课程用整数ID表示
-    // 必修课程
+    // Courses are represented by integer IDs
+    // Required courses
     IntSet requiredCourses = {101, 102, 201, 202, 301, 302};
-    // 选修课程池
+    // Elective course pool
     IntSet electivePool = {401, 402, 403, 404, 405, 406, 407, 408};
 
-    // 学生选的课程
+    // Courses selected by students
     IntSet aliceSelected = {101, 102, 201, 401, 403, 405};
     IntSet bobSelected = {101, 102, 201, 202, 401, 402};
 
-    std::cout << "必修课程: " << requiredCourses << std::endl;
-    std::cout << "选修课程池: " << electivePool << std::endl;
+    std::cout << "Required courses: " << requiredCourses << std::endl;
+    std::cout << "Elective pool: " << electivePool << std::endl;
 
-    // Alice的课程分析
-    std::cout << "\n--- Alice的选课分析 ---" << std::endl;
-    std::cout << "已选课程: " << aliceSelected << std::endl;
+    // Alice's course analysis
+    std::cout << "\n--- Alice's Course Analysis ---" << std::endl;
+    std::cout << "Selected courses: " << aliceSelected << std::endl;
 
     IntSet aliceRequired = aliceSelected & requiredCourses;
-    std::cout << "已选必修课: " << aliceRequired << std::endl;
+    std::cout << "Required courses taken: " << aliceRequired << std::endl;
 
     IntSet aliceMissingRequired = requiredCourses - aliceSelected;
-    std::cout << "漏选必修课: " << aliceMissingRequired << std::endl;
+    std::cout << "Missing required courses: " << aliceMissingRequired << std::endl;
 
     IntSet aliceElectives = aliceSelected - requiredCourses;
-    std::cout << "选修课程: " << aliceElectives << std::endl;
+    std::cout << "Electives: " << aliceElectives << std::endl;
 
-    // Bob的课程分析
-    std::cout << "\n--- Bob的选课分析 ---" << std::endl;
-    std::cout << "已选课程: " << bobSelected << std::endl;
+    // Bob's course analysis
+    std::cout << "\n--- Bob's Course Analysis ---" << std::endl;
+    std::cout << "Selected courses: " << bobSelected << std::endl;
 
     IntSet bobMissingRequired = requiredCourses - bobSelected;
-    std::cout << "漏选必修课: " << bobMissingRequired << std::endl;
+    std::cout << "Missing required courses: " << bobMissingRequired << std::endl;
 
-    // 两学生共同选的课
+    // Courses both students selected
     IntSet commonCourses = aliceSelected & bobSelected;
-    std::cout << "\nAlice和Bob共同选的课: " << commonCourses << std::endl;
+    std::cout << "\nCourses selected by both Alice and Bob: " << commonCourses << std::endl;
 
-    // 两学生选课的并集（看看总覆盖了哪些课）
+    // Union of both students' courses (see which courses are covered overall)
     IntSet allCoursesByStudents = aliceSelected | bobSelected;
-    std::cout << "两人选的课(并集): " << allCoursesByStudents << std::endl;
+    std::cout << "Courses selected by either (union): " << allCoursesByStudents << std::endl;
 
-    // 必修达成度
-    std::cout << "\n--- 必修达成度 ---" << std::endl;
+    // Required course completion
+    std::cout << "\n--- Required Course Completion ---" << std::endl;
     std::cout << "Alice: " << aliceRequired.size() << "/"
-              << requiredCourses.size() << " 门必修"
-              << (aliceRequired <= requiredCourses ? " (子集关系正确)" : "")
+              << requiredCourses.size() << " required"
+              << (aliceRequired <= requiredCourses ? " (subset relation holds)" : "")
               << std::endl;
     std::cout << "Bob: " << (bobSelected & requiredCourses).size()
-              << "/" << requiredCourses.size() << " 门必修" << std::endl;
+              << "/" << requiredCourses.size() << " required" << std::endl;
 
-    // 添加新课（运算符重载的+=）
-    std::cout << "\n--- Alice补选必修课 ---" << std::endl;
-    aliceSelected += 202;  // 补选必修课202
-    aliceSelected += 301;  // 补选必修课301
-    aliceSelected += 302;  // 补选必修课302
-    std::cout << "补选后: " << aliceSelected << std::endl;
-    std::cout << "必修课补齐: "
-              << (requiredCourses - aliceSelected).size() << " 门未选"
+    // Add new courses (overloaded +=)
+    std::cout << "\n--- Alice Adds Missing Required Courses ---" << std::endl;
+    aliceSelected += 202;  // add required course 202
+    aliceSelected += 301;  // add required course 301
+    aliceSelected += 302;  // add required course 302
+    std::cout << "After adding: " << aliceSelected << std::endl;
+    std::cout << "Required courses remaining: "
+              << (requiredCourses - aliceSelected).size() << " not selected"
               << std::endl;
 
-    // 学生退课
-    std::cout << "\n--- Bob退选选修 ---" << std::endl;
+    // A student drops a course
+    std::cout << "\n--- Bob Drops an Elective ---" << std::endl;
     bobSelected -= 402;
-    std::cout << "退课后: " << bobSelected << std::endl;
+    std::cout << "After dropping: " << bobSelected << std::endl;
 
-    // 使用()获取元素个数
-    std::cout << "\n--- 统计 ---" << std::endl;
-    std::cout << "Alice选课数: " << aliceSelected() << " 门" << std::endl;
-    std::cout << "Bob选课数: " << bobSelected() << " 门" << std::endl;
-    std::cout << "集合总数: " << IntSet::getSetCount() << std::endl;
+    // Use () to get the element count
+    std::cout << "\n--- Statistics ---" << std::endl;
+    std::cout << "Alice's course count: " << aliceSelected() << std::endl;
+    std::cout << "Bob's course count: " << bobSelected() << std::endl;
+    std::cout << "Total number of sets: " << IntSet::getSetCount() << std::endl;
 
-    // 判断集合是否为空
+    // Check whether a set is empty
     IntSet emptySet;
-    std::cout << "\n空集合 bool: " << (emptySet ? "true" : "false") << std::endl;
-    std::cout << "非空集合 bool: " << (aliceSelected ? "true" : "false") << std::endl;
+    std::cout << "\nEmpty set bool: " << (emptySet ? "true" : "false") << std::endl;
+    std::cout << "Non-empty set bool: " << (aliceSelected ? "true" : "false") << std::endl;
 
-    // 下标遍历
-    std::cout << "\nAlice的课程列表:" << std::endl;
+    // Iterate with subscript
+    std::cout << "\nAlice's course list:" << std::endl;
     for (size_t i = 0; i < aliceSelected.size(); ++i) {
-        std::cout << "  课程#" << aliceSelected[i] << std::endl;
+        std::cout << "  Course #" << aliceSelected[i] << std::endl;
     }
 
     return 0;
 }
 ```
 
-知识点融入：
-  - 集合运算符重载（|, &, -）
-  - 赋值运算符（+=, -=）
-  - 下标运算符（[]）
-  - 函数调用运算符（()）
-  - 比较运算符（==, !=, <=）
-  - 类型转换（explicit operator bool）
-  - 友元函数（operator<<）
-  - 全局运算符（int + IntSet）
-  - 动态数组管理（new/delete）
-  - 拷贝构造/移动构造（第4章Rule of Five）
-  - static成员（第4章）
-  - 命名空间 ds
+Concepts covered:
+  - Set operator overloading (|, &, -)
+  - Assignment operators (+=, -=)
+  - Subscript operator ([])
+  - Function call operator (())
+  - Comparison operators (==, !=, <=)
+  - Type conversion (explicit operator bool)
+  - Friend function (operator<<)
+  - Global operator (int + IntSet)
+  - Dynamic array management (new/delete)
+  - Copy/move construction (Chapter 4, Rule of Five)
+  - static members (Chapter 4)
+  - Namespace ds
 
 ================================================================================
 
-案例4：智能指针简化版（SimplePtr类）
+Case 4: A Simplified Smart Pointer (SimplePtr class)
 ------------------------------------
 
-【生活场景】文件句柄自动管理。重载*、->、bool转换运算符，
-实现RAII完整模式。
+[Real-life scenario] Automatic file handle management. Overload the *, -> and bool conversion operators
+to implement the complete RAII pattern.
 
 ```cpp
 #include <iostream>
@@ -1845,20 +1845,20 @@ int main() {
 
 namespace smart {
 
-// ====== 简化版智能指针 ======
+// ====== Simplified smart pointer ======
 template <typename T>
 class SimplePtr {
 private:
-    T* ptr;  // 原始指针
+    T* ptr;  // raw pointer
 
 public:
-    // 构造函数
+    // Constructor
     explicit SimplePtr(T* p = nullptr) : ptr(p) {
         PTR_LOG("SimplePtr created @" + std::to_string(
             reinterpret_cast<uintptr_t>(ptr)));
     }
 
-    // 析构函数——自动释放资源（RAII核心）
+    // Destructor -- releases the resource automatically (the core of RAII)
     ~SimplePtr() {
         if (ptr) {
             PTR_LOG("SimplePtr deleting @" + std::to_string(
@@ -1867,17 +1867,17 @@ public:
         }
     }
 
-    // 禁止拷贝（unique ownership）
+    // Disallow copying (unique ownership)
     SimplePtr(const SimplePtr&) = delete;
     SimplePtr& operator=(const SimplePtr&) = delete;
 
-    // 移动构造——转移所有权
+    // Move constructor -- transfers ownership
     SimplePtr(SimplePtr&& other) noexcept : ptr(other.ptr) {
         other.ptr = nullptr;
         PTR_LOG("SimplePtr moved");
     }
 
-    // 移动赋值
+    // Move assignment
     SimplePtr& operator=(SimplePtr&& other) noexcept {
         if (this != &other) {
             if (ptr) delete ptr;
@@ -1888,9 +1888,9 @@ public:
         return *this;
     }
 
-    // ====== 运算符重载 ======
+    // ====== Operator overloading ======
 
-    // operator* ——解引用
+    // operator* -- dereference
     T& operator*() {
         if (!ptr) throw std::runtime_error("Dereferencing null pointer");
         return *ptr;
@@ -1901,7 +1901,7 @@ public:
         return *ptr;
     }
 
-    // operator-> ——箭头运算符
+    // operator-> -- arrow operator
     T* operator->() {
         if (!ptr) throw std::runtime_error("Access via null pointer");
         return ptr;
@@ -1912,17 +1912,17 @@ public:
         return ptr;
     }
 
-    // operator bool ——判断是否为空（安全的方式）
+    // operator bool -- check whether it is null (the safe way)
     explicit operator bool() const {
         return ptr != nullptr;
     }
 
-    // operator! ——取反
+    // operator! -- negation
     bool operator!() const {
         return ptr == nullptr;
     }
 
-    // ====== 管理方法 ======
+    // ====== Management methods ======
     T* get() const { return ptr; }
 
     T* release() {
@@ -1938,12 +1938,12 @@ public:
         PTR_LOG("SimplePtr reset");
     }
 
-    // ====== 友元 ======
+    // ====== Friends ======
     friend void swap(SimplePtr& a, SimplePtr& b) noexcept {
         std::swap(a.ptr, b.ptr);
     }
 
-    // 友元比较运算符
+    // Friend comparison operators
     friend bool operator==(const SimplePtr& a, std::nullptr_t) {
         return a.ptr == nullptr;
     }
@@ -1961,7 +1961,7 @@ public:
     }
 };
 
-// ====== 模拟文件句柄类 ======
+// ====== Simulated file handle class ======
 class FileHandle {
 private:
     std::string filename;
@@ -1986,7 +1986,7 @@ public:
             throw std::runtime_error("File is not open");
         }
         content += data;
-        std::cout << "写入文件 " << filename << ": " << data << std::endl;
+        std::cout << "Writing to file " << filename << ": " << data << std::endl;
     }
 
     std::string read() const {
@@ -1995,7 +1995,7 @@ public:
 
     void close() {
         isOpen = false;
-        std::cout << "关闭文件 " << filename << std::endl;
+        std::cout << "Closing file " << filename << std::endl;
     }
 
     bool openCheck() const { return isOpen; }
@@ -2003,7 +2003,7 @@ public:
     size_t getSize() const { return content.size(); }
 };
 
-// ====== 模拟数据库连接类 ======
+// ====== Simulated database connection class ======
 class DatabaseConnection {
 private:
     std::string connectionString;
@@ -2020,13 +2020,13 @@ public:
     }
 
     void query(const std::string& sql) {
-        std::cout << "执行SQL [" << connectionString << "]: "
+        std::cout << "Executing SQL [" << connectionString << "]: "
                   << sql << std::endl;
     }
 
     void disconnect() {
         connected = false;
-        std::cout << "断开数据库: " << connectionString << std::endl;
+        std::cout << "Disconnecting database: " << connectionString << std::endl;
     }
 
     bool isConnected() const { return connected; }
@@ -2034,102 +2034,102 @@ public:
 
 }  // namespace smart
 
-// ========== 演示代码 ==========
+// ========== Demo code ==========
 int main() {
     using namespace smart;
 
-    std::cout << "===== \xF0\x9F\x92\xBE 智能指针——文件/数据库句柄管理 =====\n"
+    std::cout << "===== \xF0\x9F\x92\xBE Smart Pointers -- File/Database Handle Management =====\n"
               << std::endl;
 
-    // 1. 基本使用
+    // 1. Basic usage
     {
-        std::cout << "--- 1. 基本智能指针 ---" << std::endl;
+        std::cout << "--- 1. Basic Smart Pointer ---" << std::endl;
         SimplePtr<int> p1(new int(42));
         std::cout << "*p1 = " << *p1 << std::endl;
         *p1 = 100;
-        std::cout << "修改后 *p1 = " << *p1 << std::endl;
+        std::cout << "After modification *p1 = " << *p1 << std::endl;
 
-        // 检查非空
+        // Check for non-null
         if (p1) {
-            std::cout << "p1 非空" << std::endl;
+            std::cout << "p1 is not null" << std::endl;
         }
-    }  // p1离开作用域，自动delete
+    }  // p1 goes out of scope and is deleted automatically
 
     std::cout << std::endl;
 
-    // 2. 文件句柄管理
+    // 2. File handle management
     {
-        std::cout << "--- 2. 文件句柄RAII管理 ---" << std::endl;
+        std::cout << "--- 2. RAII File Handle Management ---" << std::endl;
         SimplePtr<FileHandle> file(new FileHandle("document.txt"));
 
-        // 使用operator->操作文件
+        // Operate on the file via operator->
         file->write("Hello, World!\n");
         file->write("This is a test file.\n");
 
-        std::cout << "文件大小: " << file->getSize() << " bytes" << std::endl;
-        std::cout << "文件内容: " << file->read();
+        std::cout << "File size: " << file->getSize() << " bytes" << std::endl;
+        std::cout << "File content: " << file->read();
 
-        // 使用operator*（不常用）
-        (*file).write("追加一行\n");
+        // Using operator* (less common)
+        (*file).write("Appending a line\n");
 
-        // 单条件判断
+        // Simple condition check
         if (file) {
-            std::cout << "\n文件句柄有效，开始关闭..." << std::endl;
+            std::cout << "\nFile handle is valid, closing..." << std::endl;
         }
 
-        // 手动关闭（可选，析构时也会关闭）
+        // Close manually (optional; the destructor closes it too)
         file->close();
 
-    }  // file离开作用域，自动delete FileHandle → 自动调用~FileHandle()
+    }  // file goes out of scope, FileHandle is deleted automatically -> ~FileHandle() is called automatically
 
     std::cout << std::endl;
 
-    // 3. 移动语义
+    // 3. Move semantics
     {
-        std::cout << "--- 3. 移动转移所有权 ---" << std::endl;
+        std::cout << "--- 3. Transferring Ownership by Move ---" << std::endl;
 
         SimplePtr<FileHandle> file1(new FileHandle("temp.log"));
         file1->write("Log entry 1\n");
 
-        // 转移到file2（file1变为空）
+        // Transfer to file2 (file1 becomes null)
         SimplePtr<FileHandle> file2(std::move(file1));
 
-        std::cout << "file1 是否为空: " << (!file1 ? "是" : "否") << std::endl;
-        std::cout << "file2 是否为空: " << (file2 ? "否" : "是") << std::endl;
+        std::cout << "file1 is null: " << (!file1 ? "yes" : "no") << std::endl;
+        std::cout << "file2 is null: " << (file2 ? "no" : "yes") << std::endl;
 
         if (file2) {
             file2->write("Log entry 2 (via file2)\n");
         }
 
-        // file1现在为空，操作它会抛异常
-        // *file1;  // 错误！
+        // file1 is now null; using it would throw an exception
+        // *file1;  // Error!
 
-    }  // file2离开作用域，自动delete FileHandle
+    }  // file2 goes out of scope, FileHandle is deleted automatically
 
     std::cout << std::endl;
 
-    // 4. 数据库连接管理
+    // 4. Database connection management
     {
-        std::cout << "--- 4. 数据库连接RAII管理 ---" << std::endl;
+        std::cout << "--- 4. RAII Database Connection Management ---" << std::endl;
 
         SimplePtr<DatabaseConnection> db(
             new DatabaseConnection("mysql://localhost:3306/mydb"));
 
-        // 使用->操作数据库
+        // Operate on the database via ->
         db->query("SELECT * FROM users");
         db->query("UPDATE users SET active = 1");
 
-        // reset替换资源
+        // reset replaces the resource
         db.reset(new DatabaseConnection("postgres://localhost:5432/otherdb"));
         db->query("SELECT version()");
 
-    }  // db离开作用域，自动断开连接并释放
+    }  // db goes out of scope, automatically disconnects and is released
 
     std::cout << std::endl;
 
-    // 5. 与nullptr比较
+    // 5. Comparison with nullptr
     {
-        std::cout << "--- 5. nullptr比较运算符 ---" << std::endl;
+        std::cout << "--- 5. nullptr Comparison Operators ---" << std::endl;
 
         SimplePtr<int> nullPtr(nullptr);
         SimplePtr<int> validPtr(new int(42));
@@ -2138,35 +2138,35 @@ int main() {
         if (nullptr == nullPtr) std::cout << "nullptr == nullPtr" << std::endl;
         if (validPtr != nullptr) std::cout << "validPtr != nullptr" << std::endl;
 
-        // operator! 
+        // operator!
         if (!nullPtr) std::cout << "!nullPtr is true" << std::endl;
         if (!!validPtr) std::cout << "!!validPtr is true" << std::endl;
 
-    }  // validPtr离开作用域，自动delete
+    }  // validPtr goes out of scope and is deleted automatically
 
-    std::cout << "\n===== 演示完成 =====" << std::endl;
+    std::cout << "\n===== Demo Complete =====" << std::endl;
     return 0;
 }
 ```
 
-知识点融入：
-  - operator*（解引用）
-  - operator->（箭头运算符）
-  - operator bool（安全类型转换判断）
-  - operator!（取反）
-  - 友元 swap
-  - 友元比较运算（与nullptr比较）
-  - 移动语义（第4章）
-  - RAII模式
-  - 模板（第8章铺垫）
-  - 命名空间 smart
+Concepts covered:
+  - operator* (dereference)
+  - operator-> (arrow operator)
+  - operator bool (safe conversion for condition checks)
+  - operator! (negation)
+  - Friend swap
+  - Friend comparison operators (comparison with nullptr)
+  - Move semantics (Chapter 4)
+  - The RAII pattern
+  - Templates (groundwork for Chapter 8)
+  - Namespace smart
 
 ================================================================================
 
-案例5：自定义字符串类完整版（String类）
+Case 5: A Complete Custom String Class (String class)
 ------------------------------------
 
-【生活场景】文本搜索引擎的索引构建。全面重载运算符的String类。
+[Real-life scenario] Building the index of a text search engine. A String class with comprehensive operator overloading.
 
 ```cpp
 #include <iostream>
@@ -2175,7 +2175,7 @@ int main() {
 #include <algorithm>
 #include <iomanip>
 
-// ====== 前7章知识全面融入 ======
+// ====== Bringing together everything from the first 7 chapters ======
 #define STR_DEBUG 0
 #if STR_DEBUG
     #define STR_LOG(msg) std::cout << "[String] " << msg << std::endl
@@ -2185,11 +2185,11 @@ int main() {
 
 namespace text {
 
-// ====== 前向声明 ======
+// ====== Forward declarations ======
 class String;
 class StringIterator;
 
-// ====== String类 ======
+// ====== String class ======
 class String {
 private:
     char* data;
@@ -2219,7 +2219,7 @@ private:
     }
 
 public:
-    // ====== 构造函数 ======
+    // ====== Constructors ======
     String() : data(nullptr), length(0), capacity(0) {
         STR_LOG("Default constructed");
     }
@@ -2233,7 +2233,7 @@ public:
         STR_LOG("Constructed from C-string");
     }
 
-    // 拷贝构造（深拷贝）
+    // Copy constructor (deep copy)
     String(const String& other) {
         length = other.length;
         capacity = other.capacity;
@@ -2247,7 +2247,7 @@ public:
         STR_LOG("Copy constructed");
     }
 
-    // 移动构造
+    // Move constructor
     String(String&& other) noexcept
         : data(other.data), length(other.length), capacity(other.capacity) {
         other.data = nullptr;
@@ -2256,14 +2256,14 @@ public:
         STR_LOG("Move constructed");
     }
 
-    // 析构函数
+    // Destructor
     ~String() {
         delete[] data;
         totalAllocated -= capacity;
         STR_LOG("Destructed");
     }
 
-    // ====== 拷贝赋值 ======
+    // ====== Copy assignment ======
     String& operator=(const String& other) {
         if (this != &other) {
             delete[] data;
@@ -2282,7 +2282,7 @@ public:
         return *this;
     }
 
-    // ====== 移动赋值 ======
+    // ====== Move assignment ======
     String& operator=(String&& other) noexcept {
         if (this != &other) {
             delete[] data;
@@ -2299,9 +2299,9 @@ public:
         return *this;
     }
 
-    // ====== 拼接运算符 ======
+    // ====== Concatenation operators ======
 
-    // operator+ 拼接两个字符串
+    // operator+ concatenates two strings
     String operator+(const String& other) const {
         String result;
         result.length = length + other.length;
@@ -2316,17 +2316,17 @@ public:
         return result;
     }
 
-    // operator+ 拼接C字符串
+    // operator+ concatenates a C string
     String operator+(const char* str) const {
         return *this + String(str);
     }
 
-    // C字符串 + String（全局函数或友元）
+    // C string + String (global or friend function)
     friend String operator+(const char* str, const String& s) {
         return String(str) + s;
     }
 
-    // ====== 追加赋值运算符 ======
+    // ====== Append-assignment operators ======
     String& operator+=(const String& other) {
         size_t newLength = length + other.length;
         ensureCapacity(newLength);
@@ -2349,7 +2349,7 @@ public:
         return *this += String(str);
     }
 
-    // ====== 下标运算符 ======
+    // ====== Subscript operator ======
     char& operator[](size_t index) {
         if (index >= length) throw std::out_of_range("Index out of range");
         return data[index];
@@ -2360,7 +2360,7 @@ public:
         return data[index];
     }
 
-    // ====== 比较运算符 ======
+    // ====== Comparison operators ======
     bool operator==(const String& other) const {
         if (length != other.length) return false;
         if (!data && !other.data) return true;
@@ -2380,7 +2380,7 @@ public:
     bool operator<=(const String& other) const { return !(other < *this); }
     bool operator>=(const String& other) const { return !(*this < other); }
 
-    // ====== 函数调用运算符：取子串 ======
+    // ====== Function call operator: substring ======
     String operator()(size_t pos, size_t count) const {
         if (pos >= length) return String();
         if (count > length - pos) count = length - pos;
@@ -2393,13 +2393,13 @@ public:
         return result;
     }
 
-    // 函数调用运算符：获取单个字符（与[]不同的语义——更安全可取默认值）
+    // Function call operator: get a single character (different semantics from [] -- safer, with a default value)
     char operator()(size_t index, char defaultVal) const {
         if (index >= length) return defaultVal;
         return data[index];
     }
 
-    // ====== 类型转换运算符 ======
+    // ====== Type conversion operators ======
     operator const char*() const {
         return data ? data : "";
     }
@@ -2408,13 +2408,13 @@ public:
         return length > 0;
     }
 
-    // ====== 访问器 ======
+    // ====== Accessors ======
     size_t size() const { return length; }
     size_t getCapacity() const { return capacity; }
     bool empty() const { return length == 0; }
     const char* c_str() const { return data ? data : ""; }
 
-    // ====== 流运算符 ======
+    // ====== Stream operators ======
     friend std::ostream& operator<<(std::ostream& os, const String& s) {
         if (s.data) os << s.data;
         return os;
@@ -2427,10 +2427,10 @@ public:
         return is;
     }
 
-    // ====== 静态成员 ======
+    // ====== Static member ======
     static size_t getTotalAllocated() { return totalAllocated; }
 
-    // ====== 查找 ======
+    // ====== Searching ======
     int find(const String& substr) const {
         if (!data || !substr.data || substr.length == 0) return -1;
         const char* pos = std::strstr(data, substr.data);
@@ -2441,13 +2441,13 @@ public:
         return find(substr) != -1;
     }
 
-    // ====== 友元类——迭代器 ======
+    // ====== Friend class -- iterator ======
     friend class StringIterator;
 };
 
 size_t String::totalAllocated = 0;
 
-// ====== 字符串迭代器（友元类演示）======
+// ====== String iterator (friend class demo) ======
 class StringIterator {
 private:
     const String& str;
@@ -2461,12 +2461,12 @@ public:
 
     char next() {
         if (!hasNext()) throw std::out_of_range("No more characters");
-        return str.data[index++];  // 直接访问String的私有成员
+        return str.data[index++];  // directly accesses String's private member
     }
 
     char peek() const {
         if (!hasNext()) throw std::out_of_range("No more characters");
-        return str.data[index];  // 直接访问私有成员
+        return str.data[index];  // directly accesses the private member
     }
 
     void reset() { index = 0; }
@@ -2475,50 +2475,50 @@ public:
 
 }  // namespace text
 
-// ========== 演示代码 ==========
+// ========== Demo code ==========
 int main() {
     using namespace text;
 
-    std::cout << "===== \xF0\x9F\x93\x9D 文本搜索引擎索引构建 =====\n" << std::endl;
+    std::cout << "===== \xF0\x9F\x93\x9D Text Search Engine Index Building =====\n" << std::endl;
 
-    // 1. 字符串创建和输出
-    String title("深入理解C++编程");
-    String author("张三");
+    // 1. Creating and printing strings
+    String title("Understanding C++ Programming in Depth");
+    String author("Zhang San");
     String emptyStr;
 
-    std::cout << "书名: " << title << std::endl;
-    std::cout << "作者: " << author << std::endl;
-    std::cout << "空字符串bool: " << (emptyStr ? "true" : "false") << std::endl;
-    std::cout << "书名bool: " << (title ? "true" : "false") << std::endl;
+    std::cout << "Title: " << title << std::endl;
+    std::cout << "Author: " << author << std::endl;
+    std::cout << "Empty string bool: " << (emptyStr ? "true" : "false") << std::endl;
+    std::cout << "Title bool: " << (title ? "true" : "false") << std::endl;
 
-    // 2. 拼接运算
-    std::cout << "\n--- 拼接运算 ---" << std::endl;
-    String fullRef = author + " 著《" + title + "》";
-    std::cout << "完整引用: " << fullRef << std::endl;
+    // 2. Concatenation
+    std::cout << "\n--- Concatenation ---" << std::endl;
+    String fullRef = author + ", \"" + title + "\"";
+    std::cout << "Full citation: " << fullRef << std::endl;
 
-    // 3. 追加运算
-    std::cout << "\n--- 追加运算 ---" << std::endl;
-    String description("本书详细讲解了");
-    description += "C++的面向对象编程";
-    description += "、";
-    description += "模板编程和标准库。";
-    std::cout << "描述: " << description << std::endl;
+    // 3. Appending
+    std::cout << "\n--- Appending ---" << std::endl;
+    String description("This book explains in detail ");
+    description += "object-oriented programming in C++";
+    description += ", ";
+    description += "template programming and the standard library.";
+    std::cout << "Description: " << description << std::endl;
 
-    // 4. 添加单个字符
+    // 4. Appending single characters
     String tag;
     tag += 'C'; tag += '+'; tag += '+';
-    std::cout << "标签: " << tag << std::endl;
+    std::cout << "Tag: " << tag << std::endl;
 
-    // 5. 下标访问
-    std::cout << "\n--- 下标访问 ---" << std::endl;
-    std::cout << "书名逐字打印: ";
+    // 5. Subscript access
+    std::cout << "\n--- Subscript Access ---" << std::endl;
+    std::cout << "Title printed character by character: ";
     for (size_t i = 0; i < title.size(); ++i) {
         std::cout << title[i] << " ";
     }
     std::cout << std::endl;
 
-    // 6. 比较运算
-    std::cout << "\n--- 比较运算 ---" << std::endl;
+    // 6. Comparison
+    std::cout << "\n--- Comparison ---" << std::endl;
     String str1("Apple");
     String str2("Banana");
     String str3("Apple");
@@ -2530,40 +2530,40 @@ int main() {
               << (str1 < str2 ? "true" : "false") << std::endl;
     std::cout << "\"" << str1 << "\" < \"" << str4 << "\": "
               << (str1 < str4 ? "true" : "false")
-              << " (ASCII大写字母小于小写)" << std::endl;
+              << " (in ASCII, uppercase letters sort before lowercase)" << std::endl;
 
-    // 7. 子串提取（函数调用运算符）
-    std::cout << "\n--- 子串提取 ---" << std::endl;
+    // 7. Substring extraction (function call operator)
+    std::cout << "\n--- Substring Extraction ---" << std::endl;
     String text("The quick brown fox jumps over the lazy dog");
-    std::cout << "全文: " << text << std::endl;
+    std::cout << "Full text: " << text << std::endl;
     std::cout << "text(4, 5) = " << text(4, 5) << std::endl;   // "quick"
     std::cout << "text(10, 5) = " << text(10, 5) << std::endl; // "brown"
     std::cout << "text(16, 3) = " << text(16, 3) << std::endl; // "fox"
     std::cout << "text(35, 4) = " << text(35, 4) << std::endl; // "lazy"
 
-    // 安全取字符（带默认值）
+    // Safe character access (with a default value)
     std::cout << "text(100, '?') = " << text(100, '?') << std::endl;
 
-    // 8. 查找功能
-    std::cout << "\n--- 查找 ---" << std::endl;
+    // 8. Searching
+    std::cout << "\n--- Search ---" << std::endl;
     String searchWords[] = { "fox", "lazy", "cat", "dog" };
     for (const auto& word : searchWords) {
         int pos = text.find(word);
         if (pos >= 0) {
-            std::cout << "找到了 \"" << word << "\" 在位置 " << pos << std::endl;
+            std::cout << "Found \"" << word << "\" at position " << pos << std::endl;
         } else {
-            std::cout << "未找到 \"" << word << "\"" << std::endl;
+            std::cout << "Not found: \"" << word << "\"" << std::endl;
         }
     }
 
-    // 9. 类型转换到const char*
-    std::cout << "\n--- 类型转换 ---" << std::endl;
+    // 9. Conversion to const char*
+    std::cout << "\n--- Type Conversion ---" << std::endl;
     const char* cstr = title;  // operator const char*()
-    std::cout << "C字符串长度: " << std::strlen(cstr) << std::endl;
+    std::cout << "C string length: " << std::strlen(cstr) << std::endl;
 
-    // 10. 全文搜索模拟
-    std::cout << "\n--- 全文搜索模拟 ---" << std::endl;
-    String corpus("C++是面向对象编程语言 C++支持继承和多态 C++有运算符重载");
+    // 10. Simulated full-text search
+    std::cout << "\n--- Simulated Full-Text Search ---" << std::endl;
+    String corpus("C++ is an object-oriented language. C++ supports inheritance and polymorphism. C++ has operator overloading.");
     String keyword("C++");
 
     int searchPos = 0;
@@ -2575,140 +2575,140 @@ int main() {
         searchPos += found + keyword.size();
         occurrence++;
     }
-    std::cout << "\"" << keyword << "\" 出现次数: " << occurrence << std::endl;
-    std::cout << "搜索文档长度: " << corpus.size() << " 字符" << std::endl;
+    std::cout << "\"" << keyword << "\" occurrences: " << occurrence << std::endl;
+    std::cout << "Searched document length: " << corpus.size() << " characters" << std::endl;
 
-    // 11. 迭代器演示（友元类）
-    std::cout << "\n--- 迭代器遍历 ---" << std::endl;
+    // 11. Iterator demo (friend class)
+    std::cout << "\n--- Iterator Traversal ---" << std::endl;
     StringIterator it(title);
-    std::cout << "逐字符迭代: ";
+    std::cout << "Character-by-character iteration: ";
     while (it.hasNext()) {
         std::cout << it.next() << " ";
     }
     std::cout << std::endl;
 
-    // 12. 内存统计
-    std::cout << "\n--- 内存统计 ---" << std::endl;
-    std::cout << "总分配容量: " << String::getTotalAllocated() << " bytes"
+    // 12. Memory statistics
+    std::cout << "\n--- Memory Statistics ---" << std::endl;
+    std::cout << "Total allocated capacity: " << String::getTotalAllocated() << " bytes"
               << std::endl;
-    std::cout << "title容量: " << title.getCapacity() << std::endl;
-    std::cout << "description容量: " << description.getCapacity() << std::endl;
+    std::cout << "title capacity: " << title.getCapacity() << std::endl;
+    std::cout << "description capacity: " << description.getCapacity() << std::endl;
 
     return 0;
 }
 ```
 
-知识点全面融入（前7章）：
-  - Rule of Five（第4章）
-  - operator+ 拼接（成员 + 友元全局）
-  - operator+= 追加
-  - operator[] 下标
-  - operator==, !=, <, >, <=, >= 比较
-  - operator() 函数调用（子串提取）
-  - operator const char*() 类型转换
+Concepts covered (everything from the first 7 chapters):
+  - Rule of Five (Chapter 4)
+  - operator+ concatenation (member + friend global)
+  - operator+= appending
+  - operator[] subscript
+  - operator==, !=, <, >, <=, >= comparison
+  - operator() function call (substring extraction)
+  - operator const char*() type conversion
   - explicit operator bool()
-  - 友元函数（operator<<, operator>>）
-  - 友元全局函数（operator+ char*）
-  - 友元类（StringIterator可访问私有成员）
-  - 动态内存管理（第4章）
-  - static成员（第4章）
-  - 命名空间 text（第3章）
-  - 调试宏（第2章）
+  - Friend functions (operator<<, operator>>)
+  - Friend global function (operator+ with char*)
+  - Friend class (StringIterator can access private members)
+  - Dynamic memory management (Chapter 4)
+  - static members (Chapter 4)
+  - Namespace text (Chapter 3)
+  - Debug macros (Chapter 2)
 
 ================================================================================
 
-                            === 第四节：课后习题 ===
+                            === Section 4: Exercises ===
 ================================================================================
 
-习题：设计一个"时间处理类" TimeSpan
+Exercise: Design a "time span" class, TimeSpan
 ======================================================
 
-【生活场景】
-一个视频播放器需要处理视频片段的时长。TimeSpan类表示一段时间长度
-（时:分:秒），需要支持时间的加减、比较、流输入输出等操作。
+[Real-life scenario]
+A video player needs to handle the durations of video clips. The TimeSpan class represents a length of time
+(hours:minutes:seconds) and must support adding and subtracting times, comparisons, stream input/output and more.
 
-【要求】
+[Requirements]
 
-1. 类名：TimeSpan
-   私有成员：hours, minutes, seconds（均为int）
-   - 内部存储规范化：seconds范围[0,59], minutes范围[0,59], hours可为任意值
-   - 构造函数自动规范化输入（如75秒 → 1分15秒）
+1. Class name: TimeSpan
+   Private members: hours, minutes, seconds (all int)
+   - Normalized internal storage: seconds in [0,59], minutes in [0,59], hours can be any value
+   - The constructor normalizes its input automatically (e.g. 75 seconds -> 1 minute 15 seconds)
 
-2. 重载运算符（必须实现）：
+2. Overloaded operators (must be implemented):
 
-   (a) 算术运算符：
-       operator+  (const TimeSpan&) const:    时间相加
-       operator-  (const TimeSpan&) const:    时间相减（结果不可为负则设为0）
-       operator+= (const TimeSpan&):          累加
-       operator-= (const TimeSpan&):          累减
+   (a) Arithmetic operators:
+       operator+  (const TimeSpan&) const:    add times
+       operator-  (const TimeSpan&) const:    subtract times (the result cannot be negative; clamp to 0)
+       operator+= (const TimeSpan&):          accumulate
+       operator-= (const TimeSpan&):          decrement by a time span
 
-   (b) 自增自减运算符：
-       operator++():       前置++（增加1秒）
-       operator++(int):    后置++（增加1秒，返回旧值）
-       operator--():       前置--（减少1秒）
-       operator--(int):    后置--（减少1秒，返回旧值）
+   (b) Increment/decrement operators:
+       operator++():       prefix ++ (add 1 second)
+       operator++(int):    postfix ++ (add 1 second, return the old value)
+       operator--():       prefix -- (subtract 1 second)
+       operator--(int):    postfix -- (subtract 1 second, return the old value)
 
-   (c) 比较运算符：
+   (c) Comparison operators:
        operator==, !=, <, >, <=, >=
 
-   (d) 流运算符：
+   (d) Stream operators:
        operator<<  (friend std::ostream&, const TimeSpan&):
-           输出格式 "HH:MM:SS"（如 "02:15:30"）
+           output format "HH:MM:SS" (e.g. "02:15:30")
        operator>>  (friend std::istream&, TimeSpan&):
-           从流中输入（格式：时 分 秒）
+           input from a stream (format: hours minutes seconds)
 
-   (e) 类型转换：
-       explicit operator int() const: 转换为总秒数
+   (e) Type conversion:
+       explicit operator int() const: converts to the total number of seconds
 
-3. 辅助函数：
-   - void normalize(): 规范化内部表示
-   - int totalSeconds() const: 返回总秒数
-   - void display() const: 友好显示
+3. Helper functions:
+   - void normalize(): normalizes the internal representation
+   - int totalSeconds() const: returns the total number of seconds
+   - void display() const: user-friendly display
 
-4. 友元函数：
-   - operator<< 和 operator>> 必须使用友元
-   - 再添加一个友元函数 operator*(int scalar, const TimeSpan& ts)
-     用于时间乘以整数倍（如 2 * TimeSpan(1,30,0) = 3小时）
+4. Friend functions:
+   - operator<< and operator>> must be friends
+   - Also add a friend function operator*(int scalar, const TimeSpan& ts)
+     for multiplying a time span by an integer (e.g. 2 * TimeSpan(1,30,0) = 3 hours)
 
-5. 在main()中:
-   - 创建多个TimeSpan对象
-   - 演示所有重载运算符的用法
-   - 模拟视频播放器的场景：
-     * 一个视频总时长为1小时30分
-     * 已经播放了45分20秒
-     * 计算剩余时间
-     * 快进30秒、后退10秒
+5. In main():
+   - Create several TimeSpan objects
+   - Demonstrate the use of every overloaded operator
+   - Simulate a video player scenario:
+     * A video has a total length of 1 hour 30 minutes
+     * 45 minutes 20 seconds have already been played
+     * Compute the remaining time
+     * Fast-forward 30 seconds, rewind 10 seconds
 
-【提示】
-- normalize()应该在每次可能改变时间的操作后调用
-- 时间规范化：totalSeconds → hours = ts/3600, mins = (ts%3600)/60, secs = ts%60
-- 前置自增返回引用，后置自增返回值（不是引用！）
-- 所有运算符重载中注意const正确性
+[Hints]
+- normalize() should be called after every operation that may change the time
+- Time normalization: totalSeconds -> hours = ts/3600, mins = (ts%3600)/60, secs = ts%60
+- Prefix increment returns a reference; postfix increment returns a value (not a reference!)
+- Pay attention to const correctness in all operator overloads
 
-【预期输出示例】
-===== 视频播放器时间管理 =====
-视频总时长: 01:30:00 (5400秒)
-已播放: 00:45:20 (2720秒)
-剩余: 00:44:40 (2680秒)
+[Sample expected output]
+===== Video Player Time Management =====
+Total video length: 01:30:00 (5400 seconds)
+Played: 00:45:20 (2720 seconds)
+Remaining: 00:44:40 (2680 seconds)
 
-快进30秒 → 已播放: 00:45:50
-后退10秒 → 已播放: 00:45:40
+Fast-forward 30 seconds -> Played: 00:45:50
+Rewind 10 seconds -> Played: 00:45:40
 
-剩余时间少于30分钟? yes
-加倍播放速度 → 预计剩余: 00:22:20
+Less than 30 minutes remaining? yes
+Double playback speed -> Estimated remaining: 00:22:20
 
-【评分要点】
-- 算术运算符正确实现 (+, -, +=, -=) (+2分)
-- 自增自减正确区分前置/后置 (+2分)
-- 比较运算符完整和正确 (+1分)
-- 流运算符友元实现正确 (+1分)
-- 类型转换explicit正确 (+1分)
-- normalize规范化逻辑正确 (+1分)
-- friend函数 (operator* scalar) (+1分)
-- 代码风格和注释 (+1分)
-- main函数完整且场景模拟合理 (+2分)
-总分：12分
+[Grading criteria]
+- Arithmetic operators implemented correctly (+, -, +=, -=) (+2 points)
+- Increment/decrement correctly distinguish prefix/postfix (+2 points)
+- Comparison operators complete and correct (+1 point)
+- Stream operators correctly implemented as friends (+1 point)
+- explicit type conversion correct (+1 point)
+- normalize logic correct (+1 point)
+- friend function (operator* scalar) (+1 point)
+- Code style and comments (+1 point)
+- main function complete with a reasonable scenario simulation (+2 points)
+Total: 12 points
 
 ================================================================================
-               第七章完 —— 恭喜你完成了C++面向对象编程的全部学习！
+               End of Chapter 7 -- Congratulations on completing C++ object-oriented programming!
 ================================================================================

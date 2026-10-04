@@ -8,7 +8,7 @@ public:
         unordered_map<int, uint64_t> hash;
         for (int i = 0; i < n; i++) {
             int x = nums[i];
-            // 把 nums[i] 映射成一个随机的 uint64_t
+            // map nums[i] to a random uint64_t
             if (!hash.contains(x)) {
                 hash[x] = rng();
             }
@@ -24,7 +24,7 @@ public:
                 while (cnt.size() >= k) {
                     auto it = cnt.find(nums[l]);
                     if (--it->second == 0) {
-                        cnt.erase(it); // 保证 cnt.size() 是窗口内的不同元素个数
+                        cnt.erase(it); // ensures cnt.size() is the number of distinct elements in the window
                     }
                     l++;
                 }

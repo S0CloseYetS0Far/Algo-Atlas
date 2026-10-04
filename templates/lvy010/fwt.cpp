@@ -1,6 +1,6 @@
 /*
 3514
-先正变换做三次方卷积再逆变换
+Apply the forward transform, do the cubic convolution, then apply the inverse transform
 */
 #include <vector>
 #include <algorithm>
@@ -39,7 +39,7 @@ public:
         while ((1LL << bit_len) <= max_val) bit_len++;
         int size = 1 << bit_len;
 
-        // 计数数组换成long long
+        // use long long for the count array
         vector<long long> cnt(size, 0);
         for (int x : nums) {
             cnt[x]++;

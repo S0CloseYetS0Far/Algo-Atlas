@@ -2,7 +2,7 @@
 class Node {
 public:
     array<Node*, 2> children{};
-    int cnt = 0; // 子树大小
+    int cnt = 0; // subtree size
 };
 
 class Trie {
@@ -19,28 +19,28 @@ public:
                 cur->children[bit] = new Node();
             }
             cur = cur->children[bit];
-            cur->cnt++; // 维护子树大小
+            cur->cnt++; // maintain the subtree size
         }
     }
 
-    // delete val，但不删除节点
-    // 要求 val 必须在 trie 中
+    // delete val, but don't delete nodes
+    // val must be in the trie
     void remove(int val) {
         Node *cur = root;
         for (int i = HIGH_BIT; i >= 0; i--) {
             cur = cur->children[(val >> i) & 1];
-            cur->cnt--; // 维护子树大小
+            cur->cnt--; // maintain the subtree size
         }
     }
 
-    // 返回 val 与 trie 中一个元素的最大异或和
-    // 要求 trie 不能为空
+    // return the maximum XOR of val with an element in the trie
+    // the trie must not be empty
     int max_xor(int val) {
         Node *cur = root;
         int ans = 0;
         for (int i = HIGH_BIT; i >= 0; i--) {
             int bit = (val >> i) & 1;
-            // 如果 cur.children[bit^1].cnt == 0，视作空节点
+            // if cur.children[bit^1].cnt == 0, treat it as an empty node
             if (cur->children[bit ^ 1] && cur->children[bit ^ 1]->cnt) {
                 ans |= 1 << i;
                 bit ^= 1;

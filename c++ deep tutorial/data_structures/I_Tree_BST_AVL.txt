@@ -1,38 +1,39 @@
 ================================================================================
-C++ 算法结构教程 — 树 (Tree) — 二叉搜索树与AVL树
+C++ Algorithms and Data Structures Tutorial — Trees — Binary Search Trees and AVL Trees
 ================================================================================
 
-## 章节概述
+## Chapter Overview
 
-树（Tree）是一种非线性的层次结构，由节点和连接节点的边组成。树结构在计算机
-科学中无处不在：文件系统、HTML DOM树、编译器语法树、数据库索引、网络路由等。
+A Tree is a non-linear hierarchical structure made up of nodes and the edges that
+connect them. Tree structures are everywhere in computer science: file systems, the
+HTML DOM tree, compiler syntax trees, database indexes, network routing, and more.
 
-本章重点讲解二叉搜索树（BST）和自平衡二叉搜索树AVL树，理解从普通树到平衡树的
-演进思路，以及旋转操作如何维持树的平衡。
+This chapter focuses on the binary search tree (BST) and the self-balancing AVL tree,
+explaining how we evolve from an ordinary tree to a balanced one, and how rotations keep a tree balanced.
 
 ================================================================================
-### 第一节: 基础语法 + 计算机底层原理
+### Section 1: Basic Syntax + Low-Level Computer Principles
 ================================================================================
 
-1.1 树的基本概念
+1.1 Basic Concepts of Trees
 --------------------
 
-树的术语：
-- 根节点（Root）：树的顶端节点，没有父节点
-- 叶子节点（Leaf）：没有子节点的节点
-- 父节点（Parent）和子节点（Child）
-- 兄弟节点（Sibling）：同一父节点的子节点
-- 子树（Subtree）：树中任意节点及其所有后代
-- 深度（Depth）：从根节点到某节点的路径长度
-- 高度（Height）：从某节点到最远叶子节点的路径长度
+Tree terminology:
+- Root: the topmost node of the tree, which has no parent
+- Leaf: a node with no children
+- Parent and Child
+- Sibling: children of the same parent
+- Subtree: any node in the tree together with all of its descendants
+- Depth: the length of the path from the root to a node
+- Height: the length of the path from a node to its farthest leaf
 
-二叉树（Binary Tree）：每个节点最多有两个子节点（左子节点和右子节点）。
+Binary Tree: every node has at most two children (a left child and a right child).
 
-二叉树的遍历方式：
-- 前序遍历（Pre-order）：根 → 左 → 右
-- 中序遍历（In-order）：左 → 根 → 右
-- 后序遍历（Post-order）：左 → 右 → 根
-- 层序遍历（Level-order）：从上到下，从左到右
+Ways to traverse a binary tree:
+- Pre-order: root → left → right
+- In-order: left → root → right
+- Post-order: left → right → root
+- Level-order: top to bottom, left to right
 
 ```cpp
 #include <iostream>
@@ -86,19 +87,19 @@ public:
     virtual void insert(int value) = 0;
 
     void printPreorder() const {
-        std::cout << "前序遍历: ";
+        std::cout << "Pre-order traversal: ";
         preorder(root);
         std::cout << std::endl;
     }
 
     void printInorder() const {
-        std::cout << "中序遍历: ";
+        std::cout << "In-order traversal: ";
         inorder(root);
         std::cout << std::endl;
     }
 
     void printPostorder() const {
-        std::cout << "后序遍历: ";
+        std::cout << "Post-order traversal: ";
         postorder(root);
         std::cout << std::endl;
     }
@@ -108,7 +109,7 @@ public:
         std::queue<TreeNode*> q;
         q.push(root);
 
-        std::cout << "层序遍历: ";
+        std::cout << "Level-order traversal: ";
         while (!q.empty()) {
             TreeNode* node = q.front();
             q.pop();
@@ -120,12 +121,12 @@ public:
         std::cout << std::endl;
     }
 
-    // 非递归中序遍历（了解栈在树遍历中的作用）
+    // Non-recursive in-order traversal (shows the role a stack plays in tree traversal)
     void printInorderIterative() const {
         std::stack<TreeNode*> stk;
         TreeNode* cur = root;
 
-        std::cout << "中序遍历(迭代): ";
+        std::cout << "In-order traversal (iterative): ";
         while (cur || !stk.empty()) {
             while (cur) {
                 stk.push(cur);
@@ -148,13 +149,13 @@ public:
 };
 ```
 
-1.2 二叉搜索树（BST）
+1.2 Binary Search Tree (BST)
 --------------------------
 
-二叉搜索树的性质：
-1. 左子树所有节点的值 < 根节点的值
-2. 右子树所有节点的值 > 根节点的值
-3. 左右子树也是二叉搜索树
+Properties of a binary search tree:
+1. Every node in the left subtree has a value < the root's value
+2. Every node in the right subtree has a value > the root's value
+3. The left and right subtrees are themselves binary search trees
 
 ```cpp
 #include <iostream>
@@ -169,7 +170,7 @@ private:
         } else if (value > node->data) {
             node->right = insertNode(node->right, value);
         }
-        // 值相等时不插入（不允许重复）
+        // Equal values are not inserted (duplicates are not allowed)
         return node;
     }
 
@@ -192,7 +193,7 @@ private:
         } else if (value > node->data) {
             node->right = deleteNode(node->right, value);
         } else {
-            // 找到要删除的节点
+            // Found the node to delete
             if (!node->left) {
                 TreeNode* temp = node->right;
                 delete node;
@@ -204,7 +205,7 @@ private:
                 return temp;
             }
 
-            // 有两个子节点：用右子树的最小节点替换
+            // Two children: replace with the smallest node of the right subtree
             TreeNode* min_node = findMin(node->right);
             node->data = min_node->data;
             node->right = deleteNode(node->right, min_node->data);
@@ -229,36 +230,37 @@ public:
 int main() {
     BST tree;
 
-    // 插入节点
+    // Insert nodes
     int values[] = {50, 30, 80, 20, 40, 70, 90, 10, 35, 45, 85};
     for (int v : values) {
         tree.insert(v);
     }
 
-    tree.printInorder();    // 应输出有序序列
+    tree.printInorder();    // should print a sorted sequence
     tree.printPreorder();
     tree.printPostorder();
     tree.printLevelorder();
     tree.printInorderIterative();
 
-    std::cout << "查找40: " << (tree.search(40) ? "找到" : "未找到") << std::endl;
-    std::cout << "查找100: " << (tree.search(100) ? "找到" : "未找到") << std::endl;
-    std::cout << "树高: " << tree.getHeight() << std::endl;
+    std::cout << "Search 40: " << (tree.search(40) ? "found" : "not found") << std::endl;
+    std::cout << "Search 100: " << (tree.search(100) ? "found" : "not found") << std::endl;
+    std::cout << "Tree height: " << tree.getHeight() << std::endl;
 
     tree.remove(40);
-    std::cout << "删除40后: ";
+    std::cout << "After deleting 40: ";
     tree.printInorder();
 
     return 0;
 }
 ```
 
-BST的问题：当插入有序数据时，BST退化为链表（斜树），树高为O(n)，
-查找复杂度退化到O(n)。这就是为什么需要平衡树。
+The problem with a BST: when sorted data is inserted, the BST degenerates into a
+linked list (a skewed tree), its height becomes O(n), and lookup degrades to O(n).
+This is why we need balanced trees.
 
 ```
-BST退化为链表：
-插入顺序: 10, 20, 30, 40, 50
+A BST degenerating into a linked list:
+Insertion order: 10, 20, 30, 40, 50
 
    10
     \
@@ -270,24 +272,25 @@ BST退化为链表：
              \
               50
 
-查找50需要比较5次，而不是log5≈2次
+Finding 50 takes 5 comparisons instead of log5≈2
 ```
 
 
-1.3 AVL树的底层原理
+1.3 How AVL Trees Work Internally
 -----------------------
 
-AVL树是自平衡二叉搜索树，任何节点的左右子树高度差不超过1（平衡因子BF ∈ {-1,0,1}）。
+An AVL tree is a self-balancing binary search tree in which the heights of the left and
+right subtrees of any node differ by at most 1 (balance factor BF ∈ {-1,0,1}).
 
-平衡因子 = 左子树高度 - 右子树高度
+Balance factor = height of left subtree - height of right subtree
 
-当插入或删除导致某节点|BF| > 1时，通过旋转恢复平衡。
+When an insertion or deletion makes some node's |BF| > 1, balance is restored by rotation.
 
-四种旋转情况：
-1. LL（左左）：左子树的左子树插入 → 右旋
-2. RR（右右）：右子树的右子树插入 → 左旋
-3. LR（左右）：左子树的右子树插入 → 先左旋再右旋
-4. RL（右左）：右子树的左子树插入 → 先右旋再左旋
+The four rotation cases:
+1. LL (left-left): inserted into the left subtree of the left child → right rotation
+2. RR (right-right): inserted into the right subtree of the right child → left rotation
+3. LR (left-right): inserted into the right subtree of the left child → left rotation, then right rotation
+4. RL (right-left): inserted into the left subtree of the right child → right rotation, then left rotation
 
 ```cpp
 #include <iostream>
@@ -321,7 +324,7 @@ private:
         }
     }
 
-    // 右旋
+    // Right rotation
     AVLNode* rightRotate(AVLNode* y) {
         AVLNode* x = y->left;
         AVLNode* T2 = x->right;
@@ -335,7 +338,7 @@ private:
         return x;
     }
 
-    // 左旋
+    // Left rotation
     AVLNode* leftRotate(AVLNode* x) {
         AVLNode* y = x->right;
         AVLNode* T2 = y->left;
@@ -350,7 +353,7 @@ private:
     }
 
     AVLNode* insertNode(AVLNode* node, int value) {
-        // 1. 普通BST插入
+        // 1. Ordinary BST insertion
         if (!node) return new AVLNode(value);
 
         if (value < node->data) {
@@ -358,32 +361,32 @@ private:
         } else if (value > node->data) {
             node->right = insertNode(node->right, value);
         } else {
-            return node;  // 不允许重复
+            return node;  // duplicates are not allowed
         }
 
-        // 2. 更新高度
+        // 2. Update the height
         updateHeight(node);
 
-        // 3. 检查平衡因子并旋转
+        // 3. Check the balance factor and rotate
         int balance = getBalance(node);
 
-        // LL情况: 右旋
+        // LL case: right rotation
         if (balance > 1 && value < node->left->data) {
             return rightRotate(node);
         }
 
-        // RR情况: 左旋
+        // RR case: left rotation
         if (balance < -1 && value > node->right->data) {
             return leftRotate(node);
         }
 
-        // LR情况: 先左旋再右旋
+        // LR case: left rotation, then right rotation
         if (balance > 1 && value > node->left->data) {
             node->left = leftRotate(node->left);
             return rightRotate(node);
         }
 
-        // RL情况: 先右旋再左旋
+        // RL case: right rotation, then left rotation
         if (balance < -1 && value < node->right->data) {
             node->right = rightRotate(node->right);
             return leftRotate(node);
@@ -398,7 +401,7 @@ private:
     }
 
     AVLNode* deleteNode(AVLNode* node, int value) {
-        // 1. 普通BST删除
+        // 1. Ordinary BST deletion
         if (!node) return nullptr;
 
         if (value < node->data) {
@@ -419,10 +422,10 @@ private:
 
         if (!node) return nullptr;
 
-        // 2. 更新高度
+        // 2. Update the height
         updateHeight(node);
 
-        // 3. 检查平衡
+        // 3. Check the balance
         int balance = getBalance(node);
 
         // LL
@@ -477,18 +480,18 @@ public:
     }
 
     void print() const {
-        std::cout << "AVL树中序遍历(带平衡因子): ";
+        std::cout << "AVL tree in-order traversal (with balance factors): ";
         inorder(root);
         std::cout << std::endl;
-        std::cout << "树高: " << (root ? root->height : 0) << std::endl;
+        std::cout << "Tree height: " << (root ? root->height : 0) << std::endl;
     }
 };
 
 int main() {
     AVLTree avl;
 
-    // 插入有序数据
-    std::cout << "插入有序序列 10, 20, 30, 40, 50, 25" << std::endl;
+    // Insert sorted data
+    std::cout << "Inserting the sorted sequence 10, 20, 30, 40, 50, 25" << std::endl;
     avl.insert(10);
     avl.insert(20);
     avl.insert(30);
@@ -498,7 +501,7 @@ int main() {
 
     avl.print();
 
-    std::cout << "\n删除30:" << std::endl;
+    std::cout << "\nDeleting 30:" << std::endl;
     avl.remove(30);
     avl.print();
 
@@ -508,29 +511,29 @@ int main() {
 
 
 ================================================================================
-### 第二节: 所有用法大全
+### Section 2: Complete Guide to All Usages
 ================================================================================
 
-2.1 其他常见树结构
+2.1 Other Common Tree Structures
 -----------------------
 
-除了二叉搜索树和AVL树，还有其他重要的树结构：
+Besides binary search trees and AVL trees, there are other important tree structures:
 
-(1) 完全二叉树（Complete Binary Tree）
-- 除最后一层外，其他层节点都是满的
-- 最后一层节点从左到右排列
-- 可用数组高效存储：父节点i，子节点为2i+1和2i+2
+(1) Complete Binary Tree
+- Every level except the last is completely filled
+- Nodes on the last level are packed from left to right
+- Can be stored efficiently in an array: for parent i, the children are 2i+1 and 2i+2
 
-(2) 满二叉树（Full Binary Tree）
-- 每个节点要么是叶子节点，要么有两个子节点
+(2) Full Binary Tree
+- Every node is either a leaf or has exactly two children
 
-(3) 线段树（Segment Tree）
-- 用于区间查询和更新
+(3) Segment Tree
+- Used for range queries and updates
 
-(4) 字典树 / 前缀树（Trie）
-- 用于字符串搜索和前缀匹配
+(4) Trie (Prefix Tree)
+- Used for string search and prefix matching
 
-2.2 字典树（Trie）实现
+2.2 Trie Implementation
 --------------------------
 
 ```cpp
@@ -543,7 +546,7 @@ class TrieNode {
 public:
     std::unordered_map<char, TrieNode*> children;
     bool is_end;
-    int count;  // 经过该节点的单词数
+    int count;  // number of words passing through this node
 
     TrieNode() : is_end(false), count(0) {}
     ~TrieNode() {
@@ -593,7 +596,7 @@ public:
         return true;
     }
 
-    // 获取所有以prefix为前缀的单词
+    // Get all words that start with prefix
     std::vector<std::string> getWordsWithPrefix(const std::string& prefix) const {
         TrieNode* cur = root;
         for (char ch : prefix) {
@@ -637,13 +640,13 @@ int main() {
     std::cout << "search(apple): " << trie.search("apple") << std::endl;
     std::cout << "startsWith(app): " << trie.startsWith("app") << std::endl;
 
-    std::cout << "\n以\"ap\"为前缀的单词: ";
+    std::cout << "\nWords with prefix \"ap\": ";
     for (const auto& word : trie.getWordsWithPrefix("ap")) {
         std::cout << word << " ";
     }
     std::cout << std::endl;
 
-    std::cout << "\n以\"bat\"为前缀的单词: ";
+    std::cout << "\nWords with prefix \"bat\": ";
     for (const auto& word : trie.getWordsWithPrefix("bat")) {
         std::cout << word << " ";
     }
@@ -653,14 +656,14 @@ int main() {
 }
 ```
 
-2.3 树与数组的转换（堆的树形表示）
+2.3 Converting Between Trees and Arrays (Tree Representation of a Heap)
 ----------------------------------------
 
 ```cpp
 #include <iostream>
 #include <vector>
 
-// 用数组表示的完全二叉树（堆）
+// A complete binary tree (heap) stored in an array
 class HeapTree {
 private:
     std::vector<int> data;
@@ -687,7 +690,7 @@ public:
         int count = 0;
         int total = data.size();
 
-        std::cout << "数组表示的完全二叉树:" << std::endl;
+        std::cout << "Complete binary tree stored in an array:" << std::endl;
 
         while (count < total) {
             int nodes_in_level = 1 << level;
@@ -698,16 +701,16 @@ public:
             ++level;
         }
 
-        // 打印父子关系
-        std::cout << "\n父子关系:" << std::endl;
+        // Print the parent-child relationships
+        std::cout << "\nParent-child relationships:" << std::endl;
         for (size_t i = 0; i < data.size(); ++i) {
-            std::cout << "节点[" << i << "]=" << data[i];
+            std::cout << "node[" << i << "]=" << data[i];
             size_t left = 2 * i + 1;
             size_t right = 2 * i + 2;
             if (left < data.size())
-                std::cout << " 左子[" << left << "]=" << data[left];
+                std::cout << " left[" << left << "]=" << data[left];
             if (right < data.size())
-                std::cout << " 右子[" << right << "]=" << data[right];
+                std::cout << " right[" << right << "]=" << data[right];
             std::cout << std::endl;
         }
     }
@@ -728,10 +731,10 @@ int main() {
 
 
 ================================================================================
-### 第三节: 实用案例
+### Section 3: Practical Examples
 ================================================================================
 
-案例一：文件系统目录树
+Example 1: File System Directory Tree
 ------------------------------
 
 ```cpp
@@ -758,7 +761,7 @@ public:
         for (int i = 0; i < depth; ++i) std::cout << "  ";
         std::cout << (is_directory ? "📁 " : "📄 ") << name << std::endl;
 
-        // 按类型排序：目录在前，文件在后
+        // Sort by type: directories first, then files
         std::vector<FileSystemNode*> dirs, files;
         for (auto child : children) {
             if (child->is_directory) dirs.push_back(child);
@@ -817,24 +820,24 @@ int main() {
 
     etc->addChild(config);
 
-    std::cout << "文件系统树:" << std::endl;
+    std::cout << "File system tree:" << std::endl;
     root.print();
 
-    std::cout << "\n查找 pics: ";
+    std::cout << "\nSearch for pics: ";
     auto found = root.find("pics");
-    std::cout << (found ? "找到" : "未找到") << std::endl;
+    std::cout << (found ? "found" : "not found") << std::endl;
 
-    std::cout << "非目录文件总数: " << root.totalSize() << std::endl;
+    std::cout << "Total number of non-directory files: " << root.totalSize() << std::endl;
 
     return 0;
 }
 ```
 
 
-案例二：表达式树（语法树）
+Example 2: Expression Tree (Syntax Tree)
 ------------------------------
 
-将数学表达式表示为树结构，支持求值和打印：
+Represent a mathematical expression as a tree structure that supports evaluation and printing:
 
 ```cpp
 #include <iostream>
@@ -901,7 +904,7 @@ public:
 };
 
 int main() {
-    // 构建表达式: (3 + 4) * (5 - 2)
+    // Build the expression: (3 + 4) * (5 - 2)
     //        *
     //      /   \
     //     +     -
@@ -913,8 +916,8 @@ int main() {
         new SubNode(new NumberNode(5), new NumberNode(2))
     );
 
-    std::cout << "表达式: " << expr->toString() << std::endl;
-    std::cout << "计算结果: " << expr->evaluate() << std::endl;
+    std::cout << "Expression: " << expr->toString() << std::endl;
+    std::cout << "Result: " << expr->evaluate() << std::endl;
 
     delete expr;
 
@@ -924,34 +927,34 @@ int main() {
 
 
 ================================================================================
-### 第四节: 课后习题
+### Section 4: Exercises
 ================================================================================
 
-1. 基础题：手动实现BST的完整操作。
-   - 插入、删除、查找、遍历（全部四种）
-   - 查找最小值和最大值
-   - 查找前驱和后继节点
-   - 判断一棵树是否为BST
+1. Basic: Implement the full set of BST operations by hand.
+   - Insert, delete, search, traverse (all four orders)
+   - Find the minimum and maximum values
+   - Find the predecessor and successor nodes
+   - Determine whether a tree is a BST
 
-2. 应用题：实现BST的中序后继查找器。
-   - 给定一个BST和一个目标值
-   - 找出BST中比目标值大的最小节点（中序后继）
-   - 要求O(h)时间，h为树高
+2. Application: Implement an in-order successor finder for a BST.
+   - Given a BST and a target value
+   - Find the smallest node in the BST that is greater than the target (the in-order successor)
+   - Required time: O(h), where h is the tree height
 
-3. 进阶题：实现AVL树的完整操作并验证正确性。
-   - 插入和删除后验证平衡性
-   - 随机插入大量节点，统计树高和log n的关系
-   - 与普通BST进行性能对比
+3. Advanced: Implement the full set of AVL tree operations and verify correctness.
+   - Verify balance after insertion and deletion
+   - Insert a large number of random nodes and measure how the tree height relates to log n
+   - Compare its performance with an ordinary BST
 
-4. 综合题：实现一个基于BST的订单簿系统。
-   - 使用BST按价格排序存储买卖订单
-   - 支持添加订单、取消订单、执行交易
-   - 输出当前最优买卖价格
+4. Comprehensive: Implement a BST-based order book system.
+   - Use a BST to store buy and sell orders sorted by price
+   - Support adding orders, cancelling orders, and executing trades
+   - Output the current best bid and ask prices
 
-5. 挑战题：实现一个B树（B-Tree）。
-   - 多路平衡搜索树，广泛应用于数据库索引
-   - 实现最小度数为t的B树
-   - 支持插入、删除、查找
-   - 验证B树的高度平衡性质
+5. Challenge: Implement a B-Tree.
+   - A multi-way balanced search tree, widely used for database indexes
+   - Implement a B-tree with minimum degree t
+   - Support insertion, deletion, and search
+   - Verify the B-tree's height-balance property
 
 ================================================================================
