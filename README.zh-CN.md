@@ -1,4 +1,4 @@
-[English](./README.md) | **简体中文**
+**简体中文** | [English](./README.md)
 
 [LeetCode post](https://leetcode.cn/discuss/post/3851162/ru-he-ke-xue-de-8ge-yue-xie-2000ti-x-plo-zvsq/) | [xhs](http://xhslink.com/o/9IVHU999iO0) | [bilibili]
 
